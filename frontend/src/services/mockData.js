@@ -97,6 +97,16 @@ export const vocabularySnapshotMock = {
   ]
 };
 
+export const vocabularyMemoryMock = {
+  retentionLabel: "当前记忆留存率",
+  retentionRate: 78,
+  stats: [
+    { value: "156 词", label: "已掌握" },
+    { value: "12 词", label: "可能遗忘" },
+    { value: "20 词", label: "今日待练" }
+  ]
+};
+
 export const grammarSnapshotMock = {
   focus: "本周重点：时态、从句与口语连接词",
   topics: [

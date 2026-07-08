@@ -37,6 +37,11 @@ export const contractShapes = {
     retentionHint: "string",
     cards: [{ id: "string", word: "string", usage: "string", progress: 0, tag: "string" }]
   },
+  vocabularyMemory: {
+    retentionLabel: "string",
+    retentionRate: 0,
+    stats: [{ value: "string", label: "string" }]
+  },
   grammarSnapshot: {
     focus: "string",
     topics: [
