@@ -1,5 +1,7 @@
-import { useCallback } from "react";
-import { Space, Tag, Typography } from "antd";
+import { useCallback, useMemo, useState } from "react";
+import { BookOutlined, SearchOutlined } from "@ant-design/icons";
+import { Button, Empty, Flex, Input, Space, Tag, Typography } from "antd";
+import { useNavigate } from "react-router-dom";
 import { GrammarMasteryPanel } from "../components/Grammar/GrammarMasteryPanel";
 import { GrammarProgressRing } from "../components/Grammar/GrammarProgressRing";
 import { GrammarTopicGrid } from "../components/Grammar/GrammarTopicGrid";
@@ -9,50 +11,29 @@ import { useAppServices } from "../services/ServiceContext";
 
 const { Title, Paragraph } = Typography;
 
-const grammarOverview = {
-  masteryLabel: "当前语法掌握率",
-  masteryRate: 76,
-  stats: [
-    { value: "24 组", label: "已掌握" },
-    { value: "6 组", label: "待巩固" },
-    { value: "12 题", label: "今日待练" }
-  ]
-};
-
-const grammarProgress = {
-  completed: 5,
-  total: 12
-};
-
-const grammarTopics = [
-  {
-    id: "collocation-preposition",
-    title: "固定搭配与介词",
-    summary: "训练常见动词、形容词与介词的搭配关系，减少中式表达和介词误用。",
-    examples: [
-      "She is interested in environmental policy.",
-      "We need to rely on accurate data."
-    ],
-    progress: 72,
-    tag: "搭配"
-  },
-  {
-    id: "grammar-vocabulary",
-    title: "词汇",
-    summary: "通过语境判断词形、词义和搭配选择，强化语法题里的词汇辨析能力。",
-    examples: [
-      "The proposal requires careful consideration.",
-      "His response was both accurate and concise."
-    ],
-    progress: 64,
-    tag: "辨析"
-  }
-];
-
 export function GrammarPage() {
+  const navigate = useNavigate();
   const { grammar } = useAppServices();
-  const loader = useCallback(() => grammar.getSnapshot(), [grammar]);
+  const [searchText, setSearchText] = useState("");
+  const loader = useCallback(async () => {
+    const [overview, progress, topics] = await Promise.all([
+      grammar.getOverview(),
+      grammar.getProgress(),
+      grammar.getTopics()
+    ]);
+
+    return { overview, progress, topics };
+  }, [grammar]);
   const { data, loading, error } = useAsyncData(loader, [loader]);
+  const filteredTopics = useMemo(() => {
+    const keyword = searchText.trim().toLowerCase();
+
+    if (!keyword) {
+      return data?.topics ?? [];
+    }
+
+    return (data?.topics ?? []).filter((topic) => topic.title.toLowerCase().includes(keyword));
+  }, [data?.topics, searchText]);
 
   return (
     <AsyncPage loading={loading} error={error}>
@@ -66,18 +47,48 @@ export function GrammarPage() {
                 </Tag>
               </Space>
               <Title>语法练习</Title>
-              <Paragraph>{data.focus}</Paragraph>
+              <Paragraph>按语法知识点进入专项训练，先从选择题题库开始建立正确率反馈。</Paragraph>
             </div>
 
             <GrammarProgressRing
-              completed={grammarProgress.completed}
-              total={grammarProgress.total}
+              completed={data.progress.completed}
+              total={data.progress.total}
             />
 
-            <GrammarMasteryPanel overview={grammarOverview} />
+            <GrammarMasteryPanel overview={data.overview} />
           </section>
 
-          <GrammarTopicGrid topics={grammarTopics} />
+          <section className="glass-panel grammar-search-panel">
+            <Flex align="center" className="grammar-search-row" gap={10} justify="space-between" wrap>
+              <Input
+                allowClear
+                onChange={(event) => setSearchText(event.target.value)}
+                placeholder="搜索语法类型"
+                prefix={<SearchOutlined />}
+                size="large"
+                value={searchText}
+              />
+              <Button
+                htmlType="button"
+                icon={<BookOutlined />}
+                onClick={() => navigate("/grammar/notebook")}
+                size="large"
+              >
+                练习本
+              </Button>
+            </Flex>
+          </section>
+
+          {filteredTopics.length ? (
+            <GrammarTopicGrid
+              onStart={(topic) => navigate(`/grammar/practice/${encodeURIComponent(topic.title)}`)}
+              topics={filteredTopics}
+            />
+          ) : (
+            <section className="glass-panel">
+              <Empty description="没有匹配的语法类型" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+            </section>
+          )}
         </div>
       ) : null}
     </AsyncPage>

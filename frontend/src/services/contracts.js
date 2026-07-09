@@ -49,7 +49,6 @@ export const contractShapes = {
     cards: [{ id: "string", word: "string", usage: "string", progress: 0, tag: "string" }]
   },
   vocabularyMemory: {
-    retentionLabel: "string",
     retentionRate: 0,
     stats: [{ value: "string", label: "string" }]
   },
@@ -102,6 +101,46 @@ export const contractShapes = {
       }
     ]
   },
+  grammarOverview: {
+    masteryRate: 0,
+    stats: [{ value: "string", label: "string" }]
+  },
+  grammarNotebookQuestions: [
+    {
+      id: 0,
+      question_text: "string",
+      options: ["string"],
+      answer: "A",
+      grammar_category: "string",
+      explanation: "string",
+      wrong: true,
+      favorited: true
+    }
+  ],
+  grammarPracticeQuestions: [
+    {
+      id: 0,
+      question_text: "string",
+      options: ["string"],
+      answer: "A",
+      grammar_category: "string",
+      explanation: "string"
+    }
+  ],
+  grammarProgress: {
+    completed: 0,
+    total: 0
+  },
+  grammarTopics: [
+    {
+      id: "string",
+      title: "string",
+      summary: "string",
+      examples: ["string"],
+      progress: 0,
+      tag: "string"
+    }
+  ],
   profileSnapshot: {
     learnerName: "string",
     level: "string",

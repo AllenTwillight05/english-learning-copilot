@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  ArrowRightOutlined,
   CheckCircleOutlined,
   CloseCircleOutlined,
   StopOutlined,
@@ -25,8 +24,6 @@ const questionTypeLabels = {
   chineseToEnglish: "中文选英文",
   englishToChinese: "英文选中文"
 };
-
-const defaultRating = "良好";
 
 const ratingShortcuts = {
   1: "重来",
@@ -78,7 +75,7 @@ export function VocabularyPracticePage() {
   const [questionIndex, setQuestionIndex] = useState(0);
   const [questionTypeIndex, setQuestionTypeIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
-  const [selectedRating, setSelectedRating] = useState(defaultRating);
+  const [selectedRating, setSelectedRating] = useState(null);
   const [answerRecords, setAnswerRecords] = useState([]);
 
   const currentQuestion = practiceWords?.[questionIndex];
@@ -98,11 +95,14 @@ export function VocabularyPracticePage() {
 
   useEffect(() => {
     function handleRatingShortcut(event) {
-      if (!answered || !ratingShortcuts[event.key]) {
+      const rating = ratingShortcuts[event.key];
+
+      if (!answered || !rating) {
         return;
       }
 
-      setSelectedRating(ratingShortcuts[event.key]);
+      event.preventDefault();
+      handleRateCurrentQuestion(rating);
     }
 
     window.addEventListener("keydown", handleRatingShortcut);
@@ -110,11 +110,11 @@ export function VocabularyPracticePage() {
     return () => {
       window.removeEventListener("keydown", handleRatingShortcut);
     };
-  }, [answered]);
+  }, [answered, isCorrect, questionType, selectedAnswer, currentQuestion, practiceWords]);
 
   function resetAnswerState() {
     setSelectedAnswer(null);
-    setSelectedRating(defaultRating);
+    setSelectedRating(null);
   }
 
   function handleSwitchQuestionType() {
@@ -122,13 +122,7 @@ export function VocabularyPracticePage() {
     resetAnswerState();
   }
 
-  function handleNextQuestion() {
-    saveCurrentAnswer();
-    setQuestionIndex((current) => (current + 1) % practiceWords.length);
-    resetAnswerState();
-  }
-
-  function buildCurrentRecord() {
+  function buildCurrentRecord(rating = selectedRating) {
     if (!answered || !currentQuestion) {
       return null;
     }
@@ -136,21 +130,28 @@ export function VocabularyPracticePage() {
     return {
       correct: isCorrect,
       questionType,
-      rating: selectedRating,
+      rating,
       selectedAnswer,
       wordId: currentQuestion.id,
       word: currentQuestion.word
     };
   }
 
-  function saveCurrentAnswer() {
-    const record = buildCurrentRecord();
+  function saveCurrentAnswer(rating) {
+    const record = buildCurrentRecord(rating);
 
     if (!record) {
       return;
     }
 
     setAnswerRecords((current) => [...current, record]);
+  }
+
+  function handleRateCurrentQuestion(rating) {
+    setSelectedRating(rating);
+    saveCurrentAnswer(rating);
+    setQuestionIndex((current) => (current + 1) % practiceWords.length);
+    resetAnswerState();
   }
 
   function buildSummary(records) {
@@ -164,7 +165,10 @@ export function VocabularyPracticePage() {
           summary.wrong += 1;
         }
 
-        summary.ratings[record.rating] = (summary.ratings[record.rating] ?? 0) + 1;
+        if (record.rating) {
+          summary.ratings[record.rating] = (summary.ratings[record.rating] ?? 0) + 1;
+        }
+
         return summary;
       },
       {
@@ -245,43 +249,21 @@ export function VocabularyPracticePage() {
 
           {answered ? (
             <VocabularyWordCard
-              onRate={setSelectedRating}
+              onRate={handleRateCurrentQuestion}
               selectedRating={selectedRating}
               word={currentQuestion}
             />
           ) : null}
 
           <Flex justify="end" gap={12} wrap>
-            {answered ? (
-              <>
-                <Button
-                  htmlType="button"
-                  icon={<StopOutlined />}
-                  onClick={handleFinishPractice}
-                  size="large"
-                >
-                  结束练习
-                </Button>
-                <Button
-                  htmlType="button"
-                  icon={<ArrowRightOutlined />}
-                  onClick={handleNextQuestion}
-                  size="large"
-                  type="primary"
-                >
-                  下一题
-                </Button>
-              </>
-            ) : (
-              <Button
-                htmlType="button"
-                icon={<StopOutlined />}
-                onClick={handleFinishPractice}
-                size="large"
-              >
-                结束练习
-              </Button>
-            )}
+            <Button
+              htmlType="button"
+              icon={<StopOutlined />}
+              onClick={handleFinishPractice}
+              size="large"
+            >
+              结束练习
+            </Button>
           </Flex>
         </div>
       ) : (

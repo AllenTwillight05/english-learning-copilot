@@ -6,7 +6,7 @@ export function GrammarMasteryPanel({ overview }) {
   return (
     <div className="memory-panel">
       <Flex justify="space-between" align="center" gap={12}>
-        <Text strong>{overview.masteryLabel}</Text>
+        <Text strong>当前语法掌握率</Text>
         <Title level={2}>{overview.masteryRate}%</Title>
       </Flex>
       <Progress
