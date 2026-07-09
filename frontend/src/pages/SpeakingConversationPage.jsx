@@ -22,7 +22,7 @@ export function SpeakingConversationPage() {
   const loader = useCallback(() => speaking.getCatalog(), [speaking]);
   const { data, loading, error } = useAsyncData(loader, [loader]);
   const [isRecording, setIsRecording] = useState(false);
-  const [turnCount, setTurnCount] = useState(0);
+  const [recordingCount, setRecordingCount] = useState(0);
 
   const scenario = useMemo(
     () => data?.scenarios.find((item) => item.id === scenarioId),
@@ -31,8 +31,13 @@ export function SpeakingConversationPage() {
 
   const startRecording = useCallback(() => {
     setIsRecording(true);
-    setTurnCount((current) => Math.min(current + 1, 3));
+    setRecordingCount((current) => current + 1);
   }, []);
+
+  const canSubmit = !isRecording && recordingCount >= 3;
+  const submitDisabledReason = isRecording
+    ? "正在录音时不可交卷"
+    : "录音次数超过 3 次后才可交卷";
 
   return (
     <AsyncPage loading={loading} error={error}>
@@ -40,13 +45,13 @@ export function SpeakingConversationPage() {
         <div className="page-stack">
           <section className="glass-panel speaking-session-panel">
             <PageSectionHeader
-              eyebrow="Conversation Mode"
-              title="微信对话模式"
-              description={scenario.title}
+              eyebrow=""
+              title={scenario.title}
+              description=""
               extra={
                 <Space wrap>
                   <Tag bordered={false} className="soft-tag">
-                    已完成 {turnCount} / 3 轮
+                    当前为第 {recordingCount} 轮
                   </Tag>
                   <Tag bordered={false} className="soft-tag soft-tag--dark">
                     {scenario.level}
@@ -82,7 +87,7 @@ export function SpeakingConversationPage() {
             <Flex justify="space-between" gap={12} wrap="wrap">
               <Space wrap>
                 <Button icon={<ArrowLeftOutlined />} onClick={() => navigate(`/speaking/${scenario.id}`)}>
-                  返回详情
+                  返回
                 </Button>
                 <Button
                   type="primary"
@@ -104,6 +109,8 @@ export function SpeakingConversationPage() {
                 type="primary"
                 icon={<SendOutlined />}
                 onClick={() => navigate(`/speaking/${scenario.id}/feedback`)}
+                disabled={!canSubmit}
+                title={canSubmit ? undefined : submitDisabledReason}
               >
                 交卷
               </Button>
@@ -119,7 +126,7 @@ export function SpeakingConversationPage() {
             description="请返回口语页重新选择一个情景模块。"
           />
           <Button icon={<ArrowLeftOutlined />} onClick={() => navigate("/speaking")}>
-            返回口语页
+            返回
           </Button>
         </section>
       ) : null}

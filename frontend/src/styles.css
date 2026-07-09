@@ -453,6 +453,14 @@ a {
   color: var(--text-soft);
 }
 
+.panel-title {
+  display: block;
+  color: rgba(17, 17, 17, 0.82);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
 .star-icon {
   color: #c08a1d;
   font-size: 18px;
@@ -500,19 +508,38 @@ a {
 }
 
 .scenario-card__tone {
-  height: 84px;
+  height: 100px;
+  background: linear-gradient(
+    180deg, 
+    color-mix(in srgb, var(--card-color) 95%, transparent) 0%, 
+    color-mix(in srgb, var(--card-color) 62%, transparent) 45%, 
+    color-mix(in srgb, var(--card-color) 0%, transparent) 100%
+  );
 }
 
-.scenario-card__tone--blue {
-  background: var(--accent-blue);
+.scenario-card__tone--blue { --card-color: var(--accent-blue); }
+.scenario-card__tone--gold { --card-color: var(--accent-gold); }
+.scenario-card__tone--mint { --card-color: var(--accent-mint); }
+
+.scenario-card__header {
+  display: grid;
+  gap: 10px;
 }
 
-.scenario-card__tone--gold {
-  background: var(--accent-gold);
+.scenario-card__title.ant-typography {
+  margin: 0;
+  color: rgba(17, 17, 17, 0.9);
+  font-size: 22px;
+  line-height: 1.2;
 }
 
-.scenario-card__tone--mint {
-  background: var(--accent-mint);
+.scenario-card__content {
+  display: grid;
+  gap: 8px;
+}
+
+.scenario-card__content .ant-typography {
+  margin-bottom: 0;
 }
 
 .scenario-card__body,
@@ -520,6 +547,9 @@ a {
   display: grid;
   gap: 14px;
   padding: 18px;
+  margin-top: -70px;
+  position: relative;
+  z-index: 1;
 }
 
 .vocabulary-hero {

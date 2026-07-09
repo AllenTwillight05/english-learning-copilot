@@ -28,7 +28,7 @@ export function SpeakingScenarioDetailPage() {
         <div className="page-stack">
           <section className="glass-panel speaking-detail-hero">
             <PageSectionHeader
-              eyebrow="Scenario Detail"
+              eyebrow=""
               title={scenario.title}
               description={scenario.goal}
               extra={
@@ -51,19 +51,18 @@ export function SpeakingScenarioDetailPage() {
             </div>
             <div className="scenario-detail-grid">
               <div className="scenario-detail-block">
-                <Text type="secondary">练习目标</Text>
+                <Text className="panel-title">练习目标</Text>
                 <Title level={4}>{scenario.goal}</Title>
                 <Paragraph>{scenario.summary}</Paragraph>
               </div>
               <div className="scenario-detail-block">
-                <Text type="secondary">发音与表达</Text>
+                <Text className="panel-title">发音与表达</Text>
                 <Title level={4}>{scenario.accent}</Title>
-                <Paragraph>进入会话后会以微信对话气泡模式完成情景问答。</Paragraph>
               </div>
             </div>
             <Space wrap>
               <Button icon={<ArrowLeftOutlined />} onClick={() => navigate("/speaking")}>
-                返回口语页
+                返回
               </Button>
               <Button
                 type="primary"
@@ -77,7 +76,7 @@ export function SpeakingScenarioDetailPage() {
 
           <section className="glass-panel">
             <PageSectionHeader
-              eyebrow="Script Preview"
+              eyebrow=""
               title={`对话示例`}
               description="当前为前端 mock 脚本，后续可接入剧本详情接口。"
             />
@@ -92,7 +91,7 @@ export function SpeakingScenarioDetailPage() {
             description="请返回口语页重新选择一个情景模块。"
           />
           <Button icon={<ArrowLeftOutlined />} onClick={() => navigate("/speaking")}>
-            返回口语页
+            返回
           </Button>
         </section>
       ) : null}

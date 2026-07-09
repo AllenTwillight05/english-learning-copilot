@@ -27,26 +27,30 @@ export function SpeakingFeedbackPage() {
         <div className="page-stack">
           <section className="glass-panel">
             <PageSectionHeader
-              eyebrow="Feedback"
-              title="评分界面"
-              description={`${scenario.title} 的模拟评分结果。`}
+              eyebrow=""
+              title="评分结果"
+              description=""
             />
             <div className="feedback-layout">
               <div className="score-card">
-                <Statistic title="总分" value={scenario.feedback.totalScore} suffix="/ 100" />
+                <Statistic
+                  title={<Text className="panel-title">总分</Text>}
+                  value={scenario.feedback.totalScore}
+                  suffix="/ 100"
+                />
                 <CheckCircleOutlined className="score-card__icon" />
               </div>
               <div className="feedback-metrics">
                 <div className="metric-chip">
-                  <Text type="secondary">发音准确性</Text>
+                  <Text className="panel-title">发音准确性</Text>
                   <Title level={4}>{scenario.feedback.pronunciation}%</Title>
                 </div>
                 <div className="metric-chip">
-                  <Text type="secondary">流畅度</Text>
+                  <Text className="panel-title">流畅度</Text>
                   <Title level={4}>{scenario.feedback.fluency}%</Title>
                 </div>
                 <div className="metric-chip">
-                  <Text type="secondary">语速</Text>
+                  <Text className="panel-title">语速</Text>
                   <Title level={4}>{scenario.feedback.speed}</Title>
                 </div>
               </div>
@@ -54,13 +58,13 @@ export function SpeakingFeedbackPage() {
 
             <div className="feedback-detail-grid">
               <div className="feedback-list">
-                <Text className="eyebrow">问题句子合集</Text>
+                <Text className="panel-title">问题句子合集</Text>
                 {scenario.feedback.issueSentences.map((sentence) => (
                   <Paragraph key={sentence}>{sentence}</Paragraph>
                 ))}
               </div>
               <div className="feedback-list">
-                <Text className="eyebrow">改进建议</Text>
+                <Text className="panel-title">改进建议</Text>
                 {scenario.feedback.suggestions.map((suggestion) => (
                   <Paragraph key={suggestion}>{suggestion}</Paragraph>
                 ))}
@@ -87,7 +91,7 @@ export function SpeakingFeedbackPage() {
             description="请返回口语页重新选择一个情景模块。"
           />
           <Button icon={<ArrowLeftOutlined />} onClick={() => navigate("/speaking")}>
-            返回口语页
+            退出
           </Button>
         </section>
       ) : null}
