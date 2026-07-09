@@ -8,6 +8,9 @@ import { SpeakingFeedbackPage } from "../pages/SpeakingFeedbackPage";
 import { SpeakingPage } from "../pages/SpeakingPage";
 import { SpeakingScenarioDetailPage } from "../pages/SpeakingScenarioDetailPage";
 import { VocabularyPage } from "../pages/VocabularyPage";
+import { VocabularyPracticePage } from "../pages/VocabularyPracticePage";
+import { VocabularyResultPage } from "../pages/VocabularyResultPage";
+import { VocabularyWordbookPage } from "../pages/VocabularyWordbookPage";
 
 export const appRoutes = [
   {
@@ -20,6 +23,9 @@ export const appRoutes = [
       { path: "speaking/:scenarioId/feedback", element: <SpeakingFeedbackPage /> },
       { path: "speaking/:scenarioId", element: <SpeakingScenarioDetailPage /> },
       { path: "vocabulary", element: <VocabularyPage /> },
+      { path: "vocabulary/practice/:level", element: <VocabularyPracticePage /> },
+      { path: "vocabulary/result", element: <VocabularyResultPage /> },
+      { path: "vocabulary/wordbook", element: <VocabularyWordbookPage /> },
       { path: "grammar", element: <GrammarPage /> },
       { path: "profile", element: <ProfilePage /> }
     ]

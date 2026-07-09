@@ -192,6 +192,93 @@ export const vocabularySnapshotMock = {
   ]
 };
 
+export const vocabularyMemoryMock = {
+  retentionLabel: "当前记忆留存率",
+  retentionRate: 78,
+  stats: [
+    { value: "156 词", label: "已掌握" },
+    { value: "12 词", label: "可能遗忘" },
+    { value: "20 词", label: "今日待练" }
+  ]
+};
+
+export const vocabularyPracticeProgressMock = {
+  completed: 8,
+  total: 20
+};
+
+export const vocabularyPracticeWordsMock = [
+  {
+    id: "purple",
+    word: "purple",
+    phonetic: "'pә:pl",
+    definition: "n. a purple color or pigment\nn. of imperial status\nv. become purple\nv. color purple",
+    briefTranslation: "紫色",
+    translation: "n. 紫色, 帝位\na. 紫色的, 帝王的, 华而不实的\nv. (使)成紫色",
+    collins: "2",
+    oxford: "1",
+    tag: "zk gk cet4 cet6 ky toefl",
+    bnc: "5326",
+    frq: "3894",
+    exchange: "s:purples/d:purpled/i:purpling/p:purpled/3:purples/r:purpler/t:purplest",
+    uk_audio: "https://dictionary.cambridge.org/media/english/uk_pron/u/ukp/ukpur/ukpurit004.mp3",
+    us_audio: "https://dictionary.cambridge.org/media/english/us_pron/p/pur/purpl/purple.mp3",
+    chineseOptions: ["紫色", "恶名昭著的", "旅行计划", "重新安排时间"],
+    englishOptions: ["purple", "flagrant", "itinerary", "reschedule"]
+  },
+  {
+    id: "flagrant",
+    word: "flagrant",
+    phonetic: "'fleigrәnt",
+    definition: "s conspicuously and outrageously bad or reprehensible",
+    briefTranslation: "恶名昭著的",
+    translation: "a. 极端明显的, 不能容忍的, 恶名昭著的\n[法] 公然的, 罪恶昭彰的, 现行的",
+    collins: "1",
+    oxford: "",
+    tag: "gre",
+    bnc: "19033",
+    frq: "18623",
+    exchange: "",
+    uk_audio: "https://dictionary.cambridge.org/media/english/uk_pron/u/ukf/ukfla/ukflacc010.mp3",
+    us_audio: "https://dictionary.cambridge.org/media/english/us_pron/f/fla/flagr/flagrant.mp3",
+    chineseOptions: ["恶名昭著的", "紫色", "登机口", "确认"],
+    englishOptions: ["flagrant", "purple", "gate", "confirm"]
+  }
+];
+
+export const vocabularyWordbookWordsMock = [
+  {
+    id: "purple",
+    word: "purple",
+    phonetic: "'pә:pl",
+    definition: "n. a purple color or pigment\nn. of imperial status",
+    briefTranslation: "紫色",
+    tag: "cet4 cet6 toefl",
+    us_audio: "https://dictionary.cambridge.org/media/english/us_pron/p/pur/purpl/purple.mp3",
+    favorited: true
+  },
+  {
+    id: "flagrant",
+    word: "flagrant",
+    phonetic: "'fleigrәnt",
+    definition: "s conspicuously and outrageously bad or reprehensible",
+    briefTranslation: "恶名昭著的",
+    tag: "gre",
+    us_audio: "https://dictionary.cambridge.org/media/english/us_pron/f/fla/flagr/flagrant.mp3",
+    favorited: false
+  },
+  {
+    id: "itinerary",
+    word: "itinerary",
+    phonetic: "ai'tinәrәri",
+    definition: "n. a proposed route of travel",
+    briefTranslation: "旅行计划",
+    tag: "cet6 toefl ielts",
+    us_audio: "",
+    favorited: true
+  }
+];
+
 export const grammarSnapshotMock = {
   focus: "本周重点：时态、从句与口语连接词",
   topics: [

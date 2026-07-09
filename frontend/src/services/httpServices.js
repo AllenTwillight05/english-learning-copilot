@@ -15,7 +15,14 @@ export function createHttpServices(baseUrl = "") {
       getCatalog: () => getJson(withBaseUrl(baseUrl, API_ENDPOINTS.speakingCatalog))
     },
     vocabulary: {
-      getSnapshot: () => getJson(withBaseUrl(baseUrl, API_ENDPOINTS.vocabularySnapshot))
+      getSnapshot: () => getJson(withBaseUrl(baseUrl, API_ENDPOINTS.vocabularySnapshot)),
+      getVocabularyMemory: () => getJson(withBaseUrl(baseUrl, API_ENDPOINTS.vocabularyMemory)),
+      getVocabularyPracticeProgress: () =>
+        getJson(withBaseUrl(baseUrl, API_ENDPOINTS.vocabularyPracticeProgress)),
+      getVocabularyPracticeWords: () =>
+        getJson(withBaseUrl(baseUrl, API_ENDPOINTS.vocabularyPracticeWords)),
+      getVocabularyWordbookWords: () =>
+        getJson(withBaseUrl(baseUrl, API_ENDPOINTS.vocabularyWordbookWords))
     },
     grammar: {
       getSnapshot: () => getJson(withBaseUrl(baseUrl, API_ENDPOINTS.grammarSnapshot))
