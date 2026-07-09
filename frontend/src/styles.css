@@ -21,6 +21,7 @@
   --accent-mint: #7ce0c1;
   --accent-rose: #f6a7c1;
   --accent-violet: #b9a7ff;
+  --accent-orange: #f9b572;
 }
 
 * {
@@ -520,6 +521,9 @@ a {
 .scenario-card__tone--blue { --card-color: var(--accent-blue); }
 .scenario-card__tone--gold { --card-color: var(--accent-gold); }
 .scenario-card__tone--mint { --card-color: var(--accent-mint); }
+.scenario-card__tone--rose { --card-color: var(--accent-rose); }
+.scenario-card__tone--violet { --card-color: var(--accent-violet); }
+.scenario-card__tone--orange { --card-color: var(--accent-orange); }
 
 .scenario-card__header {
   display: grid;
@@ -552,9 +556,53 @@ a {
   z-index: 1;
 }
 
+.grammar-page .feature-grid {
+  margin-top: 4px;
+}
+
+.grammar-page .deck-card {
+  margin-top: 0;
+}
+
+.grammar-topic-card {
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.grammar-topic-card__body {
+  display: grid;
+  gap: 14px;
+  margin-top: -70px;
+  padding: 18px;
+  position: relative;
+  z-index: 1;
+}
+
+.grammar-topic-card__body > .ant-flex:first-child {
+  min-height: 64px;
+}
+
+.grammar-topic-card h4.ant-typography {
+  margin: 0;
+}
+
+.grammar-search-panel {
+  padding: 8px 10px;
+}
+
+.grammar-search-row {
+  width: 100%;
+}
+
+.grammar-search-panel .ant-input-affix-wrapper {
+  width: min(100%, 460px);
+  min-width: min(100%, 260px);
+}
+
 .vocabulary-hero {
   display: grid;
-  grid-template-columns: minmax(320px, 0.82fr) minmax(190px, 0.42fr) minmax(430px, 0.9fr);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
   gap: 24px;
   align-items: stretch;
 }
@@ -563,6 +611,7 @@ a {
   display: grid;
   align-content: center;
   min-height: 280px;
+  min-width: 0;
 }
 
 .vocabulary-hero__copy h1.ant-typography {
@@ -591,6 +640,7 @@ a {
     linear-gradient(145deg, rgba(255, 255, 255, 0.58), rgba(255, 255, 255, 0.28)),
     rgba(17, 17, 17, 0.035);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.78);
+  min-width: 0;
 }
 
 .practice-progress-ring h4.ant-typography {
@@ -616,6 +666,7 @@ a {
     linear-gradient(145deg, rgba(255, 255, 255, 0.58), rgba(255, 255, 255, 0.28)),
     rgba(17, 17, 17, 0.035);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.78);
+  min-width: 0;
 }
 
 .memory-panel h2.ant-typography,
@@ -625,7 +676,7 @@ a {
 
 .memory-stat-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
   gap: 10px;
 }
 
@@ -1056,6 +1107,30 @@ a {
   white-space: pre-line;
 }
 
+.grammar-notebook-options {
+  display: grid;
+  gap: 8px;
+}
+
+.grammar-notebook-option {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.56), rgba(255, 255, 255, 0.24)),
+    rgba(17, 17, 17, 0.03);
+}
+
+.grammar-notebook-option--correct {
+  border-color: rgba(15, 118, 110, 0.26);
+  background:
+    linear-gradient(145deg, rgba(214, 250, 239, 0.9), rgba(255, 255, 255, 0.38)),
+    rgba(15, 118, 110, 0.08);
+}
+
 .scenario-card__body--spacious {
   min-height: 280px;
 }
@@ -1217,9 +1292,21 @@ a {
   max-width: min(72%, 560px);
   padding: 12px 14px;
   border-radius: 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   font-size: 14px;
   line-height: 1.55;
   box-shadow: 0 12px 26px rgba(63, 81, 181, 0.08);
+}
+
+.chat-bubble > span {
+  min-width: 0;
+}
+
+.chat-audio-button.ant-btn {
+  flex: 0 0 auto;
+  margin-left: 4px;
 }
 
 .chat-bubble--coach {
@@ -1321,6 +1408,45 @@ a {
   color: rgba(17, 17, 17, 0.72);
 }
 
+.replay-modal-body {
+  display: grid;
+  gap: 14px;
+}
+
+.replay-chat-window {
+  max-height: min(58vh, 520px);
+  overflow-y: auto;
+}
+
+.replay-controls {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+}
+
+.replay-segments {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(86px, 1fr);
+  gap: 6px;
+  overflow-x: auto;
+}
+
+.replay-segment {
+  min-height: 32px;
+  border: 1px solid rgba(15, 118, 110, 0.2);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.64);
+  color: rgba(17, 17, 17, 0.72);
+  cursor: pointer;
+}
+
+.replay-segment--active {
+  background: #0f766e;
+  color: #ffffff;
+}
+
 @keyframes waveformPulse {
   from {
     transform: scaleY(0.72);
@@ -1374,10 +1500,10 @@ a {
   }
 
   .speaking-workflow,
-  .feedback-layout 
+  .feedback-layout,
   .vocabulary-hero {
     grid-template-columns: 1fr;
-    }
+  }
 }
 @media (max-width: 900px) {
   .topbar,
@@ -1421,6 +1547,10 @@ a {
 
   .chat-bubble {
     max-width: 92%;
+  }
+
+  .replay-controls {
+    grid-template-columns: 1fr;
   }
 
   .memory-stat-grid {

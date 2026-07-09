@@ -2,15 +2,15 @@ import { Flex, Progress, Typography } from "antd";
 
 const { Title, Text } = Typography;
 
-export function MemoryRetentionPanel({ overview }) {
+export function GrammarMasteryPanel({ overview }) {
   return (
     <div className="memory-panel">
       <Flex justify="space-between" align="center" gap={12}>
-        <Text strong>当前记忆留存率</Text>
-        <Title level={2}>{overview.retentionRate}%</Title>
+        <Text strong>当前语法掌握率</Text>
+        <Title level={2}>{overview.masteryRate}%</Title>
       </Flex>
       <Progress
-        percent={overview.retentionRate}
+        percent={overview.masteryRate}
         showInfo={false}
         strokeColor={{
           "0%": "#111111",

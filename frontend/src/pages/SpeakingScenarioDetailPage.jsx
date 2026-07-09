@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from "react";
-import { ArrowLeftOutlined, PlayCircleOutlined } from "@ant-design/icons";
+import { ArrowLeftOutlined, HistoryOutlined, PlayCircleOutlined } from "@ant-design/icons";
 import { Button, Space, Tag, Typography } from "antd";
 import { useNavigate, useParams } from "react-router-dom";
 import { ScriptPreview } from "../components/Speaking/ScriptPreview";
@@ -9,6 +9,7 @@ import { useAsyncData } from "../hooks/useAsyncData";
 import { useAppServices } from "../services/ServiceContext";
 
 const { Text, Title, Paragraph } = Typography;
+const speakingHistoryKey = (scenarioId) => `speaking-history:${scenarioId}`;
 
 export function SpeakingScenarioDetailPage() {
   const navigate = useNavigate();
@@ -21,6 +22,10 @@ export function SpeakingScenarioDetailPage() {
     () => data?.scenarios.find((item) => item.id === scenarioId),
     [data, scenarioId]
   );
+  const hasHistory = useMemo(
+    () => Boolean(scenario && window.localStorage.getItem(speakingHistoryKey(scenario.id))),
+    [scenario]
+  );
 
   return (
     <AsyncPage loading={loading} error={error}>
@@ -30,7 +35,7 @@ export function SpeakingScenarioDetailPage() {
             <PageSectionHeader
               eyebrow=""
               title={scenario.title}
-              description={scenario.goal}
+              description={scenario.summary}
               extra={
                 <Space wrap>
                   <Tag bordered={false} className="soft-tag soft-tag--dark">
@@ -53,7 +58,6 @@ export function SpeakingScenarioDetailPage() {
               <div className="scenario-detail-block">
                 <Text className="panel-title">练习目标</Text>
                 <Title level={4}>{scenario.goal}</Title>
-                <Paragraph>{scenario.summary}</Paragraph>
               </div>
               <div className="scenario-detail-block">
                 <Text className="panel-title">发音与表达</Text>
@@ -70,6 +74,13 @@ export function SpeakingScenarioDetailPage() {
                 onClick={() => navigate(`/speaking/${scenario.id}/conversation`)}
               >
                 进入会话
+              </Button>
+              <Button
+                icon={<HistoryOutlined />}
+                disabled={!hasHistory}
+                onClick={() => navigate(`/speaking/${scenario.id}/feedback`)}
+              >
+                历史记录
               </Button>
             </Space>
           </section>
