@@ -31,7 +31,40 @@ export const speakingCatalogMock = {
       accent: "美式表达",
       duration: "18 min",
       summary: "适合训练礼貌开场、项目状态同步和 deadline 澄清。",
-      tone: "blue"
+      tone: "blue",
+      goal: "用自然、礼貌的方式开启会议，并主动确认议程与交付时间。",
+      keywords: ["agenda", "clarify", "timeline", "follow up"],
+      prompts: [
+        {
+          role: "coach",
+          text: "Good morning. Could you briefly introduce today's agenda?"
+        },
+        {
+          role: "learner",
+          text: "Sure. Today I'd like to start with the project update, then discuss the delivery timeline."
+        },
+        {
+          role: "coach",
+          text: "Great. How would you clarify a delayed deadline politely?"
+        },
+        {
+          role: "learner",
+          text: "I would say: Could we confirm whether Friday is still realistic for delivery?"
+        }
+      ],
+      feedback: {
+        totalScore: 88,
+        pronunciation: 91,
+        fluency: 84,
+        speed: "136 WPM",
+        issueSentences: [
+          "Could we confirm whether Friday is still realistic for delivery?"
+        ],
+        suggestions: [
+          "clarify 的重音可以更清楚，放在第一个音节。",
+          "长句中可以在 whether 后稍作停顿，听感会更稳。"
+        ]
+      }
     },
     {
       id: "airport-checkin",
@@ -40,7 +73,38 @@ export const speakingCatalogMock = {
       accent: "旅行高频",
       duration: "12 min",
       summary: "覆盖值机、座位偏好、航班延误和改签沟通。",
-      tone: "gold"
+      tone: "gold",
+      goal: "完成值机、座位偏好和改签请求的基础沟通。",
+      keywords: ["check in", "boarding pass", "aisle seat", "reschedule"],
+      prompts: [
+        {
+          role: "coach",
+          text: "Hello. May I see your passport and booking reference?"
+        },
+        {
+          role: "learner",
+          text: "Of course. Here is my passport, and this is my booking reference."
+        },
+        {
+          role: "coach",
+          text: "Would you prefer a window seat or an aisle seat?"
+        },
+        {
+          role: "learner",
+          text: "I'd prefer an aisle seat if one is available."
+        }
+      ],
+      feedback: {
+        totalScore: 82,
+        pronunciation: 86,
+        fluency: 78,
+        speed: "121 WPM",
+        issueSentences: ["I'd prefer an aisle seat if one is available."],
+        suggestions: [
+          "available 末尾不要吞音，保持清楚收尾。",
+          "旅行场景可以多使用 if one is available 这样的礼貌条件句。"
+        ]
+      }
     },
     {
       id: "dinner-smalltalk",
@@ -49,7 +113,38 @@ export const speakingCatalogMock = {
       accent: "自然对话",
       duration: "15 min",
       summary: "用于训练轻松话题切入、追问和自然回应。",
-      tone: "mint"
+      tone: "mint",
+      goal: "用轻松自然的问题打开话题，并通过追问延续交流。",
+      keywords: ["small talk", "recommend", "by the way", "sounds great"],
+      prompts: [
+        {
+          role: "coach",
+          text: "This restaurant is popular. Have you been here before?"
+        },
+        {
+          role: "learner",
+          text: "No, it's my first time here. Do you have any recommendations?"
+        },
+        {
+          role: "coach",
+          text: "The pasta is great. What kind of food do you usually enjoy?"
+        },
+        {
+          role: "learner",
+          text: "I usually enjoy simple food with fresh ingredients."
+        }
+      ],
+      feedback: {
+        totalScore: 85,
+        pronunciation: 87,
+        fluency: 86,
+        speed: "128 WPM",
+        issueSentences: ["Do you have any recommendations?"],
+        suggestions: [
+          "recommendations 的音节较多，可以放慢一点读。",
+          "回答后加一句反问，会更像真实社交对话。"
+        ]
+      }
     }
   ]
 };

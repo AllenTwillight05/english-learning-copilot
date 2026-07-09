@@ -28,7 +28,18 @@ export const contractShapes = {
         accent: "string",
         duration: "string",
         summary: "string",
-        tone: "blue"
+        tone: "blue",
+        goal: "string",
+        keywords: ["string"],
+        prompts: [{ role: "coach", text: "string" }],
+        feedback: {
+          totalScore: 0,
+          pronunciation: 0,
+          fluency: 0,
+          speed: "string",
+          issueSentences: ["string"],
+          suggestions: ["string"]
+        }
       }
     ]
   },

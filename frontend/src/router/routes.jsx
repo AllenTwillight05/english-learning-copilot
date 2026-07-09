@@ -3,7 +3,10 @@ import { AppLayout } from "../layouts/AppLayout";
 import { DashboardPage } from "../pages/DashboardPage";
 import { GrammarPage } from "../pages/GrammarPage";
 import { ProfilePage } from "../pages/ProfilePage";
+import { SpeakingConversationPage } from "../pages/SpeakingConversationPage";
+import { SpeakingFeedbackPage } from "../pages/SpeakingFeedbackPage";
 import { SpeakingPage } from "../pages/SpeakingPage";
+import { SpeakingScenarioDetailPage } from "../pages/SpeakingScenarioDetailPage";
 import { VocabularyPage } from "../pages/VocabularyPage";
 import { VocabularyPracticePage } from "../pages/VocabularyPracticePage";
 import { VocabularyResultPage } from "../pages/VocabularyResultPage";
@@ -16,6 +19,9 @@ export const appRoutes = [
     children: [
       { index: true, element: <DashboardPage /> },
       { path: "speaking", element: <SpeakingPage /> },
+      { path: "speaking/:scenarioId/conversation", element: <SpeakingConversationPage /> },
+      { path: "speaking/:scenarioId/feedback", element: <SpeakingFeedbackPage /> },
+      { path: "speaking/:scenarioId", element: <SpeakingScenarioDetailPage /> },
       { path: "vocabulary", element: <VocabularyPage /> },
       { path: "vocabulary/practice/:level", element: <VocabularyPracticePage /> },
       { path: "vocabulary/result", element: <VocabularyResultPage /> },
