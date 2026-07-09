@@ -3,7 +3,11 @@ import {
   grammarSnapshotMock,
   profileSnapshotMock,
   speakingCatalogMock,
-  vocabularySnapshotMock
+  vocabularyMemoryMock,
+  vocabularyPracticeProgressMock,
+  vocabularyPracticeWordsMock,
+  vocabularySnapshotMock,
+  vocabularyWordbookWordsMock
 } from "./mockData";
 
 function simulateLatency(value, delay = 120) {
@@ -24,7 +28,11 @@ export function createMockServices() {
       getCatalog: () => simulateLatency(speakingCatalogMock)
     },
     vocabulary: {
-      getSnapshot: () => simulateLatency(vocabularySnapshotMock)
+      getSnapshot: () => simulateLatency(vocabularySnapshotMock),
+      getVocabularyMemory: () => simulateLatency(vocabularyMemoryMock),
+      getVocabularyPracticeProgress: () => simulateLatency(vocabularyPracticeProgressMock),
+      getVocabularyPracticeWords: () => simulateLatency(vocabularyPracticeWordsMock),
+      getVocabularyWordbookWords: () => simulateLatency(vocabularyWordbookWordsMock)
     },
     grammar: {
       getSnapshot: () => simulateLatency(grammarSnapshotMock)
