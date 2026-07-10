@@ -10,6 +10,7 @@
 - 每个页面都有独立路由和独立页面文件。
 - 数据访问通过 `services` 层注入，页面不直接依赖 mock 或真实 HTTP。
 - 已预留 Spring Boot 后端接口路径。
+- 后端已提供认证、JWT 和 `USER` / `ADMIN` 权限接口；前端登录 UI、token 状态和请求头注入尚未接入。
 - 默认使用 mock 数据，便于前端成员独立开发。
 
 这份交付适合作为团队前端分工起点，不代表完整业务功能已经完成。
@@ -96,6 +97,13 @@ frontend/src
 - `grammar.getSnapshot()`：语法主题、例句、掌握度。
 - `profile.getSnapshot()`：个人信息、学习计划、能力进度、最近反馈。
 
+后续接入登录时，建议新增认证服务模块，例如：
+
+- `auth.register()`：调用 `POST /api/auth/register`。
+- `auth.login()`：调用 `POST /api/auth/login`。
+- `auth.me()`：调用 `GET /api/auth/me`。
+- `auth.logout()`：调用 `POST /api/auth/logout` 并清理本地 token。
+
 成员开发页面时，优先改自己负责的页面、页面私有组件目录和对应 service 数据形状，不要把其他模块逻辑塞进首页。
 
 ## 6. 后端接口预留
@@ -108,6 +116,16 @@ frontend/src
 /api/vocabulary/snapshot
 /api/grammar/snapshot
 /api/profile/snapshot
+```
+
+认证与权限接口：
+
+```text
+/api/auth/register
+/api/auth/login
+/api/auth/me
+/api/auth/logout
+/api/admin/**
 ```
 
 接 Spring Boot 时，后端返回 JSON 结构需要对齐 `frontend/src/services/contracts.js` 中记录的数据形状。
@@ -124,6 +142,8 @@ VITE_API_BASE_URL=http://localhost:8080
 更完整的接口契约说明见：
 
 - `docs/api-contracts.md`
+
+认证对接注意：登录成功后保存后端返回的 `token` 和 `user`；真实 HTTP 请求统一在 `frontend/src/services/httpClient.js` 加上 `Authorization: Bearer <token>`。当前学习模块的 `GET` 接口后端暂时允许匿名访问，避免影响现有页面联调。
 
 ## 7. 成员开发建议
 
@@ -176,7 +196,7 @@ VITE_API_BASE_URL=http://localhost:8080
 
 ## 9. 后续建议
 
-- 接入登录后，再补全用户状态管理。
+- 接入登录页、注册页、用户状态管理和 Bearer token 请求头注入。
 - 后端接口稳定后，可以用 OpenAPI 或接口表固化契约。
 - 真实接口变多后，可以引入 TanStack Query 管理请求缓存。
 - 口语实时反馈后续可扩展录音上传、波形展示和 WebSocket 流式反馈。

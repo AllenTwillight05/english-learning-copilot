@@ -25,6 +25,15 @@ export function createHttpServices(baseUrl = "") {
         getJson(withBaseUrl(baseUrl, API_ENDPOINTS.vocabularyWordbookWords))
     },
     grammar: {
+      getNotebookQuestions: () =>
+        getJson(withBaseUrl(baseUrl, API_ENDPOINTS.grammarNotebookQuestions)),
+      getOverview: () => getJson(withBaseUrl(baseUrl, API_ENDPOINTS.grammarOverview)),
+      getPracticeQuestions: ({ category } = {}) => {
+        const query = category ? `?category=${encodeURIComponent(category)}` : "";
+        return getJson(withBaseUrl(baseUrl, `${API_ENDPOINTS.grammarPracticeQuestions}${query}`));
+      },
+      getProgress: () => getJson(withBaseUrl(baseUrl, API_ENDPOINTS.grammarProgress)),
+      getTopics: () => getJson(withBaseUrl(baseUrl, API_ENDPOINTS.grammarTopics)),
       getSnapshot: () => getJson(withBaseUrl(baseUrl, API_ENDPOINTS.grammarSnapshot))
     },
     profile: {

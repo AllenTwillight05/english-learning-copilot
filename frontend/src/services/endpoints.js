@@ -7,6 +7,11 @@ export const API_ENDPOINTS = {
   vocabularyPracticeWords: "/api/vocabulary/practice-words",
   vocabularyWordbookWords: "/api/vocabulary/wordbook-words",
   vocabularySnapshot: "/api/vocabulary/snapshot",
+  grammarNotebookQuestions: "/api/grammar/notebook-questions",
+  grammarOverview: "/api/grammar/overview",
+  grammarPracticeQuestions: "/api/grammar/practice-questions",
+  grammarProgress: "/api/grammar/progress",
+  grammarTopics: "/api/grammar/topics",
   grammarSnapshot: "/api/grammar/snapshot",
   profileSnapshot: "/api/profile/snapshot"
 };

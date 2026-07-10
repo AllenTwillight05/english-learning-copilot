@@ -2,6 +2,9 @@ import { Navigate } from "react-router-dom";
 import { AppLayout } from "../layouts/AppLayout";
 import { DashboardPage } from "../pages/DashboardPage";
 import { GrammarPage } from "../pages/GrammarPage";
+import { GrammarNotebookPage } from "../pages/GrammarNotebookPage";
+import { GrammarPracticePage } from "../pages/GrammarPracticePage";
+import { GrammarResultPage } from "../pages/GrammarResultPage";
 import { ProfilePage } from "../pages/ProfilePage";
 import { SpeakingConversationPage } from "../pages/SpeakingConversationPage";
 import { SpeakingFeedbackPage } from "../pages/SpeakingFeedbackPage";
@@ -27,6 +30,9 @@ export const appRoutes = [
       { path: "vocabulary/result", element: <VocabularyResultPage /> },
       { path: "vocabulary/wordbook", element: <VocabularyWordbookPage /> },
       { path: "grammar", element: <GrammarPage /> },
+      { path: "grammar/notebook", element: <GrammarNotebookPage /> },
+      { path: "grammar/practice/:category", element: <GrammarPracticePage /> },
+      { path: "grammar/result", element: <GrammarResultPage /> },
       { path: "profile", element: <ProfilePage /> }
     ]
   },

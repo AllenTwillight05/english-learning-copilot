@@ -1,34 +1,47 @@
-import { Button, Flex, Progress, Tag, Typography } from "antd";
+import { Button, Flex, Progress, Space, Tag, Typography } from "antd";
 
 const { Title, Paragraph, Text } = Typography;
 
-// 语法主题网格只负责主题和例句展示，练习提交逻辑后续放到语法服务里。
-export function GrammarTopicGrid({ topics }) {
+const cardTones = ["blue", "gold", "mint"];
+
+export function GrammarTopicGrid({ topics, onStart }) {
   return (
     <section className="feature-grid">
-      {topics.map((topic) => (
-        <article className="deck-card" key={topic.id}>
-          <Flex justify="space-between" align="center">
-            <Title level={4}>{topic.title}</Title>
-            <Tag bordered={false} className="soft-tag">
-              {topic.tag}
-            </Tag>
-          </Flex>
-          <Paragraph>{topic.summary}</Paragraph>
-          <div className="script-preview">
-            {topic.examples.map((example) => (
-              <div className="script-line" key={example}>
-                {example}
+      {topics.map((topic, index) => {
+        const tone = cardTones[index % cardTones.length];
+
+        return (
+          <article className="deck-card grammar-topic-card" key={topic.id}>
+            <div className={`scenario-card__tone scenario-card__tone--${tone}`} />
+            <div className="grammar-topic-card__body">
+              <Flex justify="space-between" align="center" gap={12}>
+                <Title level={4}>{topic.title}</Title>
+                <Tag bordered={false} className="soft-tag">
+                  {topic.tag}
+                </Tag>
+              </Flex>
+              <Paragraph>{topic.summary}</Paragraph>
+              <div className="script-preview">
+                {topic.examples.map((example) => (
+                  <div className="script-line" key={example}>
+                    {example}
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-          <Progress percent={topic.progress} showInfo={false} />
-          <Flex justify="space-between" align="center">
-            <Text type="secondary">掌握度</Text>
-            <Button>开始练习</Button>
-          </Flex>
-        </article>
-      ))}
+              <Progress percent={topic.progress} showInfo={false} />
+              <Flex justify="space-between" align="center">
+                <Space size={6}>
+                  <Text type="secondary">正确率</Text>
+                  <Text strong>{topic.progress}%</Text>
+                </Space>
+                <Button htmlType="button" onClick={() => onStart(topic)}>
+                  开始练习
+                </Button>
+              </Flex>
+            </div>
+          </article>
+        );
+      })}
     </section>
   );
 }

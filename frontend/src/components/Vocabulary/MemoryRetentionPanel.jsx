@@ -6,7 +6,7 @@ export function MemoryRetentionPanel({ overview }) {
   return (
     <div className="memory-panel">
       <Flex justify="space-between" align="center" gap={12}>
-        <Text strong>{overview.retentionLabel}</Text>
+        <Text strong>当前记忆留存率</Text>
         <Title level={2}>{overview.retentionRate}%</Title>
       </Flex>
       <Progress
