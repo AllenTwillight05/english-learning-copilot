@@ -1,6 +1,10 @@
 // Spring Boot 接口路径统一放这里，页面和服务层不要散写 URL 字符串。
 export const API_ENDPOINTS = {
   dashboardOverview: "/api/dashboard/overview",
+  dashboardRecommendedTask: "/api/dashboard/recommended-task",
+  dashboardStudyPlan: "/api/dashboard/study-plan",
+  dashboardWeeklyOverview: "/api/dashboard/weekly-overview",
+  dashboardCommunityLearningTrends: "/api/dashboard/community-learning-trends",
   speakingCatalog: "/api/speaking/catalog",
   vocabularyMemory: "/api/vocabulary/memory",
   vocabularyPracticeProgress: "/api/vocabulary/practice-progress",

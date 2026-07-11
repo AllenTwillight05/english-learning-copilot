@@ -1,9 +1,4 @@
 export const dashboardOverviewMock = {
-  productTag: "A6 口语学习助手",
-  stackTag: "Spring Boot + React",
-  headline: "更像私人教练，而不是练习题仓库。",
-  description:
-    "把情境训练、实时反馈、词汇巩固和个性化计划放进一个统一界面，让用户从“知道该学什么”直接走到“今天就能开口说”。",
   primaryActionLabel: "开始今天训练",
   secondaryActionLabel: "切换场景库",
   quickStats: [
@@ -13,6 +8,78 @@ export const dashboardOverviewMock = {
   ],
   focusIntensity: "中高",
   suggestedDuration: "32 分钟"
+};
+
+export const dashboardRecommendedTaskMock = {
+  topic: "商务会谈开场",
+  suggestedDuration: "32 分钟",
+  intensity: "中高"
+};
+
+export const dashboardStudyPlanMock = {
+  speaking: {
+    completed: 0,
+    total: 1
+  },
+  vocabulary: {
+    completed: 2,
+    total: 8
+  },
+  grammar: {
+    completed: 3,
+    total: 6
+  },
+  streakDays: 2
+};
+
+export const dashboardWeeklyOverviewMock = {
+  speakingDuration: "148 min",
+  pronunciationAccuracy: "92%",
+  learningDays: "5 days",
+  vocabularyLearned: "36 词",
+  grammarPracticed: "18 题"
+};
+
+export const dashboardCommunityLearningTrendsMock = {
+  speaking: [
+    {
+      topic: "机场值机与改签",
+      description: "练习座位选择、行李托运和礼貌改签表达。"
+    },
+    {
+      topic: "商务会谈开场",
+      description: "训练会议开场、确认议程和推进讨论。"
+    },
+    {
+      topic: "晚餐社交破冰",
+      description: "学习自然接话、推荐菜品和轻松追问。"
+    }
+  ],
+  vocabulary: [
+    {
+      word: "purple",
+      briefTranslation: "紫色"
+    },
+    {
+      word: "flagrant",
+      briefTranslation: "恶名昭著的"
+    },
+    {
+      word: "itinerary",
+      briefTranslation: "旅行计划"
+    }
+  ],
+  grammar: [
+    {
+      topic: "时态与语态"
+    },
+    {
+      topic: "从句"
+    },
+    {
+      topic: "介词与固定搭配"
+    }
+  ]
 };
 
 export const speakingCatalogMock = {

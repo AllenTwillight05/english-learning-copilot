@@ -9,7 +9,13 @@ function withBaseUrl(baseUrl, path) {
 export function createHttpServices(baseUrl = "") {
   return {
     dashboard: {
-      getOverview: () => getJson(withBaseUrl(baseUrl, API_ENDPOINTS.dashboardOverview))
+      getOverview: () => getJson(withBaseUrl(baseUrl, API_ENDPOINTS.dashboardOverview)),
+      getRecommendedTask: () =>
+        getJson(withBaseUrl(baseUrl, API_ENDPOINTS.dashboardRecommendedTask)),
+      getStudyPlan: () => getJson(withBaseUrl(baseUrl, API_ENDPOINTS.dashboardStudyPlan)),
+      getWeeklyOverview: () => getJson(withBaseUrl(baseUrl, API_ENDPOINTS.dashboardWeeklyOverview)),
+      getCommunityLearningTrends: () =>
+        getJson(withBaseUrl(baseUrl, API_ENDPOINTS.dashboardCommunityLearningTrends))
     },
     speaking: {
       getCatalog: () => getJson(withBaseUrl(baseUrl, API_ENDPOINTS.speakingCatalog))

@@ -1,5 +1,9 @@
 import {
+  dashboardCommunityLearningTrendsMock,
   dashboardOverviewMock,
+  dashboardRecommendedTaskMock,
+  dashboardStudyPlanMock,
+  dashboardWeeklyOverviewMock,
   grammarNotebookQuestionsMock,
   grammarOverviewMock,
   grammarPracticeQuestionsMock,
@@ -27,7 +31,11 @@ function simulateLatency(value, delay = 120) {
 export function createMockServices() {
   return {
     dashboard: {
-      getOverview: () => simulateLatency(dashboardOverviewMock)
+      getOverview: () => simulateLatency(dashboardOverviewMock),
+      getRecommendedTask: () => simulateLatency(dashboardRecommendedTaskMock),
+      getStudyPlan: () => simulateLatency(dashboardStudyPlanMock),
+      getWeeklyOverview: () => simulateLatency(dashboardWeeklyOverviewMock),
+      getCommunityLearningTrends: () => simulateLatency(dashboardCommunityLearningTrendsMock)
     },
     speaking: {
       getCatalog: () => simulateLatency(speakingCatalogMock)

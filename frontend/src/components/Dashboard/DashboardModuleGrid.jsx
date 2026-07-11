@@ -12,25 +12,25 @@ const { Text } = Typography;
 const moduleCards = [
   {
     title: "口语",
-    description: "情境对话、录音练习与口语反馈入口。",
+    description: "情境对话、录音练习与口语反馈",
     path: "/speaking",
     icon: <AudioOutlined />
   },
   {
     title: "词汇",
-    description: "高频词、错词回顾与复习队列入口。",
+    description: "单词本与词汇练习",
     path: "/vocabulary",
     icon: <BookOutlined />
   },
   {
     title: "语法",
-    description: "语法主题、例句理解与句型训练入口。",
+    description: "练习本与语法练习",
     path: "/grammar",
     icon: <ReadOutlined />
   },
   {
     title: "个人",
-    description: "学习计划、能力进度和最近反馈入口。",
+    description: "学习计划、能力进度和最近反馈",
     path: "/profile",
     icon: <UserOutlined />
   }
@@ -47,8 +47,10 @@ export function DashboardModuleGrid({ onNavigate }) {
           onClick={() => onNavigate(card.path)}
         >
           <span className="home-panel__icon">{card.icon}</span>
-          <span>
-            <Text strong>{card.title}</Text>
+          <span className="home-panel__copy">
+            <Text strong className="home-panel__title">
+              {card.title}
+            </Text>
             <span className="helper-text">{card.description}</span>
           </span>
         </button>

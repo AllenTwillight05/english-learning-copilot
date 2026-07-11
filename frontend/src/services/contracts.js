@@ -6,15 +6,43 @@
  */
 export const contractShapes = {
   dashboardOverview: {
-    productTag: "string",
-    stackTag: "string",
-    headline: "string",
-    description: "string",
     primaryActionLabel: "string",
     secondaryActionLabel: "string",
     quickStats: [{ label: "string", value: "string", icon: "microphone" }],
     focusIntensity: "string",
     suggestedDuration: "string"
+  },
+  dashboardRecommendedTask: {
+    topic: "string",
+    suggestedDuration: "string",
+    intensity: "string"
+  },
+  dashboardStudyPlan: {
+    speaking: {
+      completed: 0,
+      total: 0
+    },
+    vocabulary: {
+      completed: 0,
+      total: 0
+    },
+    grammar: {
+      completed: 0,
+      total: 0
+    },
+    streakDays: 0
+  },
+  dashboardWeeklyOverview: {
+    speakingDuration: "string",
+    pronunciationAccuracy: "string",
+    learningDays: "string",
+    vocabularyLearned: "string",
+    grammarPracticed: "string"
+  },
+  dashboardCommunityLearningTrends: {
+    speaking: [{ topic: "string", description: "string" }],
+    vocabulary: [{ word: "string", briefTranslation: "string" }],
+    grammar: [{ topic: "string" }]
   },
   speakingCatalog: {
     modes: ["string"],
