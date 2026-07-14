@@ -128,6 +128,26 @@ export const contractShapes = {
       englishOptions: ["string"]
     }
   ],
+  reviewVocabulary: [
+    {
+      id: "string",
+      word: "string",
+      phonetic: "string",
+      definition: "string",
+      briefTranslation: "string",
+      translation: "string",
+      collins: "string",
+      oxford: "string",
+      tag: "string",
+      bnc: "string",
+      frq: "string",
+      exchange: "string",
+      uk_audio: "string",
+      us_audio: "string",
+      chineseOptions: ["string"],
+      englishOptions: ["string"]
+    }
+  ],
   vocabularyWordbookWords: [
     {
       id: "string",
@@ -170,6 +190,16 @@ export const contractShapes = {
     }
   ],
   grammarPracticeQuestions: [
+    {
+      id: 0,
+      question_text: "string",
+      options: ["string"],
+      answer: "A",
+      grammar_category: "string",
+      explanation: "string"
+    }
+  ],
+  reviewGrammar: [
     {
       id: 0,
       question_text: "string",

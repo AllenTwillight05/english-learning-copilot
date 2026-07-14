@@ -1,5 +1,11 @@
 import { useCallback } from "react";
-import { BookOutlined, FireOutlined, RocketOutlined, StarOutlined } from "@ant-design/icons";
+import {
+  BookOutlined,
+  FireOutlined,
+  HistoryOutlined,
+  RocketOutlined,
+  StarOutlined
+} from "@ant-design/icons";
 import { Space, Tag, Typography } from "antd";
 import { useNavigate } from "react-router-dom";
 import { MemoryRetentionPanel } from "../components/Vocabulary/MemoryRetentionPanel";
@@ -92,6 +98,13 @@ export function VocabularyPage() {
                 title={level.title}
               />
             ))}
+            <VocabularyLevelCard
+              description="复习系统安排的到期词汇，巩固记忆并更新掌握情况。"
+              icon={<HistoryOutlined />}
+              onClick={() => navigate("/vocabulary/practice/review")}
+              tag="Review"
+              title="复习"
+            />
             <VocabularyWordbookButton onClick={() => navigate("/vocabulary/wordbook")} />
           </section>
         </div>

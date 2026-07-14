@@ -70,7 +70,14 @@ export function VocabularyPracticePage() {
   const navigate = useNavigate();
   const { level = "starter" } = useParams();
   const { vocabulary } = useAppServices();
-  const loader = useCallback(() => vocabulary.getVocabularyPracticeWords({ level }), [level, vocabulary]);
+  const isReview = level === "review";
+  const loader = useCallback(
+    () =>
+      isReview
+        ? vocabulary.getReviewVocabulary()
+        : vocabulary.getVocabularyPracticeWords({ level }),
+    [isReview, level, vocabulary]
+  );
   const { data: practiceWords, loading, error } = useAsyncData(loader, [loader]);
   const [questionIndex, setQuestionIndex] = useState(0);
   const [questionTypeIndex, setQuestionTypeIndex] = useState(0);
@@ -217,13 +224,13 @@ export function VocabularyPracticePage() {
               <div>
                 <Space align="center" wrap>
                   <Tag bordered={false} className="soft-tag soft-tag--dark">
-                    {level}
+                    {isReview ? "Review" : level}
                   </Tag>
                   <Tag bordered={false} className="soft-tag">
                     {questionIndex + 1} / {practiceWords.length}
                   </Tag>
                 </Space>
-                <Title level={2}>词汇练习</Title>
+                <Title level={2}>{isReview ? "词汇复习" : "词汇练习"}</Title>
               </div>
               <Button htmlType="button" icon={<SwapOutlined />} onClick={handleSwitchQuestionType}>
                 {questionTypeLabels[questionType]}

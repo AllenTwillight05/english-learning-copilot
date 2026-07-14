@@ -33,10 +33,14 @@ export function GrammarPracticePage() {
   const navigate = useNavigate();
   const { category = "" } = useParams();
   const decodedCategory = decodeURIComponent(category);
+  const isReview = decodedCategory === "review";
   const { grammar } = useAppServices();
   const loader = useCallback(
-    () => grammar.getPracticeQuestions({ category: decodedCategory }),
-    [decodedCategory, grammar]
+    () =>
+      isReview
+        ? grammar.getReviewGrammar()
+        : grammar.getPracticeQuestions({ category: decodedCategory }),
+    [decodedCategory, grammar, isReview]
   );
   const { data: questions, loading, error } = useAsyncData(loader, [loader]);
   const [questionIndex, setQuestionIndex] = useState(0);
@@ -155,13 +159,13 @@ export function GrammarPracticePage() {
               <div>
                 <Space align="center" wrap>
                   <Tag bordered={false} className="soft-tag soft-tag--dark">
-                    {decodedCategory}
+                    {isReview ? "Review" : decodedCategory}
                   </Tag>
                   <Tag bordered={false} className="soft-tag">
                     {questionIndex + 1} / {questions.length}
                   </Tag>
                 </Space>
-                <Title level={2}>语法练习</Title>
+                <Title level={2}>{isReview ? "语法复习" : "语法练习"}</Title>
               </div>
             </Flex>
 

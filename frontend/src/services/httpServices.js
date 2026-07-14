@@ -33,6 +33,8 @@ export function createHttpServices(baseUrl = "") {
         getJson(withBaseUrl(baseUrl, API_ENDPOINTS.vocabularyPracticeProgress)),
       getVocabularyPracticeWords: () =>
         getJson(withBaseUrl(baseUrl, API_ENDPOINTS.vocabularyPracticeWords)),
+      getReviewVocabulary: () =>
+        getJson(withBaseUrl(baseUrl, API_ENDPOINTS.reviewVocabulary)),
       getVocabularyWordbookWords: () =>
         getJson(withBaseUrl(baseUrl, API_ENDPOINTS.vocabularyWordbookWords))
     },
@@ -40,6 +42,7 @@ export function createHttpServices(baseUrl = "") {
       getNotebookQuestions: () =>
         getJson(withBaseUrl(baseUrl, API_ENDPOINTS.grammarNotebookQuestions)),
       getOverview: () => getJson(withBaseUrl(baseUrl, API_ENDPOINTS.grammarOverview)),
+      getReviewGrammar: () => getJson(withBaseUrl(baseUrl, API_ENDPOINTS.reviewGrammar)),
       getPracticeQuestions: ({ category } = {}) => {
         const query = category ? `?category=${encodeURIComponent(category)}` : "";
         return getJson(withBaseUrl(baseUrl, `${API_ENDPOINTS.grammarPracticeQuestions}${query}`));

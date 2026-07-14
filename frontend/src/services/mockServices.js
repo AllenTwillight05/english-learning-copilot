@@ -11,6 +11,8 @@ import {
   grammarSnapshotMock,
   grammarTopicsMock,
   profileSnapshotMock,
+  reviewGrammarMock,
+  reviewVocabularyMock,
   speakingCatalogMock,
   vocabularyMemoryMock,
   vocabularyPracticeProgressMock,
@@ -133,11 +135,13 @@ export function createMockServices() {
       getVocabularyMemory: () => simulateLatency(vocabularyMemoryMock),
       getVocabularyPracticeProgress: () => simulateLatency(vocabularyPracticeProgressMock),
       getVocabularyPracticeWords: () => simulateLatency(vocabularyPracticeWordsMock),
+      getReviewVocabulary: () => simulateLatency(reviewVocabularyMock),
       getVocabularyWordbookWords: () => simulateLatency(vocabularyWordbookWordsMock)
     },
     grammar: {
       getNotebookQuestions: () => simulateLatency(grammarNotebookQuestionsMock),
       getOverview: () => simulateLatency(grammarOverviewMock),
+      getReviewGrammar: () => simulateLatency(reviewGrammarMock),
       getPracticeQuestions: ({ category } = {}) => {
         const questions = category
           ? grammarPracticeQuestionsMock.filter((question) => question.grammar_category === category)

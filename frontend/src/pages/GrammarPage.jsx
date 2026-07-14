@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
-import { BookOutlined, SearchOutlined } from "@ant-design/icons";
+import { BookOutlined, HistoryOutlined, SearchOutlined } from "@ant-design/icons";
 import { Button, Empty, Flex, Input, Space, Tag, Typography } from "antd";
 import { useNavigate } from "react-router-dom";
 import { GrammarMasteryPanel } from "../components/Grammar/GrammarMasteryPanel";
@@ -68,14 +68,24 @@ export function GrammarPage() {
                 size="large"
                 value={searchText}
               />
-              <Button
-                htmlType="button"
-                icon={<BookOutlined />}
-                onClick={() => navigate("/grammar/notebook")}
-                size="large"
-              >
-                练习本
-              </Button>
+              <Space wrap>
+                <Button
+                  htmlType="button"
+                  icon={<HistoryOutlined />}
+                  onClick={() => navigate("/grammar/practice/review")}
+                  size="large"
+                >
+                  复习
+                </Button>
+                <Button
+                  htmlType="button"
+                  icon={<BookOutlined />}
+                  onClick={() => navigate("/grammar/notebook")}
+                  size="large"
+                >
+                  练习本
+                </Button>
+              </Space>
             </Flex>
           </section>
 
