@@ -2,7 +2,7 @@ import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { SpeakingPage } from "../../../src/pages/SpeakingPage";
-import { speakingCatalogMock } from "../../../src/services/mockData";
+import { speakingScenariosMock } from "../../../src/services/mockData";
 import { renderWithProviders } from "../utils/renderWithProviders";
 
 describe("SpeakingPage", () => {
@@ -12,7 +12,7 @@ describe("SpeakingPage", () => {
       route: "/speaking"
     });
 
-    for (const scenario of speakingCatalogMock.scenarios) {
+    for (const scenario of speakingScenariosMock) {
       expect(await screen.findByRole("button", { name: new RegExp(scenario.title) })).toBeInTheDocument();
     }
 

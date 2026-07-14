@@ -68,33 +68,33 @@ export const contractShapes = {
     vocabulary: [{ word: "string", briefTranslation: "string" }],
     grammar: [{ topic: "string" }]
   },
-  speakingCatalog: {
-    modes: ["string"],
-    scriptPreviewTitle: "string",
-    scriptPreviewLines: ["string"],
-    scenarios: [
-      {
-        id: "string",
-        title: "string",
-        level: "string",
-        accent: "string",
-        duration: "string",
-        summary: "string",
-        tone: "blue",
-        goal: "string",
-        keywords: ["string"],
-        prompts: [{ role: "coach", text: "string" }],
-        feedback: {
-          totalScore: 0,
-          pronunciation: 0,
-          fluency: 0,
-          speed: "string",
-          issueSentences: ["string"],
-          suggestions: ["string"]
-        }
+  speakingScenarios: [
+    {
+      id: "string",
+      title: "string",
+      description: "string",
+      difficulty: "B2",
+      level: "B2",
+      accent: "string",
+      duration: "string",
+      summary: "string",
+      tone: "blue",
+      goal: "string",
+      keywords: ["string"],
+      openingMessage: "string",
+      targetTurns: 6,
+      scoringRubric: "string",
+      prompts: [{ role: "coach", text: "string" }],
+      feedback: {
+        totalScore: 0,
+        pronunciation: 0,
+        fluency: 0,
+        speed: "string",
+        issueSentences: ["string"],
+        suggestions: ["string"]
       }
-    ]
-  },
+    }
+  ],
   vocabularySnapshot: {
     dailyGoal: "string",
     retentionHint: "string",

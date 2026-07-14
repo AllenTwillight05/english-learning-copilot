@@ -24,7 +24,8 @@ export function createHttpServices(baseUrl = "") {
         getJson(withBaseUrl(baseUrl, API_ENDPOINTS.dashboardCommunityLearningTrends))
     },
     speaking: {
-      getCatalog: () => getJson(withBaseUrl(baseUrl, API_ENDPOINTS.speakingCatalog))
+      listScenarios: () => getJson(withBaseUrl(baseUrl, API_ENDPOINTS.speakingScenarios)),
+      getScenario: (scenarioId) => getJson(withBaseUrl(baseUrl, API_ENDPOINTS.speakingScenario(scenarioId)))
     },
     vocabulary: {
       getSnapshot: () => getJson(withBaseUrl(baseUrl, API_ENDPOINTS.vocabularySnapshot)),

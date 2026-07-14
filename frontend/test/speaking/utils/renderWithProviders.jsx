@@ -4,12 +4,18 @@ import zhCN from "antd/locale/zh_CN";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { appTheme } from "../../../src/app/theme";
 import { AppServicesProvider } from "../../../src/services/ServiceContext";
-import { speakingCatalogMock } from "../../../src/services/mockData";
+import { speakingScenariosMock } from "../../../src/services/mockData";
 
-function createTestServices(catalog = speakingCatalogMock) {
+function createTestServices(scenarios = speakingScenariosMock) {
   return {
     speaking: {
-      getCatalog: () => Promise.resolve(structuredClone(catalog))
+      listScenarios: () => Promise.resolve(structuredClone(scenarios)),
+      getScenario: (scenarioId) => {
+        const scenario = scenarios.find((item) => item.id === scenarioId);
+        return scenario
+          ? Promise.resolve(structuredClone(scenario))
+          : Promise.reject(new Error("Speaking scenario was not found."));
+      }
     }
   };
 }

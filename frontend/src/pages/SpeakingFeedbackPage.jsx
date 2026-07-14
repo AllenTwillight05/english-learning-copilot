@@ -45,7 +45,7 @@ export function SpeakingFeedbackPage() {
   const navigate = useNavigate();
   const { scenarioId } = useParams();
   const { speaking } = useAppServices();
-  const loader = useCallback(() => speaking.getCatalog(), [speaking]);
+  const loader = useCallback(() => speaking.getScenario(scenarioId), [speaking, scenarioId]);
   const { data, loading, error } = useAsyncData(loader, [loader]);
   const [isReplayOpen, setIsReplayOpen] = useState(false);
   const [activeTurn, setActiveTurn] = useState(0);
@@ -54,10 +54,7 @@ export function SpeakingFeedbackPage() {
   const stopReplayRef = useRef(false);
   const replayRunRef = useRef(0);
 
-  const scenario = useMemo(
-    () => data?.scenarios.find((item) => item.id === scenarioId),
-    [data, scenarioId]
-  );
+  const scenario = data;
   const prompts = scenario?.prompts ?? [];
   const hasPromptScript = prompts.length > 0;
   const feedback = scenario?.feedback;

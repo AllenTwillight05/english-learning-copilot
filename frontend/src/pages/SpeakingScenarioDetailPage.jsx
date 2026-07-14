@@ -15,13 +15,11 @@ export function SpeakingScenarioDetailPage() {
   const navigate = useNavigate();
   const { scenarioId } = useParams();
   const { speaking } = useAppServices();
-  const loader = useCallback(() => speaking.getCatalog(), [speaking]);
+  const loader = useCallback(() => speaking.getScenario(scenarioId), [speaking, scenarioId]);
   const { data, loading, error } = useAsyncData(loader, [loader]);
+  const isMissingScenario = error?.status === 404 || error?.message === "Speaking scenario was not found.";
 
-  const scenario = useMemo(
-    () => data?.scenarios.find((item) => item.id === scenarioId),
-    [data, scenarioId]
-  );
+  const scenario = data;
   const prompts = scenario?.prompts ?? [];
   const keywords = scenario?.keywords ?? [];
   const hasPromptScript = prompts.length > 0;
@@ -31,7 +29,7 @@ export function SpeakingScenarioDetailPage() {
   );
 
   return (
-    <AsyncPage loading={loading} error={error}>
+    <AsyncPage loading={loading} error={isMissingScenario ? null : error}>
       {scenario ? (
         <div className="page-stack">
           <section className="glass-panel speaking-detail-hero">
@@ -109,7 +107,7 @@ export function SpeakingScenarioDetailPage() {
             )}
           </section>
         </div>
-      ) : data ? (
+      ) : isMissingScenario ? (
         <section className="glass-panel">
           <PageSectionHeader
             eyebrow="Scenario Missing"

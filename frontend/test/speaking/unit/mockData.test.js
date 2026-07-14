@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { speakingCatalogMock } from "../../../src/services/mockData";
+import { speakingScenariosMock } from "../../../src/services/mockData";
 
-describe("speakingCatalogMock", () => {
+describe("speakingScenariosMock", () => {
   it("contains six complete speaking scenarios", () => {
-    expect(speakingCatalogMock.scenarios).toHaveLength(6);
+    expect(speakingScenariosMock).toHaveLength(6);
 
-    speakingCatalogMock.scenarios.forEach((scenario) => {
+    speakingScenariosMock.forEach((scenario) => {
       expect(scenario).toEqual(
         expect.objectContaining({
           id: expect.any(String),

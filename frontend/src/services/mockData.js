@@ -82,8 +82,7 @@ export const dashboardCommunityLearningTrendsMock = {
   ]
 };
 
-export const speakingCatalogMock = {
-  scenarios: [
+export const speakingScenariosMock = [
     {
       id: "business-opening",
       title: "商务会谈",
@@ -326,8 +325,7 @@ export const speakingCatalogMock = {
         ]
       }
     }
-  ]
-};
+];
 
 export const feedbackSummaryMock = {
   statusLabel: "实时采样中",

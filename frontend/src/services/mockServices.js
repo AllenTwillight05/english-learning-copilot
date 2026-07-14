@@ -11,7 +11,7 @@ import {
   grammarSnapshotMock,
   grammarTopicsMock,
   profileSnapshotMock,
-  speakingCatalogMock,
+  speakingScenariosMock,
   vocabularyMemoryMock,
   vocabularyPracticeProgressMock,
   vocabularyPracticeWordsMock,
@@ -126,7 +126,13 @@ export function createMockServices() {
       getCommunityLearningTrends: () => simulateLatency(dashboardCommunityLearningTrendsMock)
     },
     speaking: {
-      getCatalog: () => simulateLatency(speakingCatalogMock)
+      listScenarios: () => simulateLatency(speakingScenariosMock),
+      getScenario: (scenarioId) => {
+        const scenario = speakingScenariosMock.find((item) => item.id === scenarioId);
+        return scenario
+          ? simulateLatency(scenario)
+          : Promise.reject(new Error("Speaking scenario was not found."));
+      }
     },
     vocabulary: {
       getSnapshot: () => simulateLatency(vocabularySnapshotMock),

@@ -9,10 +9,10 @@ import { useAppServices } from "../services/ServiceContext";
 export function SpeakingPage() {
   const navigate = useNavigate();
   const { speaking } = useAppServices();
-  const loader = useCallback(() => speaking.getCatalog(), [speaking]);
+  const loader = useCallback(() => speaking.listScenarios(), [speaking]);
   const { data, loading, error } = useAsyncData(loader, [loader]);
 
-  const scenarios = useMemo(() => data?.scenarios ?? [], [data]);
+  const scenarios = useMemo(() => data ?? [], [data]);
 
   return (
     <AsyncPage loading={loading} error={error}>

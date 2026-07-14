@@ -95,7 +95,8 @@ frontend/src
 当前服务模块：
 
 - `dashboard.getOverview()`：首页概览。
-- `speaking.getCatalog()`：口语场景、练习模式、脚本预览。
+- `speaking.listScenarios()`：口语场景列表。
+- `speaking.getScenario(scenarioId)`：单个口语场景详情。
 - `vocabulary.getSnapshot()`：词汇卡片、掌握度、复习目标。
 - `grammar.getSnapshot()`：语法主题、例句、掌握度。
 - `profile.getSnapshot()`：个人信息、学习计划、能力进度、最近反馈；当前仅在 `/profile` 已登录时调用。
@@ -132,7 +133,8 @@ VITE_PROFILE_API_MODE=mock
 
 ```text
 /api/dashboard/overview
-/api/speaking/catalog
+/api/speaking/scenarios
+/api/speaking/scenarios/{scenarioId}
 /api/vocabulary/snapshot
 /api/grammar/snapshot
 /api/profile/snapshot
@@ -195,8 +197,8 @@ VITE_API_MODE=mixed VITE_API_BASE_URL=http://localhost:8080 npm run dev
 
 - 页面：`frontend/src/pages/SpeakingPage.jsx`
 - 私有组件：`frontend/src/components/Speaking/`
-- 数据：`speaking.getCatalog()`
-- 后续接口：场景列表、会话创建、录音上传、口语评分。
+- 数据：`speaking.listScenarios()`、`speaking.getScenario(scenarioId)`
+- 后续接口：会话创建、录音上传、口语评分、用户场景完成进度。
 
 词汇负责人：
 

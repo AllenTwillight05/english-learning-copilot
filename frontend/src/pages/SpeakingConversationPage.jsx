@@ -28,7 +28,7 @@ export function SpeakingConversationPage() {
   const navigate = useNavigate();
   const { scenarioId } = useParams();
   const { speaking } = useAppServices();
-  const loader = useCallback(() => speaking.getCatalog(), [speaking]);
+  const loader = useCallback(() => speaking.getScenario(scenarioId), [speaking, scenarioId]);
   const { data, loading, error } = useAsyncData(loader, [loader]);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingCount, setRecordingCount] = useState(0);
@@ -38,10 +38,7 @@ export function SpeakingConversationPage() {
   const activeLearnerIndexRef = useRef(0);
   const streamRef = useRef(null);
 
-  const scenario = useMemo(
-    () => data?.scenarios.find((item) => item.id === scenarioId),
-    [data, scenarioId]
-  );
+  const scenario = data;
   const prompts = scenario?.prompts ?? [];
   const hasPromptScript = prompts.length > 0;
 

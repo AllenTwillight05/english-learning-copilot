@@ -4,24 +4,34 @@ import { describe, expect, it } from "vitest";
 import { SpeakingConversationPage } from "../../../src/pages/SpeakingConversationPage";
 import { SpeakingFeedbackPage } from "../../../src/pages/SpeakingFeedbackPage";
 import { SpeakingScenarioDetailPage } from "../../../src/pages/SpeakingScenarioDetailPage";
-import { speakingCatalogMock } from "../../../src/services/mockData";
 import { renderWithProviders } from "../utils/renderWithProviders";
 
-const incompleteCatalog = {
-  ...speakingCatalogMock,
-  scenarios: [
-    {
-      id: "incomplete",
-      title: "缺字段场景",
-      level: "A1",
-      accent: "基础表达",
-      duration: "5 min",
-      summary: "用于测试缺失字段。",
-      tone: "blue",
-      goal: "确认页面不会因为缺字段崩溃。"
+const incompleteScenarios = [
+  {
+    id: "incomplete",
+    title: "缺字段场景",
+    level: "A1",
+    accent: "基础表达",
+    duration: "5 min",
+    summary: "用于测试缺失字段。",
+    tone: "blue",
+    goal: "确认页面不会因为缺字段崩溃。"
+  }
+];
+
+function createScenarioServices(scenarios) {
+  return {
+    speaking: {
+      listScenarios: () => Promise.resolve(structuredClone(scenarios)),
+      getScenario: (scenarioId) => {
+        const scenario = scenarios.find((item) => item.id === scenarioId);
+        return scenario
+          ? Promise.resolve(structuredClone(scenario))
+          : Promise.reject(new Error("Speaking scenario was not found."));
+      }
     }
-  ]
-};
+  };
+}
 
 describe("speaking exceptional states", () => {
   it("shows the missing scenario state when the scenario id does not exist", async () => {
@@ -47,9 +57,7 @@ describe("speaking exceptional states", () => {
 
   it("degrades optional fields but blocks conversation when prompts are missing", async () => {
     const services = {
-      speaking: {
-        getCatalog: () => Promise.resolve(structuredClone(incompleteCatalog))
-      }
+      ...createScenarioServices(incompleteScenarios)
     };
 
     renderWithProviders(<SpeakingScenarioDetailPage />, {
@@ -65,9 +73,7 @@ describe("speaking exceptional states", () => {
 
   it("shows an explicit error state and disables dependent actions when prompts are missing", async () => {
     const services = {
-      speaking: {
-        getCatalog: () => Promise.resolve(structuredClone(incompleteCatalog))
-      }
+      ...createScenarioServices(incompleteScenarios)
     };
 
     renderWithProviders(<SpeakingConversationPage />, {
@@ -86,9 +92,7 @@ describe("speaking exceptional states", () => {
 
   it("shows an explicit feedback error instead of a misleading zero score when feedback is missing", async () => {
     const services = {
-      speaking: {
-        getCatalog: () => Promise.resolve(structuredClone(incompleteCatalog))
-      }
+      ...createScenarioServices(incompleteScenarios)
     };
 
     renderWithProviders(<SpeakingFeedbackPage />, {
