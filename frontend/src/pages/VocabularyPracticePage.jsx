@@ -39,6 +39,10 @@ const emptyRatingSummary = {
   简单: 0
 };
 
+const ratingScores = Object.fromEntries(
+  Object.entries(ratingShortcuts).map(([score, label]) => [label, Number(score)])
+);
+
 function getCorrectAnswer(question, questionType) {
   if (questionType === "chineseToEnglish") {
     return question.word;
@@ -154,8 +158,26 @@ export function VocabularyPracticePage() {
     setAnswerRecords((current) => [...current, record]);
   }
 
+  function submitCurrentRating(rating) {
+    if (!currentQuestion) {
+      return;
+    }
+
+    vocabulary.submitVocabularyRating({
+      vocabularyId: currentQuestion.id,
+      score: ratingScores[rating]
+    }).catch((error) => {
+      console.error("Failed to submit vocabulary rating.", error);
+    });
+  }
+
+  function handleToggleFavorite(vocabularyId) {
+    return vocabulary.toggleVocabularyFavorite({ vocabularyId });
+  }
+
   function handleRateCurrentQuestion(rating) {
     setSelectedRating(rating);
+    submitCurrentRating(rating);
     saveCurrentAnswer(rating);
     setQuestionIndex((current) => (current + 1) % practiceWords.length);
     resetAnswerState();
@@ -256,6 +278,7 @@ export function VocabularyPracticePage() {
 
           {answered ? (
             <VocabularyWordCard
+              onToggleFavorite={handleToggleFavorite}
               onRate={handleRateCurrentQuestion}
               selectedRating={selectedRating}
               word={currentQuestion}

@@ -124,6 +124,7 @@ export const contractShapes = {
       exchange: "string",
       uk_audio: "string",
       us_audio: "string",
+      favorited: false,
       chineseOptions: ["string"],
       englishOptions: ["string"]
     }
@@ -160,6 +161,10 @@ export const contractShapes = {
       favorited: true
     }
   ],
+  vocabularyFavoriteResponse: {
+    vocabularyId: 0,
+    favorited: true
+  },
   grammarSnapshot: {
     focus: "string",
     topics: [

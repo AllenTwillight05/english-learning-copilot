@@ -31,12 +31,18 @@ export function createHttpServices(baseUrl = "") {
       getVocabularyMemory: () => getJson(withBaseUrl(baseUrl, API_ENDPOINTS.vocabularyMemory)),
       getVocabularyPracticeProgress: () =>
         getJson(withBaseUrl(baseUrl, API_ENDPOINTS.vocabularyPracticeProgress)),
-      getVocabularyPracticeWords: () =>
-        getJson(withBaseUrl(baseUrl, API_ENDPOINTS.vocabularyPracticeWords)),
+      getVocabularyPracticeWords: ({ level } = {}) => {
+        const query = level ? `?level=${encodeURIComponent(level)}` : "";
+        return getJson(withBaseUrl(baseUrl, `${API_ENDPOINTS.vocabularyPracticeWords}${query}`));
+      },
+      submitVocabularyRating: (payload) =>
+        postJson(withBaseUrl(baseUrl, API_ENDPOINTS.vocabularyPracticeRatings), payload),
       getReviewVocabulary: () =>
         getJson(withBaseUrl(baseUrl, API_ENDPOINTS.reviewVocabulary)),
       getVocabularyWordbookWords: () =>
-        getJson(withBaseUrl(baseUrl, API_ENDPOINTS.vocabularyWordbookWords))
+        getJson(withBaseUrl(baseUrl, API_ENDPOINTS.vocabularyWordbookWords)),
+      toggleVocabularyFavorite: (payload) =>
+        postJson(withBaseUrl(baseUrl, API_ENDPOINTS.vocabularyWordbookFavorites), payload)
     },
     grammar: {
       getNotebookQuestions: () =>

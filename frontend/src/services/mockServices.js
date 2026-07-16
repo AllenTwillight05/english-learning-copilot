@@ -16,11 +16,12 @@ import {
   speakingCatalogMock,
   vocabularyMemoryMock,
   vocabularyPracticeProgressMock,
-  vocabularyPracticeWordsMock,
-  vocabularySnapshotMock,
-  vocabularyWordbookWordsMock
+  vocabularySnapshotMock
 } from "./mockData";
 import { getStoredAuth } from "./authStorage";
+import { createHttpServices } from "./httpServices";
+
+const httpServices = createHttpServices(import.meta.env.VITE_API_BASE_URL ?? "");
 
 const mockUsers = [
   {
@@ -134,9 +135,12 @@ export function createMockServices() {
       getSnapshot: () => simulateLatency(vocabularySnapshotMock),
       getVocabularyMemory: () => simulateLatency(vocabularyMemoryMock),
       getVocabularyPracticeProgress: () => simulateLatency(vocabularyPracticeProgressMock),
-      getVocabularyPracticeWords: () => simulateLatency(vocabularyPracticeWordsMock),
+      getVocabularyPracticeWords: (options) =>
+        httpServices.vocabulary.getVocabularyPracticeWords(options),
+      submitVocabularyRating: (payload) => httpServices.vocabulary.submitVocabularyRating(payload),
       getReviewVocabulary: () => simulateLatency(reviewVocabularyMock),
-      getVocabularyWordbookWords: () => simulateLatency(vocabularyWordbookWordsMock)
+      getVocabularyWordbookWords: () => httpServices.vocabulary.getVocabularyWordbookWords(),
+      toggleVocabularyFavorite: (payload) => httpServices.vocabulary.toggleVocabularyFavorite(payload)
     },
     grammar: {
       getNotebookQuestions: () => simulateLatency(grammarNotebookQuestionsMock),

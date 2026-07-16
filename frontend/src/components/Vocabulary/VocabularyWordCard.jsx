@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { SoundOutlined, StarFilled, StarOutlined } from "@ant-design/icons";
 import { App, Button, Descriptions, Flex, Space, Tag, Typography } from "antd";
 
@@ -11,16 +11,28 @@ const ratingOptions = [
   { key: "easy", label: "简单", shortcut: "4" }
 ];
 
-export function VocabularyWordCard({ word, selectedRating, onRate }) {
+export function VocabularyWordCard({ word, selectedRating, onRate, onToggleFavorite }) {
   const { message } = App.useApp();
-  const [favorited, setFavorited] = useState(false);
+  const [favorited, setFavorited] = useState(Boolean(word.favorited));
 
-  function handleToggleFavorite() {
-    setFavorited((current) => {
-      const next = !current;
-      message.success(next ? "已收藏单词" : "已取消收藏");
-      return next;
-    });
+  useEffect(() => {
+    setFavorited(Boolean(word.favorited));
+  }, [word.favorited, word.id]);
+
+  async function handleToggleFavorite() {
+    const previous = favorited;
+    const next = !previous;
+    setFavorited(next);
+
+    try {
+      const result = await onToggleFavorite?.(word.id);
+      const updatedFavorited = result?.favorited ?? next;
+      setFavorited(updatedFavorited);
+      message.success(updatedFavorited ? "已收藏单词" : "已取消收藏");
+    } catch (error) {
+      setFavorited(previous);
+      message.error(error?.status === 401 ? "请先登录后收藏单词" : "收藏状态更新失败");
+    }
   }
 
   function handlePlayAudio(audioUrl) {
