@@ -1,33 +1,52 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { SpeakingFeedbackPage } from "../../../src/pages/SpeakingFeedbackPage";
+import { speakingScenariosMock } from "../../../src/services/mockData";
 import { renderWithProviders } from "../utils/renderWithProviders";
 
+const defaultScenario = speakingScenariosMock[0];
+
 const replayMessages = [
-  { role: "coach", text: "Welcome back. What would you like to practice first?", audioUrl: "" },
-  { role: "learner", text: "I want to review my meeting opening.", audioUrl: "" },
-  { role: "coach", text: "Great. Please start with a short agenda.", audioUrl: "" },
-  { role: "learner", text: "First, I will share the project update.", audioUrl: "" }
+  { id: 1, sender: "AGENT", content: "Welcome back. What would you like to practice first?", audioUrl: "", turnIndex: 0 },
+  { id: 2, sender: "USER", content: "I want to review my meeting opening.", audioUrl: "", turnIndex: 1 },
+  { id: 3, sender: "AGENT", content: "Great. Please start with a short agenda.", audioUrl: "", turnIndex: 1 },
+  { id: 4, sender: "USER", content: "First, I will share the project update.", audioUrl: "", turnIndex: 2 }
 ];
 
+function createFeedbackServices(session) {
+  return {
+    speaking: {
+      getScenario: (scenarioId) => {
+        const scenario = speakingScenariosMock.find((item) => item.id === scenarioId);
+        return scenario
+          ? Promise.resolve(structuredClone(scenario))
+          : Promise.reject(new Error("Speaking scenario was not found."));
+      },
+      getSession: () => Promise.resolve(structuredClone(session)),
+      listHistory: () => Promise.resolve([structuredClone(session)])
+    }
+  };
+}
+
+const session = {
+  id: 42,
+  userId: 1,
+  scenario: defaultScenario,
+  status: "ACTIVE",
+  startedAt: "2026-07-09T00:00:00.000Z",
+  completedAt: null,
+  currentTurn: 2,
+  targetTurns: 6,
+  messages: replayMessages
+};
+
 describe("SpeakingFeedbackPage", () => {
-  afterEach(() => {
-    window.localStorage.clear();
-  });
-
   it("opens the replay modal with chat records and turn segments", async () => {
-    window.localStorage.setItem(
-      "speaking-history:business-opening",
-      JSON.stringify({
-        savedAt: "2026-07-09T00:00:00.000Z",
-        messages: replayMessages
-      })
-    );
-
     renderWithProviders(<SpeakingFeedbackPage />, {
       path: "/speaking/:scenarioId/feedback",
-      route: "/speaking/business-opening/feedback"
+      route: `/speaking/${defaultScenario.id}/feedback?sessionId=${session.id}`,
+      services: createFeedbackServices(session)
     });
 
     await userEvent.click(await screen.findByRole("button", { name: /查看回放/ }));
@@ -43,7 +62,8 @@ describe("SpeakingFeedbackPage", () => {
   it("can pause and resume replay from the modal controls", async () => {
     renderWithProviders(<SpeakingFeedbackPage />, {
       path: "/speaking/:scenarioId/feedback",
-      route: "/speaking/business-opening/feedback"
+      route: `/speaking/${defaultScenario.id}/feedback?sessionId=${session.id}`,
+      services: createFeedbackServices(session)
     });
 
     await userEvent.click(await screen.findByRole("button", { name: /查看回放/ }));

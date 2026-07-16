@@ -82,17 +82,16 @@ export const dashboardCommunityLearningTrendsMock = {
   ]
 };
 
-export const speakingCatalogMock = {
-  scenarios: [
+export const speakingScenariosMock = [
     {
-      id: "business-opening",
-      title: "商务会谈",
-      level: "B2",
-      accent: "美式表达",
-      duration: "18 min",
-      summary: "训练礼貌开场、项目进度同步等职场对话技能。",
-      tone: "blue",
-      goal: "掌握得体的会议开场白，并学会主动推进议程与确认交付时间。",
+      id: "mock1",
+      title: "mock1-tittle",
+      level: "mock1-level",
+      accent: "mock1-accent",
+      duration: "mock1-duration",
+      summary: "mock1-summary",
+      tone: "mock1-tone",
+      goal: "mock1-goal",
       keywords: ["agenda", "clarify", "timeline", "follow up"],
       prompts: [
         {
@@ -326,8 +325,7 @@ export const speakingCatalogMock = {
         ]
       }
     }
-  ]
-};
+];
 
 export const feedbackSummaryMock = {
   statusLabel: "实时采样中",

@@ -24,7 +24,15 @@ export function createHttpServices(baseUrl = "") {
         getJson(withBaseUrl(baseUrl, API_ENDPOINTS.dashboardCommunityLearningTrends))
     },
     speaking: {
-      getCatalog: () => getJson(withBaseUrl(baseUrl, API_ENDPOINTS.speakingCatalog))
+      listScenarios: () => getJson(withBaseUrl(baseUrl, API_ENDPOINTS.speakingScenarios)),
+      getScenario: (scenarioId) => getJson(withBaseUrl(baseUrl, API_ENDPOINTS.speakingScenario(scenarioId))),
+      createSession: (scenarioId) =>
+        postJson(withBaseUrl(baseUrl, API_ENDPOINTS.speakingSessions), { scenarioId }),
+      getSession: (sessionId) =>
+        getJson(withBaseUrl(baseUrl, API_ENDPOINTS.speakingSession(sessionId))),
+      listHistory: () => getJson(withBaseUrl(baseUrl, API_ENDPOINTS.speakingHistory)),
+      addMessage: (sessionId, content) =>
+        postJson(withBaseUrl(baseUrl, API_ENDPOINTS.speakingSessionMessages(sessionId)), { content })
     },
     vocabulary: {
       getSnapshot: () => getJson(withBaseUrl(baseUrl, API_ENDPOINTS.vocabularySnapshot)),

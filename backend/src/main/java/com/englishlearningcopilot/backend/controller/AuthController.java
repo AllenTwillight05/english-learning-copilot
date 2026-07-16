@@ -26,22 +26,38 @@ public class AuthController {
         this.authService = authService;
     }
 
+    /**
+     * POST /api/auth/register
+     * Register a new user
+     */
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
     public AuthResponse register(@Valid @RequestBody RegisterRequest request) {
         return authService.register(request);
     }
 
+    /**
+     * POST /api/auth/login
+     * Log in a user
+     */
     @PostMapping("/login")
     public AuthResponse login(@Valid @RequestBody LoginRequest request) {
         return authService.login(request);
     }
 
+    /**
+     * GET /api/auth/me
+     * Get the current user
+     */
     @GetMapping("/me")
     public UserResponse me(Principal principal) {
         return authService.currentUser(principal.getName());
     }
 
+    /**
+     * POST /api/auth/logout
+     * Log out the current user
+     */
     @PostMapping("/logout")
     public MessageResponse logout() {
         return new MessageResponse("Logged out. Please remove the token on the client.");

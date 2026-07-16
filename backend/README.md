@@ -18,6 +18,13 @@
 mvn spring-boot:run
 ```
 
+项目使用 Java 21。若本机同时安装多个 JDK，请先切到 JDK 21：
+
+```bash
+export JAVA_HOME=$(/usr/libexec/java_home -v 21)
+mvn spring-boot:run
+```
+
 后端使用 Spring 环境变量读取本地配置，不依赖提交到仓库的 `.env` 文件。本地开发时，可以在当前终端 `export` 环境变量，或者启动前 `source` 自己的私有配置文件。
 
 示例：

@@ -23,16 +23,28 @@ public class AdminUserController {
         this.adminUserService = adminUserService;
     }
 
+    /**
+     * GET /api/admin/users
+     * Get all users
+     */
     @GetMapping
     public List<UserResponse> listUsers() {
         return adminUserService.listUsers();
     }
 
+    /**
+     * PATCH /api/admin/users/{id}/role
+     * Update a user's role（USER or ADMIN)
+     */
     @PatchMapping("/{id}/role")
     public UserResponse updateRole(@PathVariable Long id, @Valid @RequestBody UpdateUserRoleRequest request) {
         return adminUserService.updateRole(id, request);
     }
 
+    /**
+     * PATCH /api/admin/users/{id}/status
+     * Update a user's status(enable or not)
+     */
     @PatchMapping("/{id}/status")
     public UserResponse updateStatus(@PathVariable Long id, @Valid @RequestBody UpdateUserStatusRequest request) {
         return adminUserService.updateStatus(id, request);

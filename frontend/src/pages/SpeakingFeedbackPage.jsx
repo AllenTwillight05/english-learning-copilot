@@ -1,33 +1,19 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeftOutlined,
-  CheckCircleOutlined,
   PauseCircleOutlined,
   PlayCircleOutlined,
   ReloadOutlined,
   SoundOutlined
 } from "@ant-design/icons";
-import { Button, Modal, Space, Statistic, Typography } from "antd";
-import { useNavigate, useParams } from "react-router-dom";
+import { Button, Modal, Space, Typography } from "antd";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { AsyncPage } from "../components/common/AsyncPage";
 import { PageSectionHeader } from "../components/common/PageSectionHeader";
 import { useAsyncData } from "../hooks/useAsyncData";
 import { useAppServices } from "../services/ServiceContext";
 
-const { Text, Title, Paragraph } = Typography;
-const speakingHistoryKey = (scenarioId) => `speaking-history:${scenarioId}`;
-
-function isCompleteFeedback(feedback) {
-  return Boolean(
-    feedback &&
-      typeof feedback.totalScore === "number" &&
-      typeof feedback.pronunciation === "number" &&
-      typeof feedback.fluency === "number" &&
-      typeof feedback.speed === "string" &&
-      Array.isArray(feedback.issueSentences) &&
-      Array.isArray(feedback.suggestions)
-  );
-}
+const { Text, Paragraph } = Typography;
 
 function speakText(text, onEnd) {
   if (!window.speechSynthesis || !text) {
@@ -41,11 +27,40 @@ function speakText(text, onEnd) {
   return utterance;
 }
 
+function toReplayMessage(message) {
+  const isUser = message.sender === "USER";
+  return {
+    id: message.id,
+    role: isUser ? "learner" : "coach",
+    text: message.content,
+    audioUrl: message.audioUrl,
+    instantTip: message.instantTip
+  };
+}
+
+function findLatestScenarioSession(history, scenarioId) {
+  return history.find((session) => session.scenario?.id === scenarioId) ?? null;
+}
+
 export function SpeakingFeedbackPage() {
   const navigate = useNavigate();
   const { scenarioId } = useParams();
+  const [searchParams] = useSearchParams();
   const { speaking } = useAppServices();
-  const loader = useCallback(() => speaking.getCatalog(), [speaking]);
+  const sessionId = searchParams.get("sessionId");
+  const loader = useCallback(async () => {
+    const scenario = await speaking.getScenario(scenarioId);
+    if (sessionId) {
+      const session = await speaking.getSession(sessionId);
+      return { scenario, session };
+    }
+
+    const history = await speaking.listHistory();
+    return {
+      scenario,
+      session: findLatestScenarioSession(history, scenarioId)
+    };
+  }, [scenarioId, sessionId, speaking]);
   const { data, loading, error } = useAsyncData(loader, [loader]);
   const [isReplayOpen, setIsReplayOpen] = useState(false);
   const [activeTurn, setActiveTurn] = useState(0);
@@ -54,37 +69,12 @@ export function SpeakingFeedbackPage() {
   const stopReplayRef = useRef(false);
   const replayRunRef = useRef(0);
 
-  const scenario = useMemo(
-    () => data?.scenarios.find((item) => item.id === scenarioId),
-    [data, scenarioId]
+  const scenario = data?.scenario;
+  const session = data?.session;
+  const replayMessages = useMemo(
+    () => (session?.messages ?? []).map(toReplayMessage),
+    [session]
   );
-  const prompts = scenario?.prompts ?? [];
-  const hasPromptScript = prompts.length > 0;
-  const feedback = scenario?.feedback;
-  const hasFeedback = isCompleteFeedback(feedback);
-
-  const replayState = useMemo(() => {
-    if (!scenario) {
-      return { messages: [], isCorrupted: false };
-    }
-    const savedReplay = window.localStorage.getItem(speakingHistoryKey(scenario.id));
-    if (savedReplay) {
-      try {
-        const parsedReplay = JSON.parse(savedReplay);
-        if (!Array.isArray(parsedReplay.messages)) {
-          return { messages: prompts, isCorrupted: true };
-        }
-        return {
-          messages: parsedReplay.messages,
-          isCorrupted: false
-        };
-      } catch {
-        return { messages: prompts, isCorrupted: true };
-      }
-    }
-    return { messages: prompts, isCorrupted: false };
-  }, [prompts, scenario]);
-  const replayMessages = replayState.messages;
 
   const replayTurns = useMemo(() => {
     const turns = [];
@@ -151,64 +141,31 @@ export function SpeakingFeedbackPage() {
               title="评分结果"
               description=""
             />
-            {hasFeedback ? (
-              <>
-                <div className="feedback-layout">
-                  <div className="score-card">
-                    <Statistic
-                      title={<Text className="panel-title">总分</Text>}
-                      value={feedback.totalScore}
-                      suffix="/ 100"
-                    />
-                    <CheckCircleOutlined className="score-card__icon" />
-                  </div>
-                  <div className="feedback-metrics">
-                    <div className="metric-chip">
-                      <Text className="panel-title">发音准确性</Text>
-                      <Title level={4}>{feedback.pronunciation}%</Title>
-                    </div>
-                    <div className="metric-chip">
-                      <Text className="panel-title">流畅度</Text>
-                      <Title level={4}>{feedback.fluency}%</Title>
-                    </div>
-                    <div className="metric-chip">
-                      <Text className="panel-title">语速</Text>
-                      <Title level={4}>{feedback.speed}</Title>
-                    </div>
-                  </div>
+            {session ? (
+              <div className="feedback-detail-grid">
+                <div className="feedback-list">
+                  <Text className="panel-title">本次文本回放</Text>
+                  <Paragraph>
+                    已从后端读取最新会话记录，共 {replayMessages.length} 条消息。语音录制、音频文件和发音评分接入后，可继续挂载到这些消息记录上。
+                  </Paragraph>
                 </div>
-
-                <div className="feedback-detail-grid">
-                  <div className="feedback-list">
-                    <Text className="panel-title">问题句子合集</Text>
-                    {feedback.issueSentences.map((sentence) => (
-                      <Paragraph key={sentence}>{sentence}</Paragraph>
-                    ))}
-                  </div>
-                  <div className="feedback-list">
-                    <Text className="panel-title">改进建议</Text>
-                    {feedback.suggestions.map((suggestion) => (
-                      <Paragraph key={suggestion}>{suggestion}</Paragraph>
-                    ))}
-                  </div>
+                <div className="feedback-list">
+                  <Text className="panel-title">会话状态</Text>
+                  <Paragraph>当前状态：{session.status}</Paragraph>
+                  <Paragraph>完成轮次：{session.currentTurn} / {session.targetTurns}</Paragraph>
                 </div>
-              </>
+              </div>
             ) : (
               <div className="speaking-alert" role="alert">
-                评分数据缺失，暂时无法展示本次练习结果。请返回会话页重新练习，或稍后重试。
+                暂无历史会话记录。请先进入会话完成一次文本练习。
               </div>
             )}
-            {replayState.isCorrupted ? (
-              <div className="speaking-alert" role="alert">
-                历史回放记录损坏，已改用当前情景脚本作为回放内容。
-              </div>
-            ) : null}
 
             <Space wrap>
               <Button onClick={() => navigate("/speaking")}>退出</Button>
               <Button
                 icon={<SoundOutlined />}
-                disabled={!hasPromptScript && replayMessages.length === 0}
+                disabled={replayMessages.length === 0}
                 onClick={() => {
                   setIsReplayOpen(true);
                   playFromTurn(0);
@@ -242,7 +199,7 @@ export function SpeakingFeedbackPage() {
                 {replayMessages.map((message, index) => (
                   <div
                     className={`chat-bubble-row chat-bubble-row--${message.role}`}
-                    key={`${message.role}-${index}`}
+                    key={message.id ?? `${message.role}-${index}`}
                   >
                     <div className={`chat-bubble chat-bubble--${message.role}`}>{message.text}</div>
                   </div>

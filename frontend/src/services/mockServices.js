@@ -10,7 +10,7 @@ import {
   profileSnapshotMock,
   reviewGrammarMock,
   reviewVocabularyMock,
-  speakingCatalogMock,
+  speakingScenariosMock,
   vocabularyMemoryMock,
   vocabularyPracticeProgressMock,
   vocabularySnapshotMock
@@ -34,6 +34,10 @@ const mockUsers = [
     password: "Password123"
   }
 ];
+
+let nextSpeakingSessionId = 1;
+let nextSpeakingMessageId = 1;
+const mockSpeakingSessions = new Map();
 
 function toUserResponse(user) {
   const { password, ...safeUser } = user;
@@ -63,6 +67,31 @@ function simulateLatency(value, delay = 120) {
       resolve(structuredClone(value));
     }, delay);
   });
+}
+
+function toSpeakingMessageResponse({ sender, content, instantTip = null, turnIndex }) {
+  return {
+    id: nextSpeakingMessageId++,
+    sender,
+    content,
+    instantTip,
+    turnIndex,
+    createdAt: new Date().toISOString()
+  };
+}
+
+function toSpeakingSessionResponse({ scenario, messages, currentTurn = 0 }) {
+  return {
+    id: nextSpeakingSessionId++,
+    userId: getStoredAuth().user?.id ?? 1,
+    scenario,
+    status: "ACTIVE",
+    startedAt: new Date().toISOString(),
+    completedAt: null,
+    currentTurn,
+    targetTurns: scenario.targetTurns ?? 6,
+    messages
+  };
 }
 
 // 默认使用的 mock 服务。mock 数据尽量贴近 contracts.js，方便后端接口未完成时并行开发。
@@ -126,7 +155,77 @@ export function createMockServices() {
       getCommunityLearningTrends: () => httpServices.dashboard.getCommunityLearningTrends()
     },
     speaking: {
-      getCatalog: () => simulateLatency(speakingCatalogMock)
+      listScenarios: () => simulateLatency(speakingScenariosMock),
+      getScenario: (scenarioId) => {
+        const scenario = speakingScenariosMock.find((item) => item.id === scenarioId);
+        return scenario
+          ? simulateLatency(scenario)
+          : Promise.reject(new Error("Speaking scenario was not found."));
+      },
+      createSession: (scenarioId) => {
+        const scenario = speakingScenariosMock.find((item) => item.id === scenarioId);
+        if (!scenario) {
+          return Promise.reject(new Error("Speaking scenario was not found."));
+        }
+
+        const openingMessage = scenario.prompts?.find((message) => message.role === "coach")?.text
+          ?? scenario.openingMessage
+          ?? "Let's start this speaking practice.";
+        const session = toSpeakingSessionResponse({
+          scenario,
+          messages: [
+            toSpeakingMessageResponse({
+              sender: "AGENT",
+              content: openingMessage,
+              turnIndex: 0
+            })
+          ]
+        });
+        mockSpeakingSessions.set(session.id, session);
+        return simulateLatency(session);
+      },
+      getSession: (sessionId) => {
+        const session = mockSpeakingSessions.get(Number(sessionId));
+        return session
+          ? simulateLatency(session)
+          : Promise.reject(new Error("Speaking session was not found."));
+      },
+      listHistory: () => {
+        const sessions = Array.from(mockSpeakingSessions.values())
+          .sort((left, right) => new Date(right.startedAt).getTime() - new Date(left.startedAt).getTime());
+        return simulateLatency(sessions);
+      },
+      addMessage: (sessionId, content) => {
+        const session = mockSpeakingSessions.get(Number(sessionId));
+        if (!session) {
+          return Promise.reject(new Error("Speaking session was not found."));
+        }
+
+        const turnIndex = session.currentTurn + 1;
+        const userMessage = toSpeakingMessageResponse({
+          sender: "USER",
+          content,
+          turnIndex
+        });
+        const agentMessage = toSpeakingMessageResponse({
+          sender: "AGENT",
+          content: "Nice answer. Could you add one more detail and make it sound more natural?",
+          instantTip: "Try adding a reason or example to make your response fuller.",
+          turnIndex
+        });
+        const updatedSession = {
+          ...session,
+          currentTurn: turnIndex,
+          messages: [...session.messages, userMessage, agentMessage]
+        };
+        mockSpeakingSessions.set(updatedSession.id, updatedSession);
+
+        return simulateLatency({
+          userMessage,
+          agentMessage,
+          session: updatedSession
+        });
+      }
     },
     vocabulary: {
       getSnapshot: () => simulateLatency(vocabularySnapshotMock),

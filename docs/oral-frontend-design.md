@@ -88,7 +88,7 @@
    - 点击 `退出` 结束当前流程。重新进入 `口语界面` 开始新的练习循环。
    - 或点击 `再练一次` 回到会话界面，重做当前练习。
 5. **对应状态**
-    - 口语界面：catalog
+    - 口语界面：scenarios
     - 情景细节：preview
     - 会话界面：ready, recording, uploading
     - 交卷：evaluating

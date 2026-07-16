@@ -9,6 +9,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.englishlearningcopilot.backend.entity.AppUser;
 import com.englishlearningcopilot.backend.entity.UserRole;
+import com.englishlearningcopilot.backend.repository.SpeakingMessageRepository;
+import com.englishlearningcopilot.backend.repository.SpeakingSessionRepository;
 import com.englishlearningcopilot.backend.repository.UserRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -36,10 +38,18 @@ class AuthAndAdminIntegrationTest {
     private UserRepository userRepository;
 
     @Autowired
+    private SpeakingMessageRepository speakingMessageRepository;
+
+    @Autowired
+    private SpeakingSessionRepository speakingSessionRepository;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @BeforeEach
     void setUp() {
+        speakingMessageRepository.deleteAll();
+        speakingSessionRepository.deleteAll();
         userRepository.deleteAll();
     }
 

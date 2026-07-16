@@ -1704,6 +1704,13 @@ a {
   padding: 14px;
 }
 
+.speaking-message-composer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+}
+
 .recorder-strip__label {
   display: flex;
   align-items: center;

@@ -101,7 +101,7 @@ VITE_DASHBOARD_API_MODE=mock
 
 默认 `VITE_API_MODE=mock`：
 
-- 内置可登录账号：`learner` 或 `learner@example.com`。
+- mock可登录账号：`learner` 或 `learner@example.com`。
 - 内置密码：`Password123`。
 - 注册会在当前前端运行时加入 mock 用户列表，刷新后恢复初始 mock 状态，不会写入 MySQL。
 

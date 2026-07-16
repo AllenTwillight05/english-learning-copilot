@@ -12,6 +12,15 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/admin")
 public class AdminPlaceholderController {
 
+    /**
+     * ANY /api/admin/question-types
+     * ANY /api/admin/question-types/{id}
+     * ANY /api/admin/question-banks
+     * ANY /api/admin/question-banks/{id}
+     * ANY /api/admin/vocabulary-entries
+     * ANY /api/admin/vocabulary-entries/{id}
+     * Return a placeholder response for reserved admin APIs(都是占位的，尚未开发完！)
+     */
     @RequestMapping({
             "/question-types",
             "/question-types/{id}",
