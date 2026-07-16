@@ -124,6 +124,27 @@ export const contractShapes = {
       exchange: "string",
       uk_audio: "string",
       us_audio: "string",
+      favorited: false,
+      chineseOptions: ["string"],
+      englishOptions: ["string"]
+    }
+  ],
+  reviewVocabulary: [
+    {
+      id: "string",
+      word: "string",
+      phonetic: "string",
+      definition: "string",
+      briefTranslation: "string",
+      translation: "string",
+      collins: "string",
+      oxford: "string",
+      tag: "string",
+      bnc: "string",
+      frq: "string",
+      exchange: "string",
+      uk_audio: "string",
+      us_audio: "string",
       chineseOptions: ["string"],
       englishOptions: ["string"]
     }
@@ -140,6 +161,10 @@ export const contractShapes = {
       favorited: true
     }
   ],
+  vocabularyFavoriteResponse: {
+    vocabularyId: 0,
+    favorited: true
+  },
   grammarSnapshot: {
     focus: "string",
     topics: [
@@ -170,6 +195,16 @@ export const contractShapes = {
     }
   ],
   grammarPracticeQuestions: [
+    {
+      id: 0,
+      question_text: "string",
+      options: ["string"],
+      answer: "A",
+      grammar_category: "string",
+      explanation: "string"
+    }
+  ],
+  reviewGrammar: [
     {
       id: 0,
       question_text: "string",

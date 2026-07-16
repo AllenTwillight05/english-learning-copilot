@@ -45,6 +45,7 @@ public class SecurityConfig {
                 .authenticationProvider(authenticationProvider)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/vocabulary/wordbook-words").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/dashboard/**", "/api/speaking/**", "/api/vocabulary/**", "/api/grammar/**").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()

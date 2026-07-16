@@ -425,6 +425,13 @@ export const vocabularyPracticeWordsMock = [
   }
 ];
 
+// 复习队列使用独立数据源，后续接入 FSRS 接口时不会与按难度取词互相影响。
+export const reviewVocabularyMock = vocabularyPracticeWordsMock.map((word) => ({
+  ...word,
+  chineseOptions: [...word.chineseOptions],
+  englishOptions: [...word.englishOptions]
+}));
+
 export const vocabularyWordbookWordsMock = [
   {
     id: "purple",
@@ -629,6 +636,12 @@ export const grammarPracticeQuestionsMock = [
     explanation: "前后是因果关系，therefore 表示因此，符合句意。"
   }
 ];
+
+// 语法复习使用独立 mock，便于后续替换为按复习计划返回题目的接口。
+export const reviewGrammarMock = grammarPracticeQuestionsMock.map((question) => ({
+  ...question,
+  options: [...question.options]
+}));
 
 export const grammarNotebookQuestionsMock = [
   {

@@ -983,7 +983,7 @@ a {
 
 .vocabulary-action-grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
 }
 
@@ -1036,6 +1036,11 @@ a {
 .practice-level-button:nth-child(4) .practice-level-button__icon {
   color: #6a3fd1;
   background: linear-gradient(145deg, rgba(185, 167, 255, 0.86), rgba(255, 255, 255, 0.52));
+}
+
+.practice-level-button:nth-child(5) .practice-level-button__icon {
+  color: #be123c;
+  background: linear-gradient(145deg, rgba(253, 164, 175, 0.82), rgba(255, 255, 255, 0.5));
 }
 
 .practice-level-button__body {

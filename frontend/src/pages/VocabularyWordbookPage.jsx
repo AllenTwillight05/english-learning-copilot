@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ArrowLeftOutlined } from "@ant-design/icons";
-import { Button, Empty, Flex, Typography } from "antd";
-import { useNavigate } from "react-router-dom";
+import { ArrowLeftOutlined, LoginOutlined, ReadOutlined } from "@ant-design/icons";
+import { App, Button, Empty, Flex, Result, Typography } from "antd";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../auth/AuthContext";
 import { VocabularyWordbookItem } from "../components/Vocabulary/VocabularyWordbookItem";
 import { VocabularyWordbookTabs } from "../components/Vocabulary/VocabularyWordbookTabs";
 import { AsyncPage } from "../components/common/AsyncPage";
@@ -11,9 +12,18 @@ import { useAppServices } from "../services/ServiceContext";
 const { Title, Text } = Typography;
 
 export function VocabularyWordbookPage() {
+  const { message } = App.useApp();
+  const auth = useAuth();
+  const location = useLocation();
   const navigate = useNavigate();
   const { vocabulary } = useAppServices();
-  const loader = useCallback(() => vocabulary.getVocabularyWordbookWords(), [vocabulary]);
+  const loader = useCallback(() => {
+    if (auth.loading || !auth.isAuthenticated) {
+      return Promise.resolve(null);
+    }
+
+    return vocabulary.getVocabularyWordbookWords();
+  }, [auth.isAuthenticated, auth.loading, vocabulary]);
   const { data, loading, error } = useAsyncData(loader, [loader]);
   const [activeTab, setActiveTab] = useState("learned");
   const [words, setWords] = useState([]);
@@ -36,12 +46,39 @@ export function VocabularyWordbookPage() {
     ? words.filter((word) => word.favorited)
     : words;
 
-  function handleToggleFavorite(wordId) {
+  async function handleToggleFavorite(wordId) {
+    const currentWord = words.find((word) => word.id === wordId);
+
+    if (!currentWord) {
+      return;
+    }
+
+    const previousFavorited = currentWord.favorited;
+    const nextFavorited = !previousFavorited;
+
     setWords((current) =>
       current.map((word) =>
-        word.id === wordId ? { ...word, favorited: !word.favorited } : word
+        word.id === wordId ? { ...word, favorited: nextFavorited } : word
       )
     );
+
+    try {
+      const result = await vocabulary.toggleVocabularyFavorite({ vocabularyId: wordId });
+      const updatedFavorited = result?.favorited ?? nextFavorited;
+      setWords((current) =>
+        current.map((word) =>
+          word.id === wordId ? { ...word, favorited: updatedFavorited } : word
+        )
+      );
+      message.success(updatedFavorited ? "已收藏单词" : "已取消收藏");
+    } catch (error) {
+      setWords((current) =>
+        current.map((word) =>
+          word.id === wordId ? { ...word, favorited: previousFavorited } : word
+        )
+      );
+      message.error(error?.status === 401 ? "请先登录后收藏单词" : "收藏状态更新失败");
+    }
   }
 
   function handlePlayAudio(word) {
@@ -54,6 +91,33 @@ export function VocabularyWordbookPage() {
     utterance.lang = "en-US";
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(utterance);
+  }
+
+  if (auth.loading) {
+    return <AsyncPage loading error={null} />;
+  }
+
+  if (!auth.isAuthenticated) {
+    return (
+      <div className="page-stack">
+        <section className="glass-panel profile-empty-state">
+          <Result
+            icon={<ReadOutlined />}
+            title="单词本需要登录"
+            subTitle="登录后可以查看你已经学过的单词。"
+            extra={
+              <Button
+                type="primary"
+                icon={<LoginOutlined />}
+                onClick={() => navigate("/login", { state: { from: location } })}
+              >
+                请先登录
+              </Button>
+            }
+          />
+        </section>
+      </div>
+    );
   }
 
   return (
