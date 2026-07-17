@@ -47,6 +47,8 @@ export function createHttpServices(baseUrl = "") {
         postJson(withBaseUrl(baseUrl, API_ENDPOINTS.vocabularyPracticeRatings), payload),
       getReviewVocabulary: () =>
         getJson(withBaseUrl(baseUrl, API_ENDPOINTS.reviewVocabulary)),
+      submitReviewVocabulary: (payload) =>
+        postJson(withBaseUrl(baseUrl, API_ENDPOINTS.reviewVocabularySubmit), payload),
       getVocabularyWordbookWords: () =>
         getJson(withBaseUrl(baseUrl, API_ENDPOINTS.vocabularyWordbookWords)),
       toggleVocabularyFavorite: (payload) =>

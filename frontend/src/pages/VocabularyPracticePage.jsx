@@ -153,10 +153,18 @@ export function VocabularyPracticePage() {
       return;
     }
 
-    vocabulary.submitVocabularyRating({
-      vocabularyId: currentQuestion.id,
-      score: ratingScores[rating]
-    }).catch((error) => {
+    const score = ratingScores[rating];
+    const request = isReview
+      ? vocabulary.submitReviewVocabulary({
+          questionId: String(currentQuestion.id),
+          rating: score
+        })
+      : vocabulary.submitVocabularyRating({
+          vocabularyId: currentQuestion.id,
+          score
+        });
+
+    request.catch((error) => {
       console.error("Failed to submit vocabulary rating.", error);
     });
   }

@@ -20,6 +20,7 @@ export const API_ENDPOINTS = {
   vocabularyPracticeWords: "/api/vocabulary/practice-words",
   vocabularyPracticeRatings: "/api/vocabulary/practice-ratings",
   reviewVocabulary: "/api/vocabulary/review-vocabulary",
+  reviewVocabularySubmit: "/api/vocabulary/review",
   vocabularyWordbookWords: "/api/vocabulary/wordbook-words",
   vocabularyWordbookFavorites: "/api/vocabulary/wordbook-favorites",
   vocabularySnapshot: "/api/vocabulary/snapshot",

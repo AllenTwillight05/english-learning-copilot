@@ -2,12 +2,14 @@ package com.englishlearningcopilot.backend;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.englishlearningcopilot.backend.dto.VocabularyRatingRequest;
 import com.englishlearningcopilot.backend.dto.VocabularyPracticeWordResponse;
 import com.englishlearningcopilot.backend.entity.AppUser;
 import com.englishlearningcopilot.backend.entity.UserRole;
 import com.englishlearningcopilot.backend.entity.UserWordbook;
 import com.englishlearningcopilot.backend.entity.Vocabulary;
 import com.englishlearningcopilot.backend.repository.UserRepository;
+import com.englishlearningcopilot.backend.repository.UserWordProgressRepository;
 import com.englishlearningcopilot.backend.repository.UserWordbookRepository;
 import com.englishlearningcopilot.backend.repository.VocabularyRepository;
 import com.englishlearningcopilot.backend.service.VocabularyService;
@@ -32,8 +34,12 @@ class VocabularyPracticeDifficultyIntegrationTest {
     @Autowired
     private UserWordbookRepository userWordbookRepository;
 
+    @Autowired
+    private UserWordProgressRepository userWordProgressRepository;
+
     @BeforeEach
     void setUp() {
+        userWordProgressRepository.deleteAll();
         userWordbookRepository.deleteAll();
         vocabularyRepository.deleteAll();
         userRepository.deleteAll();
@@ -75,6 +81,21 @@ class VocabularyPracticeDifficultyIntegrationTest {
                 .toList();
 
         assertThat(words).containsExactly("unlearned");
+    }
+
+    @Test
+    void practiceRatingAddsWordToFsrsReviewProgress() {
+        Vocabulary vocabulary = saveVocabulary("reviewable", "zk");
+        AppUser user = saveUser("learner");
+
+        vocabularyService.submitRating(user.getUsername(), new VocabularyRatingRequest(vocabulary.getId(), 3));
+
+        assertThat(userWordbookRepository.findByUserIdAndVocabularyId(user.getId(), vocabulary.getId())).isPresent();
+        assertThat(userWordProgressRepository.findByUserIdAndQuestionIdAndQuestionType(
+                user.getId(),
+                String.valueOf(vocabulary.getId()),
+                "vocabulary"
+        )).isPresent();
     }
 
     private void assertWords(String level, String... expectedWords) {

@@ -12,6 +12,7 @@ import com.englishlearningcopilot.backend.exception.ResourceNotFoundException;
 import com.englishlearningcopilot.backend.repository.UserRepository;
 import com.englishlearningcopilot.backend.repository.UserWordbookRepository;
 import com.englishlearningcopilot.backend.repository.VocabularyRepository;
+import com.englishlearningcopilot.backend.service.ReviewService;
 import com.englishlearningcopilot.backend.service.VocabularyService;
 import java.util.List;
 import java.util.Locale;
@@ -31,15 +32,18 @@ public class VocabularyServiceImpl implements VocabularyService {
     private final VocabularyRepository vocabularyRepository;
     private final UserRepository userRepository;
     private final UserWordbookRepository userWordbookRepository;
+    private final ReviewService reviewService;
 
     public VocabularyServiceImpl(
             VocabularyRepository vocabularyRepository,
             UserRepository userRepository,
-            UserWordbookRepository userWordbookRepository
+            UserWordbookRepository userWordbookRepository,
+            ReviewService reviewService
     ) {
         this.vocabularyRepository = vocabularyRepository;
         this.userRepository = userRepository;
         this.userWordbookRepository = userWordbookRepository;
+        this.reviewService = reviewService;
     }
 
     @Override
@@ -116,14 +120,14 @@ public class VocabularyServiceImpl implements VocabularyService {
             throw new ResourceNotFoundException("Vocabulary word was not found.");
         }
 
-        if (userWordbookRepository.findByUserIdAndVocabularyId(user.getId(), vocabularyId).isPresent()) {
-            return;
+        if (userWordbookRepository.findByUserIdAndVocabularyId(user.getId(), vocabularyId).isEmpty()) {
+            UserWordbook wordbook = new UserWordbook();
+            wordbook.setUserId(user.getId());
+            wordbook.setVocabularyId(vocabularyId);
+            userWordbookRepository.save(wordbook);
         }
 
-        UserWordbook wordbook = new UserWordbook();
-        wordbook.setUserId(user.getId());
-        wordbook.setVocabularyId(vocabularyId);
-        userWordbookRepository.save(wordbook);
+        reviewService.submitRating(user.getId(), String.valueOf(vocabularyId), request.score());
     }
 
     @Override

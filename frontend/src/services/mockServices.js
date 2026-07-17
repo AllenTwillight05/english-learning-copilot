@@ -234,7 +234,8 @@ export function createMockServices() {
       getVocabularyPracticeWords: (options) =>
         httpServices.vocabulary.getVocabularyPracticeWords(options),
       submitVocabularyRating: (payload) => httpServices.vocabulary.submitVocabularyRating(payload),
-      getReviewVocabulary: () => simulateLatency(reviewVocabularyMock),
+      getReviewVocabulary: () => httpServices.vocabulary.getReviewVocabulary(),
+      submitReviewVocabulary: (payload) => httpServices.vocabulary.submitReviewVocabulary(payload),
       getVocabularyWordbookWords: () => httpServices.vocabulary.getVocabularyWordbookWords(),
       toggleVocabularyFavorite: (payload) => httpServices.vocabulary.toggleVocabularyFavorite(payload)
     },
