@@ -1,5 +1,6 @@
 package com.englishlearningcopilot.backend.service.impl;
 
+import com.englishlearningcopilot.backend.dto.DailyPracticeProgressResponse;
 import com.englishlearningcopilot.backend.dto.VocabularyFavoriteRequest;
 import com.englishlearningcopilot.backend.dto.VocabularyFavoriteResponse;
 import com.englishlearningcopilot.backend.dto.VocabularyPracticeWordResponse;
@@ -12,6 +13,7 @@ import com.englishlearningcopilot.backend.exception.ResourceNotFoundException;
 import com.englishlearningcopilot.backend.repository.UserRepository;
 import com.englishlearningcopilot.backend.repository.UserWordbookRepository;
 import com.englishlearningcopilot.backend.repository.VocabularyRepository;
+import com.englishlearningcopilot.backend.service.LearningPlanService;
 import com.englishlearningcopilot.backend.service.ReviewService;
 import com.englishlearningcopilot.backend.service.VocabularyService;
 import java.util.List;
@@ -33,17 +35,20 @@ public class VocabularyServiceImpl implements VocabularyService {
     private final UserRepository userRepository;
     private final UserWordbookRepository userWordbookRepository;
     private final ReviewService reviewService;
+    private final LearningPlanService learningPlanService;
 
     public VocabularyServiceImpl(
             VocabularyRepository vocabularyRepository,
             UserRepository userRepository,
             UserWordbookRepository userWordbookRepository,
-            ReviewService reviewService
+            ReviewService reviewService,
+            LearningPlanService learningPlanService
     ) {
         this.vocabularyRepository = vocabularyRepository;
         this.userRepository = userRepository;
         this.userWordbookRepository = userWordbookRepository;
         this.reviewService = reviewService;
+        this.learningPlanService = learningPlanService;
     }
 
     @Override
@@ -68,6 +73,12 @@ public class VocabularyServiceImpl implements VocabularyService {
                 ).stream()
                 .map(VocabularyPracticeWordResponse::from)
                 .toList();
+    }
+
+    @Override
+    @Transactional
+    public DailyPracticeProgressResponse getPracticeProgress(String username) {
+        return learningPlanService.getVocabularyProgress(username);
     }
 
     private String[] getLevelTags(String level) {
@@ -128,6 +139,7 @@ public class VocabularyServiceImpl implements VocabularyService {
         }
 
         reviewService.submitRating(user.getId(), String.valueOf(vocabularyId), request.score());
+        learningPlanService.recordVocabularyPractice(user.getId(), vocabularyId);
     }
 
     @Override

@@ -1,5 +1,6 @@
 package com.englishlearningcopilot.backend.service.impl;
 
+import com.englishlearningcopilot.backend.dto.DailyPracticeProgressResponse;
 import com.englishlearningcopilot.backend.dto.GrammarFavoriteRequest;
 import com.englishlearningcopilot.backend.dto.GrammarFavoriteResponse;
 import com.englishlearningcopilot.backend.dto.GrammarNotebookQuestionResponse;
@@ -14,6 +15,7 @@ import com.englishlearningcopilot.backend.repository.GrammarQuestionRepository;
 import com.englishlearningcopilot.backend.repository.UserGrammarbookRepository;
 import com.englishlearningcopilot.backend.repository.UserRepository;
 import com.englishlearningcopilot.backend.service.GrammarService;
+import com.englishlearningcopilot.backend.service.LearningPlanService;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -29,15 +31,18 @@ public class GrammarServiceImpl implements GrammarService {
     private final GrammarQuestionRepository grammarQuestionRepository;
     private final UserGrammarbookRepository userGrammarbookRepository;
     private final UserRepository userRepository;
+    private final LearningPlanService learningPlanService;
 
     public GrammarServiceImpl(
             GrammarQuestionRepository grammarQuestionRepository,
             UserGrammarbookRepository userGrammarbookRepository,
-            UserRepository userRepository
+            UserRepository userRepository,
+            LearningPlanService learningPlanService
     ) {
         this.grammarQuestionRepository = grammarQuestionRepository;
         this.userGrammarbookRepository = userGrammarbookRepository;
         this.userRepository = userRepository;
+        this.learningPlanService = learningPlanService;
     }
 
     @Override
@@ -52,6 +57,12 @@ public class GrammarServiceImpl implements GrammarService {
                 ).stream()
                 .map(GrammarPracticeQuestionResponse::from)
                 .toList();
+    }
+
+    @Override
+    @Transactional
+    public DailyPracticeProgressResponse getProgress(String username) {
+        return learningPlanService.getGrammarProgress(username);
     }
 
     @Override
@@ -90,6 +101,7 @@ public class GrammarServiceImpl implements GrammarService {
         UserGrammarbook grammarbook = getOrCreateGrammarbook(user.getId(), questionId);
         grammarbook.setIncorrect(request.incorrect());
         userGrammarbookRepository.save(grammarbook);
+        learningPlanService.recordGrammarPractice(user.getId(), questionId);
     }
 
     @Override

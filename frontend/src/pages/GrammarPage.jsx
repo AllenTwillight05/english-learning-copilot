@@ -1,7 +1,8 @@
 import { useCallback, useMemo, useState } from "react";
-import { BookOutlined, HistoryOutlined, SearchOutlined } from "@ant-design/icons";
-import { Button, Empty, Flex, Input, Space, Tag, Typography } from "antd";
-import { useNavigate } from "react-router-dom";
+import { BookOutlined, HistoryOutlined, LoginOutlined, SearchOutlined, UserOutlined } from "@ant-design/icons";
+import { Button, Empty, Flex, Input, Result, Space, Tag, Typography } from "antd";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../auth/AuthContext";
 import { GrammarMasteryPanel } from "../components/Grammar/GrammarMasteryPanel";
 import { GrammarProgressRing } from "../components/Grammar/GrammarProgressRing";
 import { GrammarTopicGrid } from "../components/Grammar/GrammarTopicGrid";
@@ -11,19 +12,47 @@ import { useAppServices } from "../services/ServiceContext";
 
 const { Title, Paragraph } = Typography;
 
+function syncTodayPendingStat(overview, progress) {
+  const stats = overview.stats.map((stat, index) => {
+    if (index !== overview.stats.length - 1) {
+      return stat;
+    }
+
+    return {
+      ...stat,
+      value: `${progress.remaining} 题`
+    };
+  });
+
+  return {
+    ...overview,
+    stats
+  };
+}
+
 export function GrammarPage() {
+  const auth = useAuth();
+  const location = useLocation();
   const navigate = useNavigate();
   const { grammar } = useAppServices();
   const [searchText, setSearchText] = useState("");
   const loader = useCallback(async () => {
+    if (auth.loading || !auth.isAuthenticated) {
+      return null;
+    }
+
     const [overview, progress, topics] = await Promise.all([
       grammar.getOverview(),
       grammar.getProgress(),
       grammar.getTopics()
     ]);
 
-    return { overview, progress, topics };
-  }, [grammar]);
+    return {
+      overview: syncTodayPendingStat(overview, progress),
+      progress,
+      topics
+    };
+  }, [auth.isAuthenticated, auth.loading, grammar]);
   const { data, loading, error } = useAsyncData(loader, [loader]);
   const filteredTopics = useMemo(() => {
     const keyword = searchText.trim().toLowerCase();
@@ -34,6 +63,33 @@ export function GrammarPage() {
 
     return (data?.topics ?? []).filter((topic) => topic.title.toLowerCase().includes(keyword));
   }, [data?.topics, searchText]);
+
+  if (auth.loading) {
+    return <AsyncPage loading error={null} />;
+  }
+
+  if (!auth.isAuthenticated) {
+    return (
+      <div className="page-stack">
+        <section className="glass-panel profile-empty-state">
+          <Result
+            icon={<UserOutlined />}
+            title="个人页面需要登录"
+            subTitle="登录后可以查看你的学习计划、能力进度和最近反馈。"
+            extra={
+              <Button
+                type="primary"
+                icon={<LoginOutlined />}
+                onClick={() => navigate("/login", { state: { from: location } })}
+              >
+                请先登录
+              </Button>
+            }
+          />
+        </section>
+      </div>
+    );
+  }
 
   return (
     <AsyncPage loading={loading} error={error}>
@@ -52,6 +108,7 @@ export function GrammarPage() {
 
             <GrammarProgressRing
               completed={data.progress.completed}
+              remaining={data.progress.remaining}
               total={data.progress.total}
             />
 

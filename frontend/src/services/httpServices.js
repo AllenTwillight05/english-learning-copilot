@@ -74,7 +74,11 @@ export function createHttpServices(baseUrl = "") {
       getSnapshot: () => getJson(withBaseUrl(baseUrl, API_ENDPOINTS.grammarSnapshot))
     },
     profile: {
-      getSnapshot: () => getJson(withBaseUrl(baseUrl, API_ENDPOINTS.profileSnapshot))
+      getSnapshot: () => getJson(withBaseUrl(baseUrl, API_ENDPOINTS.profileSnapshot)),
+      getLearningPlan: () => getJson(withBaseUrl(baseUrl, API_ENDPOINTS.profileLearningPlan)),
+      updateLearningPlan: (payload) =>
+        postJson(withBaseUrl(baseUrl, API_ENDPOINTS.profileLearningPlan), payload),
+      getDailyStatus: () => getJson(withBaseUrl(baseUrl, API_ENDPOINTS.profileDailyStatus))
     }
   };
 }

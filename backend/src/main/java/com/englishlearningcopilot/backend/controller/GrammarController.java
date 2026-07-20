@@ -1,6 +1,7 @@
 package com.englishlearningcopilot.backend.controller;
 
 import com.englishlearningcopilot.backend.dto.GrammarFavoriteRequest;
+import com.englishlearningcopilot.backend.dto.DailyPracticeProgressResponse;
 import com.englishlearningcopilot.backend.dto.GrammarFavoriteResponse;
 import com.englishlearningcopilot.backend.dto.GrammarNotebookQuestionResponse;
 import com.englishlearningcopilot.backend.dto.GrammarPracticeResultRequest;
@@ -38,6 +39,11 @@ public class GrammarController {
             @RequestParam String category
     ) {
         return grammarService.getPracticeQuestions(principal.getName(), category);
+    }
+
+    @GetMapping("/progress")
+    public DailyPracticeProgressResponse getProgress(Principal principal) {
+        return grammarService.getProgress(principal.getName());
     }
 
     /**

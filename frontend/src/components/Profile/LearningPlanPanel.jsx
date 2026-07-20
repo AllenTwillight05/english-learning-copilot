@@ -1,20 +1,25 @@
-import { CheckCircleFilled } from "@ant-design/icons";
-import { List, Tag, Typography } from "antd";
+import { CheckCircleFilled, SettingOutlined } from "@ant-design/icons";
+import { Button, List, Tag, Typography } from "antd";
 import { PageSectionHeader } from "../common/PageSectionHeader";
 
 const { Text } = Typography;
 
-// 学习计划面板只展示今日任务列表，计划生成和更新交给 profile 服务。
-export function LearningPlanPanel({ plan }) {
+export function LearningPlanPanel({ plan, onEdit }) {
   return (
     <section className="glass-panel">
       <PageSectionHeader
         eyebrow="Learning Plan"
         title="今日学习计划"
         extra={
-          <Tag bordered={false} className="soft-tag">
-            自动规划已开启
-          </Tag>
+          <Button
+            htmlType="button"
+            icon={<SettingOutlined />}
+            onClick={onEdit}
+            size="small"
+            type="primary"
+          >
+            设置计划
+          </Button>
         }
       />
       <List
@@ -25,7 +30,7 @@ export function LearningPlanPanel({ plan }) {
               <div>
                 <Text strong>{item.task}</Text>
                 <div className="plan-meta">
-                  {item.time} · {item.meta}
+                  {item.time} - {item.meta}
                 </div>
               </div>
               {item.done ? <CheckCircleFilled className="success-icon" /> : null}
@@ -33,6 +38,11 @@ export function LearningPlanPanel({ plan }) {
           </List.Item>
         )}
       />
+      {plan.allDone ? (
+        <Tag bordered={false} className="soft-tag">
+          今日已完成
+        </Tag>
+      ) : null}
     </section>
   );
 }

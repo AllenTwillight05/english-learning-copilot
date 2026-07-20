@@ -1,6 +1,7 @@
 package com.englishlearningcopilot.backend.controller;
 
 import com.englishlearningcopilot.backend.dto.MessageResponse;
+import com.englishlearningcopilot.backend.dto.DailyPracticeProgressResponse;
 import com.englishlearningcopilot.backend.dto.VocabularyFavoriteRequest;
 import com.englishlearningcopilot.backend.dto.VocabularyFavoriteResponse;
 import com.englishlearningcopilot.backend.dto.VocabularyPracticeWordResponse;
@@ -38,6 +39,11 @@ public class VocabularyController {
     ) {
         String username = principal == null ? null : principal.getName();
         return vocabularyService.getPracticeWords(username, level);
+    }
+
+    @GetMapping("/practice-progress")
+    public DailyPracticeProgressResponse getPracticeProgress(Principal principal) {
+        return vocabularyService.getPracticeProgress(principal.getName());
     }
 
     /**
