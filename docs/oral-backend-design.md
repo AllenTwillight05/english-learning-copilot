@@ -12,9 +12,10 @@
 - 返回 sessionId 给前端。
 
 **3. 对话交互**
-- 每一轮前端提交用户输入，可以先支持文本，后续再接语音转文字。
+- 每一轮前端提交用户录音。当前前端已经移除了文本输入框，不再支持手动打字发送。
+- 后端收到录音后，会先保存音频文件，再把音频交给 ASR 和发音评分服务处理。现在这两个服务还是 mock，实现目标是先跑通流程。
 - 后端保存用户发言，然后把以下内容交给 Agent：
-    当前场景、角色设定、历史对话、用户最新发言、目标能力、当前轮次。
+    当前场景、角色设定、历史对话、用户最新转写文本、目标能力、当前轮次。
 
 **4. Agent 生成回复**
 Agent 返回两类内容：
@@ -40,7 +41,7 @@ GET    /api/speaking/scenarios/{scenarioId}
 POST   /api/speaking/sessions
 GET    /api/speaking/sessions/{sessionId}
 
-POST   /api/speaking/sessions/{sessionId}/messages
+POST   /api/speaking/sessions/{sessionId}/messages  // multipart，字段名 audio
 POST   /api/speaking/sessions/{sessionId}/finish
 
 GET    /api/speaking/sessions/{sessionId}/feedback
@@ -71,6 +72,11 @@ speaking_message
 - session_id
 - sender  // USER or AGENT
 - content
+- audio_url
+- transcribed_text
+- pronunciation_score
+- pronunciation_detail
+- instant_tip
 - turn_index
 - created_at
 
@@ -90,7 +96,7 @@ speaking_feedback
 ```
 
 ## 开发顺序
-- 第一阶段 文本对话闭环：场景列表、创建 session、用户发一句、Agent 回一句、保存历史。
+- 第一阶段 原本计划先做文本对话闭环：场景列表、创建 session、用户发一句、Agent 回一句、保存历史。当前实现已经把前端文本输入移除，实际主链路改成“录音上传 + mock 转写 + mock 回复”。
 - 第二阶段 结束评分：把完整对话发给评分 Agent，返回结构化 JSON，落库并展示。
 - 第三阶段 接语音能力：前端录音上传，后端调用语音转文字；如果要评 pronunciation，再保存音频或转写置信度，并让 Agent 根据转写和语音分析结果评分。
 - 第四阶段 历史记录和回放：替代现在前端 localStorage，让历史练习来自数据库。
@@ -98,26 +104,27 @@ speaking_feedback
 ## 目前的数据流
 
 ### 数据内容
-1. Scenarios：Spring Boot 启动时会执行SpeakingScenarioSeedConfig.java中的 CommandLineRunner seedSpeakingScenarios(...)，往 speaking_scenarios 表里插入 4 条默认场景（待取代）：
+1. Scenarios：Spring Boot 启动时会执行 SpeakingScenarioSeedConfig.java 中的 CommandLineRunner seedSpeakingScenarios(...)，往 speaking_scenarios 表里插入 4 条默认场景：
     - business-opening
     - airport-checkin
     - dinner-smalltalk
     - clinic-visit
-2. Usr：来自 users 表，由注册api写入（POST /api/auth/register）；speaking 创建 session 时会根据当前 JWT 里的用户名查 users 表
-3. Session：调用会话api（POST /api/speaking/sessions），后端在 speaking_sessions 表创建一条记录，包含：
+2. User：来自 users 表，由注册 api 写入（POST /api/auth/register）；speaking 创建 session 时会根据当前 JWT 里的用户名查 users 表。
+3. Session：调用会话 api（POST /api/speaking/sessions），后端在 speaking_sessions 表创建一条记录，包含：
     - user_id
     - scenario_id
     - status
     - started_at
     - target_turns
     - current_turn
-4. Message：调用消息api（POST /api/speaking/sessions/{sessionId}/messages），后端会写入两类消息到 speaking_messages：
-    - USER：用户发来的内容
-    - AGENT：后端 agent 回复
-    目前 agent 回复来自后端的 mock agent client。
+4. Message：调用消息 api（POST /api/speaking/sessions/{sessionId}/messages），后端会写入两类消息到 speaking_messages：
+    - USER：用户录音转写后的文本，同时保存 audioUrl、transcribedText、pronunciationScore、pronunciationDetail。
+    - AGENT：后端 agent 回复，同时保存 instantTip。当前 TTS 是 mock，所以 agent audioUrl 通常为空，前端会退回浏览器 TTS 播放。
+5. Audio：录音文件不直接放数据库。当前存到本地文件系统，路径来自 `app.speaking.upload-dir`，默认是 `uploads/speaking`。数据库只保存音频路径。
+6. Feedback：当前没有单独落 `speaking_feedback` 表。反馈接口会根据 session 里的消息和发音分数临时生成一份 mock 评分结果。
 
 ### 数据传输
-后端 speaking 模块一次“理想全流程”数据流：
+后端 speaking 模块当前一次可跑通的数据流：
 
 **1. 启动阶段：准备场景数据**
 
@@ -159,11 +166,11 @@ GET /api/speaking/scenarios/{scenarioId}
 
 后端从 `speaking_scenarios` 表读取场景基础信息，返回给前端。
 
-这一步目前可以跑通。
+这一步目前可以跑通。场景详情页的“对话示例”使用 `sampleDialogue`，真实会话不依赖旧的 `scenario.prompts`。
 
 **4. 创建练习会话阶段**
 
-前端理论上应该在用户点击“进入会话/开始练习”时调用：
+前端在用户进入会话页时调用：
 
 ```text
 POST /api/speaking/sessions
@@ -185,54 +192,86 @@ POST /api/speaking/sessions
 - 自动把场景的 `openingMessage` 写入 `speaking_messages`，作为第一条 Agent 消息。
 - 返回 session 和 messages。
 
-这一步后端已有，但当前前端还没接上。
+这一步目前前后端已经接上。会话页加载后，第一条 Agent 开场白来自后端 session.messages。
 
-**5. 用户发送文本消息阶段**
+**5. 用户录音消息阶段**
 
-前端理论上应该调用：
+前端点击“开始录音”后使用浏览器 MediaRecorder 获取音频。点击“停止录音”后，前端把录音 Blob 作为 multipart 表单提交：
 
 ```text
 POST /api/speaking/sessions/{sessionId}/messages
 ```
 
-请求体类似：
+请求格式：
 
-```json
-{
-  "content": "Sure. Today I'd like to start with the project update."
-}
+```http
+Content-Type: multipart/form-data
+```
+
+字段：
+
+```text
+audio: recording.webm
 ```
 
 后端会：
 
-- 写入一条 `USER` 消息到 `speaking_messages`。
-- 调用 `SpeakingAgentClient` 生成回复。
+- 读取上传的音频文件。
+- 先写入一条占位 `USER` 消息，拿到 message id 后保存音频文件。
+- 调用 `AsrService` 生成转写文本。当前是 `MockAsrService`，返回固定 mock 文本。
+- 调用 `IseService` 生成发音分数。当前是 `MockIseService`，返回随机 mock 分数。
+- 更新 `USER` 消息，写入 content、audioUrl、transcribedText、pronunciationScore、pronunciationDetail。
+- 调用 `SpeakingAgentClient` 生成回复。当前是 `MockSpeakingAgentClient`，按场景和轮次返回固定风格的回复。
+- 调用 `TtsService` 生成 Agent 语音。当前是 `MockTtsService`，返回空音频；前端会用浏览器 `speechSynthesis` 读出 Agent 文本。
 - 写入一条 `AGENT` 消息。
 - 更新 `speaking_sessions.currentTurn`。
-- 返回本轮用户消息、Agent 消息和 session 状态。
+- 返回本轮用户消息、Agent 消息、发音分数和 session 状态。
 
-这一步后端也已有，但当前是 mock agent，不是真 AI；前端也还没接上。
+这一步目前可以跑通，真实 ASR、真实发音评分、真实大模型 Agent 还没有接入。
 
-**目前无法完整跑通的缺口**
+**6. 查询历史和反馈阶段**
 
-1. 前端 speaking 会话页还在用 `scenario.prompts` 跑固定脚本，而后端场景接口不返回 `prompts`。
-2. 前端还没有调用后端的 `POST /api/speaking/sessions` 创建真实 session。
-3. 前端还没有调用 `POST /api/speaking/sessions/{sessionId}/messages` 发送用户消息。
-4. 当前录音流程只是前端模拟，没有上传录音接口接入。
-5. 后端还没有真实语音识别、发音评分、语速、流利度评估。
-6. 后端还没有完整 feedback 接口，例如设计文档里提到的：
+前端反馈页优先使用 URL 里的 `sessionId` 查询会话：
+
+```text
+GET /api/speaking/sessions/{sessionId}
+```
+
+如果没有 `sessionId`，前端会调用历史接口，找到当前场景最新的一条 session：
+
+```text
+GET /api/speaking/history
+```
+
+反馈数据来自：
+
 ```text
 GET /api/speaking/sessions/{sessionId}/feedback
 ```
-7. 当前 `SpeakingAgentClient` 是 mock 回复，不是真正的大模型或语音对话伙伴。
-8. 前端反馈页还在读 `scenario.feedback`，但后端不返回 `feedback`，所以真实 HTTP 下会显示“评分数据缺失”。
+
+当前反馈接口不是最终评分算法，它会生成 mock 总分、发音准确性、流畅度、语速、问题句子、建议和每轮反馈。它的作用是先让“录音练习 -> 会话保存 -> 反馈页展示 -> 回放”这条路跑起来。
+
+### 当前还没有做完的地方
+
+1. ASR 还没有接真实模型，现在转写文本来自 `MockAsrService`。
+2. 发音评分还没有接真实模型，现在 pronunciation score 来自 `MockIseService`。
+3. Agent 还没有接真实大模型，现在回复来自 `MockSpeakingAgentClient`。
+4. TTS 还没有接真实语音合成，现在后端不生成 Agent 音频，前端使用浏览器 TTS。
+5. `POST /api/speaking/sessions/{sessionId}/finish` 还没有实现。当前“交卷”只是前端跳转到反馈页，并不会把 session 状态改成 completed。
+6. `speaking_feedback` 表还没有真正使用。反馈结果目前是按请求临时生成，不是稳定保存的历史评分报告。
+7. 录音文件当前使用本地文件系统保存。部署到服务器时需要把 `app.speaking.upload-dir` 配到服务器上的持久目录；如果多实例部署，应该换成对象存储或共享存储。
+8. 文本输入发送功能已经从前端和 service 中移除。现在 `/messages` 只接受 multipart 录音，不再接受 JSON 文本消息。
 
 所以现在的真实进度可以理解为：
 
 ```text
 场景列表/详情：已后端化，可从 MySQL 跑通
 认证 + 用户入库：已后端化，可跑通
-创建 session：后端已实现，前端未接
-发送文本消息：后端已实现，前端未接
-录音上传/语音评估/反馈报告：尚未实现完整后端闭环
+创建 session：前后端已接通
+录音上传：前后端已接通，音频保存到文件系统，路径写入消息记录
+语音转写：已接 mock，未接真实模型
+发音评分：已接 mock，未接真实模型
+Agent 回复：已接 mock，未接真实大模型
+反馈报告：接口已接通，当前是 mock 评分，尚未落 speaking_feedback 表
+历史和回放：已从后端 session/history 读取，不再依赖前端 localStorage 保存练习结果
 ```

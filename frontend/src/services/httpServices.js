@@ -1,5 +1,6 @@
 import { API_ENDPOINTS } from "./endpoints";
-import { getJson, postJson } from "./httpClient";
+import { getJson, postJson, requestJson } from "./httpClient";
+import { getStoredAuth } from "./authStorage";
 
 function withBaseUrl(baseUrl, path) {
   return `${baseUrl}${path}`;
@@ -31,8 +32,18 @@ export function createHttpServices(baseUrl = "") {
       getSession: (sessionId) =>
         getJson(withBaseUrl(baseUrl, API_ENDPOINTS.speakingSession(sessionId))),
       listHistory: () => getJson(withBaseUrl(baseUrl, API_ENDPOINTS.speakingHistory)),
-      addMessage: (sessionId, content) =>
-        postJson(withBaseUrl(baseUrl, API_ENDPOINTS.speakingSessionMessages(sessionId)), { content })
+      submitRecording: (sessionId, audioBlob) => {
+        const formData = new FormData();
+        formData.append("audio", audioBlob, "recording.webm");
+        const { token } = getStoredAuth();
+        return requestJson(withBaseUrl(baseUrl, API_ENDPOINTS.speakingSessionMessages(sessionId)), {
+          method: "POST",
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+          body: formData
+        });
+      },
+      getFeedback: (sessionId) =>
+        getJson(withBaseUrl(baseUrl, API_ENDPOINTS.speakingSessionFeedback(sessionId)))
     },
     vocabulary: {
       getSnapshot: () => getJson(withBaseUrl(baseUrl, API_ENDPOINTS.vocabularySnapshot)),

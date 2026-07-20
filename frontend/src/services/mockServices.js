@@ -195,18 +195,30 @@ export function createMockServices() {
           .sort((left, right) => new Date(right.startedAt).getTime() - new Date(left.startedAt).getTime());
         return simulateLatency(sessions);
       },
-      addMessage: (sessionId, content) => {
+      submitRecording: (sessionId, _audioBlob) => {
         const session = mockSpeakingSessions.get(Number(sessionId));
         if (!session) {
           return Promise.reject(new Error("Speaking session was not found."));
         }
-
         const turnIndex = session.currentTurn + 1;
+        const transcribedText = "This is a mock transcript of the recorded speech.";
+        const rng = () => Math.floor(Math.random() * 18) + 78;
+        const pronunciationScore = {
+          totalScore: rng(),
+          accuracy: rng(),
+          fluency: rng(),
+          integrity: rng(),
+          speed: 100 + Math.floor(Math.random() * 50)
+        };
         const userMessage = toSpeakingMessageResponse({
           sender: "USER",
-          content,
+          content: transcribedText,
           turnIndex
         });
+        userMessage.audioUrl = `mock-audio/speaking/${sessionId}/${userMessage.id}.webm`;
+        userMessage.transcribedText = transcribedText;
+        userMessage.pronunciationScore = pronunciationScore.totalScore;
+        userMessage.pronunciationDetail = JSON.stringify(pronunciationScore);
         const agentMessage = toSpeakingMessageResponse({
           sender: "AGENT",
           content: "Nice answer. Could you add one more detail and make it sound more natural?",
@@ -219,11 +231,33 @@ export function createMockServices() {
           messages: [...session.messages, userMessage, agentMessage]
         };
         mockSpeakingSessions.set(updatedSession.id, updatedSession);
-
         return simulateLatency({
           userMessage,
           agentMessage,
+          pronunciationScore,
           session: updatedSession
+        });
+      },
+      getFeedback: (sessionId) => {
+        const session = mockSpeakingSessions.get(Number(sessionId));
+        if (!session) {
+          return Promise.reject(new Error("Speaking session was not found."));
+        }
+        const userMessages = (session.messages ?? [])
+          .filter((msg) => msg.sender === "USER")
+          .map((msg) => msg.content);
+        const rng = () => Math.floor(Math.random() * 18) + 78;
+        return simulateLatency({
+          totalScore: rng(),
+          pronunciation: rng(),
+          fluency: rng(),
+          speed: (108 + Math.floor(Math.random() * 37)) + " WPM",
+          issueSentences: userMessages.slice(0, 2),
+          suggestions: [
+            "Try adding more detail to make your responses fuller and more natural.",
+            "Pay attention to sentence stress — emphasize key words for clearer communication.",
+            "Practice linking words together to improve your overall fluency."
+          ]
         });
       }
     },

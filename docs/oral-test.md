@@ -18,7 +18,7 @@ frontend/test/speaking/
 - `unit/mockData.test.js`：检查口语 mock 数据字段完整性。
 - `unit/SpeakingPage.test.jsx`：检查口语入口页和卡片跳转。
 - `unit/SpeakingScenarioDetailPage.test.jsx`：检查情景详情页和历史记录按钮。
-- `unit/SpeakingConversationPage.test.jsx`：检查会话页录音轮次、单句回放和交卷。
+- `unit/SpeakingConversationPage.test.jsx`：检查会话页创建后端风格 session、单句回放，以及文本输入框已移除。
 - `unit/SpeakingFeedbackPage.test.jsx`：检查反馈页回放弹窗和暂停/开始控制。
 - `unit/SpeakingErrorStates.test.jsx`：检查异常数据场景。
 - `e2e/speaking-flow.spec.js`：检查真实浏览器中的完整口语流程。
@@ -53,9 +53,9 @@ Playwright + Chromium + @axe-core/playwright
 - mock 数据结构是否满足页面依赖。
 - `/speaking` 是否展示 6 个口语情景。
 - 情景详情页是否能进入会话页。
-- 历史记录按钮是否根据 localStorage 启用。
-- 会话页是否能录音 3 轮后交卷。
-- 交卷后是否写入 `speaking-history:<scenarioId>`。
+- 历史记录按钮是否根据后端 history 数据启用。
+- 会话页是否能创建后端风格 session，并展示后端返回的开场白。
+- 会话页是否不再展示打字输入框和“发送”按钮。
 - 反馈页是否能打开回放弹窗。
 - 回放弹窗是否展示聊天记录和分轮控制。
 - 异常数据是否有显式提示，并阻断依赖动作。
@@ -66,7 +66,7 @@ E2E 测试覆盖：
 - 进入会话页。
 - 模拟开始/停止录音 3 轮。
 - 点击交卷进入反馈页。
-- 检查 localStorage 回放记录。
+- 检查后端风格 session/history 回放数据。
 - 打开并操作回放弹窗。
 - 检查 AntD Modal 行为。
 - 检查移动端布局。
@@ -85,9 +85,9 @@ E2E 测试覆盖：
 
 - scenario id 不存在。
 - `keywords` 缺失。
-- `prompts` 缺失。
-- `feedback` 缺失或字段不完整。
-- localStorage 历史回放 JSON 损坏。
+- `sampleDialogue` 或旧 mock `prompts` 缺失时的降级展示。
+- feedback 缺失或字段不完整。
+- history/session 查询失败时的错误展示。
 
 ## 运行命令
 
@@ -122,8 +122,8 @@ npm run test:e2e -- --update-snapshots
 ```text
 npm run test:run
 
-Test Files  6 passed (6)
-Tests       13 passed (13)
+Test Files  7 passed (7)
+Tests       23 passed (23)
 ```
 
 E2E 测试：

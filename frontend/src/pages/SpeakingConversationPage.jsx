@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeftOutlined,
   AudioOutlined,
@@ -6,15 +6,12 @@ import {
   SendOutlined,
   SoundOutlined
 } from "@ant-design/icons";
-import { Button, Flex, Input, Progress, Space, Tag, Typography } from "antd";
+import { Button, Flex, Progress, Space, Tag } from "antd";
 import { useNavigate, useParams } from "react-router-dom";
 import { AsyncPage } from "../components/common/AsyncPage";
 import { PageSectionHeader } from "../components/common/PageSectionHeader";
 import { useAsyncData } from "../hooks/useAsyncData";
 import { useAppServices } from "../services/ServiceContext";
-
-const { Text } = Typography;
-const { TextArea } = Input;
 
 function speakText(text) {
   if (!window.speechSynthesis || !text) {
@@ -24,12 +21,25 @@ function speakText(text) {
   window.speechSynthesis.speak(new SpeechSynthesisUtterance(text));
 }
 
+function playAudioUrl(audioUrl, onEnd) {
+  if (!audioUrl) {
+    onEnd();
+    return null;
+  }
+  const audio = new Audio(audioUrl);
+  audio.onended = onEnd;
+  audio.onerror = onEnd;
+  audio.play().catch(onEnd);
+  return audio;
+}
+
 function toChatMessage(message) {
   const isUser = message.sender === "USER";
   return {
     id: message.id,
     role: isUser ? "learner" : "coach",
     text: message.content,
+    audioUrl: message.audioUrl,
     instantTip: message.instantTip
   };
 }
@@ -47,11 +57,14 @@ export function SpeakingConversationPage() {
   }, [speaking, scenarioId]);
   const { data, loading, error } = useAsyncData(loader, [loader]);
   const [session, setSession] = useState(null);
-  const [draftMessage, setDraftMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [sendError, setSendError] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingCount, setRecordingCount] = useState(0);
+
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
+  const agentAudioRef = useRef(null);
 
   const activeSession = session ?? data;
   const scenario = activeSession?.scenario;
@@ -60,49 +73,104 @@ export function SpeakingConversationPage() {
     [activeSession]
   );
   const lastTip = [...messages].reverse().find((message) => message.instantTip)?.instantTip;
-  const canSend = draftMessage.trim().length > 0 && !isSending && Boolean(activeSession?.id);
 
   const playMessageAudio = useCallback((message) => {
-    speakText(message.text);
+    if (message.audioUrl) {
+      playAudioUrl(message.audioUrl, () => {});
+    } else {
+      speakText(message.text);
+    }
   }, []);
 
-  const startRecording = useCallback(() => {
-    setIsRecording(true);
-    setRecordingCount((current) => current + 1);
+  const stopAgentAudio = useCallback(() => {
+    agentAudioRef.current?.pause();
+    agentAudioRef.current = null;
   }, []);
+
+  const startRecording = useCallback(async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+          ? "audio/webm;codecs=opus"
+          : "audio/webm"
+      });
+
+      audioChunksRef.current = [];
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = async () => {
+        // Stop all tracks to release the microphone
+        stream.getTracks().forEach((track) => track.stop());
+
+        if (audioChunksRef.current.length === 0 || !activeSession?.id) {
+          return;
+        }
+
+        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+        audioChunksRef.current = [];
+
+        setIsSending(true);
+        setSendError(null);
+        try {
+          const turn = await speaking.submitRecording(activeSession.id, audioBlob);
+          setSession(turn.session);
+          setRecordingCount((current) => current + 1);
+
+          // Auto-play agent audio if available, else fallback to browser TTS
+          const agentMsg = turn.agentMessage;
+          if (agentMsg?.audioUrl) {
+            stopAgentAudio();
+            agentAudioRef.current = playAudioUrl(agentMsg.audioUrl, () => {
+              agentAudioRef.current = null;
+            });
+          } else if (agentMsg?.content) {
+            speakText(agentMsg.content);
+          }
+        } catch (err) {
+          setSendError(err);
+        } finally {
+          setIsSending(false);
+        }
+      };
+
+      mediaRecorderRef.current = mediaRecorder;
+      mediaRecorder.start();
+      setIsRecording(true);
+    } catch (err) {
+      console.error("Failed to start recording:", err);
+    }
+  }, [activeSession, speaking, stopAgentAudio]);
 
   const stopRecording = useCallback(() => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
+      mediaRecorderRef.current.stop();
+      mediaRecorderRef.current = null;
+    }
     setIsRecording(false);
   }, []);
-
-  const sendMessage = useCallback(async () => {
-    if (!canSend) {
-      return;
-    }
-
-    const content = draftMessage.trim();
-    setDraftMessage("");
-    setIsSending(true);
-    setSendError(null);
-
-    try {
-      const turn = await speaking.addMessage(activeSession.id, content);
-      setSession(turn.session);
-    } catch (error) {
-      setDraftMessage(content);
-      setSendError(error);
-    } finally {
-      setIsSending(false);
-    }
-  }, [activeSession, canSend, draftMessage, speaking]);
 
   const finishSession = useCallback(() => {
     if (!scenario || !activeSession?.id) {
       return;
     }
-
+    stopAgentAudio();
     navigate(`/speaking/${scenario.id}/feedback?sessionId=${encodeURIComponent(activeSession.id)}`);
-  }, [activeSession, navigate, scenario]);
+  }, [activeSession, navigate, scenario, stopAgentAudio]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      stopAgentAudio();
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
+        mediaRecorderRef.current.stop();
+      }
+    };
+  }, [stopAgentAudio]);
 
   return (
     <AsyncPage loading={loading} error={error}>
@@ -160,7 +228,13 @@ export function SpeakingConversationPage() {
             <div className={`recorder-strip ${isRecording ? "recorder-strip--recording" : ""}`}>
               <div className="recorder-strip__label">
                 <SoundOutlined />
-                <span>{isRecording ? "正在录音" : "录音仍未实现，可用打字检查交互是否正常"}</span>
+                <span>
+                  {isRecording
+                    ? "正在录音中..."
+                    : isSending
+                      ? "正在处理语音..."
+                      : "点击「开始录音」录入语音"}
+                </span>
               </div>
               <div className="waveform-bars" aria-hidden="true">
                 {Array.from({ length: 28 }).map((_, index) => (
@@ -168,31 +242,7 @@ export function SpeakingConversationPage() {
                 ))}
               </div>
               {isRecording ? <Progress percent={66} showInfo={false} status="active" /> : null}
-            </div>
-
-            <div className="speaking-message-composer">
-              <TextArea
-                autoSize={{ minRows: 2, maxRows: 4 }}
-                maxLength={4000}
-                placeholder="输入你的英文回答..."
-                value={draftMessage}
-                onChange={(event) => setDraftMessage(event.target.value)}
-                onPressEnter={(event) => {
-                  if (!event.shiftKey) {
-                    event.preventDefault();
-                    sendMessage();
-                  }
-                }}
-              />
-              <Button
-                type="primary"
-                icon={<SendOutlined />}
-                loading={isSending}
-                disabled={!canSend}
-                onClick={sendMessage}
-              >
-                发送
-              </Button>
+              {isSending ? <Progress percent={100} showInfo={false} status="active" /> : null}
             </div>
 
             <Flex justify="space-between" gap={12} wrap="wrap">
@@ -204,7 +254,7 @@ export function SpeakingConversationPage() {
                   type="primary"
                   icon={<AudioOutlined />}
                   onClick={startRecording}
-                  disabled={isRecording}
+                  disabled={isRecording || isSending}
                 >
                   开始录音
                 </Button>
@@ -225,7 +275,6 @@ export function SpeakingConversationPage() {
                 交卷
               </Button>
             </Flex>
-            <Text type="secondary">当前会话消息已接入后端 session。</Text>
           </section>
         </div>
       ) : null}

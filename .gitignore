@@ -4,6 +4,7 @@ dist
 frontend/dist
 target
 backend/target
+backend/uploads/speaking/
 .DS_Store
 .env
 frontend/.env

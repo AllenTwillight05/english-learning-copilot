@@ -41,6 +41,18 @@ public class SpeakingMessage {
     @Column(nullable = false, length = 4000)
     private String content;
 
+    @Column(name = "audio_url", length = 500)
+    private String audioUrl;
+
+    @Column(name = "transcribed_text", length = 4000)
+    private String transcribedText;
+
+    @Column(name = "pronunciation_score")
+    private Double pronunciationScore;
+
+    @Column(name = "pronunciation_detail", length = 4000)
+    private String pronunciationDetail;
+
     @Column(name = "instant_tip", length = 1000)
     private String instantTip;
 

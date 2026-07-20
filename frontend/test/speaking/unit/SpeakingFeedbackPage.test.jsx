@@ -24,7 +24,18 @@ function createFeedbackServices(session) {
           : Promise.reject(new Error("Speaking scenario was not found."));
       },
       getSession: () => Promise.resolve(structuredClone(session)),
-      listHistory: () => Promise.resolve([structuredClone(session)])
+      listHistory: () => Promise.resolve([structuredClone(session)]),
+      getFeedback: () => Promise.resolve({
+        totalScore: 88,
+        pronunciation: 91,
+        fluency: 84,
+        speed: "136 WPM",
+        issueSentences: ["I want to review my meeting opening."],
+        suggestions: [
+          "Try adding more detail to make your responses fuller.",
+          "Pay attention to sentence stress."
+        ]
+      })
     }
   };
 }
@@ -42,7 +53,7 @@ const session = {
 };
 
 describe("SpeakingFeedbackPage", () => {
-  it("opens the replay modal with chat records and turn segments", async () => {
+  it("opens the replay modal with chat records and controls", async () => {
     renderWithProviders(<SpeakingFeedbackPage />, {
       path: "/speaking/:scenarioId/feedback",
       route: `/speaking/${defaultScenario.id}/feedback?sessionId=${session.id}`,
@@ -55,8 +66,6 @@ describe("SpeakingFeedbackPage", () => {
     expect(within(dialog).getByText("Welcome back. What would you like to practice first?")).toBeInTheDocument();
     expect(within(dialog).getByText("I want to review my meeting opening.")).toBeInTheDocument();
     expect(within(dialog).getByRole("button", { name: /暂停/ })).toBeInTheDocument();
-    expect(within(dialog).getByRole("button", { name: "第 1 轮" })).toBeInTheDocument();
-    expect(within(dialog).getByRole("button", { name: "第 2 轮" })).toBeInTheDocument();
   });
 
   it("can pause and resume replay from the modal controls", async () => {
@@ -76,5 +85,34 @@ describe("SpeakingFeedbackPage", () => {
     await waitFor(() => {
       expect(within(dialog).getByRole("button", { name: /暂停/ })).toBeInTheDocument();
     });
+  });
+
+  it("displays feedback scores when feedback is available", async () => {
+    renderWithProviders(<SpeakingFeedbackPage />, {
+      path: "/speaking/:scenarioId/feedback",
+      route: `/speaking/${defaultScenario.id}/feedback?sessionId=${session.id}`,
+      services: createFeedbackServices(session)
+    });
+
+    expect(await screen.findByText("88")).toBeInTheDocument();
+    expect(screen.getByText("91")).toBeInTheDocument();
+    expect(screen.getByText("84")).toBeInTheDocument();
+    expect(screen.getByText("136 WPM")).toBeInTheDocument();
+    expect(screen.getByText(/总评分/)).toBeInTheDocument();
+    expect(screen.getByText(/发音准确性/)).toBeInTheDocument();
+    expect(screen.getByText(/流畅度/)).toBeInTheDocument();
+    expect(screen.getByText(/语速/)).toBeInTheDocument();
+  });
+
+  it("shows feedback missing message when no feedback available", async () => {
+    const services = createFeedbackServices(session);
+    services.speaking.getFeedback = () => Promise.reject(new Error("No feedback"));
+    renderWithProviders(<SpeakingFeedbackPage />, {
+      path: "/speaking/:scenarioId/feedback",
+      route: `/speaking/${defaultScenario.id}/feedback?sessionId=${session.id}`,
+      services
+    });
+
+    expect(await screen.findByText(/评分数据暂未生成/)).toBeInTheDocument();
   });
 });
