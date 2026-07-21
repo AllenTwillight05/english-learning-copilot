@@ -3,8 +3,9 @@ import { Progress, Typography } from "antd";
 
 const { Title, Text } = Typography;
 
-function PlanProgressItem({ label, completed, total, strokeColor }) {
+function PlanProgressItem({ label, completed, total, remaining, strokeColor }) {
   const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+  const pending = remaining ?? Math.max(total - completed, 0);
 
   return (
     <div className="dashboard-study-plan__item">
@@ -20,6 +21,7 @@ function PlanProgressItem({ label, completed, total, strokeColor }) {
         strokeColor={strokeColor}
         trailColor="rgba(17, 17, 17, 0.08)"
       />
+      <Text type="secondary">今日待练：{pending}</Text>
     </div>
   );
 }
@@ -38,20 +40,16 @@ export function DashboardStudyPlanNote({ plan }) {
 
       <div className="dashboard-study-plan__list">
         <PlanProgressItem
-          label="口语"
-          completed={plan.speaking.completed}
-          total={plan.speaking.total}
-          strokeColor="#c08a1d"
-        />
-        <PlanProgressItem
           label="词汇"
           completed={plan.vocabulary.completed}
+          remaining={plan.vocabulary.remaining}
           total={plan.vocabulary.total}
           strokeColor="#0f766e"
         />
         <PlanProgressItem
           label="语法"
           completed={plan.grammar.completed}
+          remaining={plan.grammar.remaining}
           total={plan.grammar.total}
           strokeColor="#2356c4"
         />

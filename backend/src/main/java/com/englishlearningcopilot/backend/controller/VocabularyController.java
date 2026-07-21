@@ -1,6 +1,7 @@
 package com.englishlearningcopilot.backend.controller;
 
 import com.englishlearningcopilot.backend.dto.MessageResponse;
+import com.englishlearningcopilot.backend.dto.DailyPracticeProgressResponse;
 import com.englishlearningcopilot.backend.dto.VocabularyFavoriteRequest;
 import com.englishlearningcopilot.backend.dto.VocabularyFavoriteResponse;
 import com.englishlearningcopilot.backend.dto.VocabularyPracticeWordResponse;
@@ -10,6 +11,7 @@ import com.englishlearningcopilot.backend.service.VocabularyService;
 import jakarta.validation.Valid;
 import java.security.Principal;
 import java.util.List;
+import java.util.Map;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -28,6 +30,16 @@ public class VocabularyController {
     }
 
     /**
+     * GET /api/vocabulary/memory
+     * Get the current user's FSRS vocabulary memory statistics
+    */
+    @GetMapping("/memory")
+    public Map<String, Object> getVocabularyMemory(Principal principal) {
+        String username = principal == null ? null : principal.getName();
+        return vocabularyService.getMemory(username);
+    }
+
+    /**
      * GET /api/vocabulary/practice-words
      * Get random vocabulary practice words excluding current user's wordbook
     */
@@ -38,6 +50,11 @@ public class VocabularyController {
     ) {
         String username = principal == null ? null : principal.getName();
         return vocabularyService.getPracticeWords(username, level);
+    }
+
+    @GetMapping("/practice-progress")
+    public DailyPracticeProgressResponse getPracticeProgress(Principal principal) {
+        return vocabularyService.getPracticeProgress(principal.getName());
     }
 
     /**

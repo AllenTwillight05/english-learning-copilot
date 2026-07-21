@@ -11,11 +11,14 @@ import com.englishlearningcopilot.backend.dto.GrammarRatingRequest;
 import com.englishlearningcopilot.backend.entity.AppUser;
 import com.englishlearningcopilot.backend.entity.GrammarQuestion;
 import com.englishlearningcopilot.backend.entity.UserGrammarbook;
+import com.englishlearningcopilot.backend.entity.UserWordProgress;
 import com.englishlearningcopilot.backend.entity.UserRole;
 import com.englishlearningcopilot.backend.repository.GrammarQuestionRepository;
 import com.englishlearningcopilot.backend.repository.UserGrammarbookRepository;
 import com.englishlearningcopilot.backend.repository.UserRepository;
+import com.englishlearningcopilot.backend.repository.UserWordProgressRepository;
 import com.englishlearningcopilot.backend.service.GrammarService;
+import java.time.Instant;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,8 +40,12 @@ class GrammarNotebookIntegrationTest {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private UserWordProgressRepository userWordProgressRepository;
+
     @BeforeEach
     void setUp() {
+        userWordProgressRepository.deleteAll();
         userGrammarbookRepository.deleteAll();
         grammarQuestionRepository.deleteAll();
         userRepository.deleteAll();
@@ -130,7 +137,7 @@ class GrammarNotebookIntegrationTest {
     }
 
     @Test
-    void selfRatingIsAcceptedWithoutUpdatingGrammarbook() {
+    void selfRatingAddsQuestionToFsrsReviewProgressWithoutUpdatingGrammarbook() {
         AppUser user = saveUser("learner");
         GrammarQuestion question = saveQuestion(30, "Self-rated question");
 
@@ -140,6 +147,35 @@ class GrammarNotebookIntegrationTest {
         );
 
         assertThat(userGrammarbookRepository.findAll()).isEmpty();
+        assertThat(userWordProgressRepository.findByUserIdAndQuestionIdAndQuestionType(
+                user.getId(),
+                String.valueOf(question.getId()),
+                "grammar"
+        )).isPresent();
+    }
+
+    @Test
+    void reviewQuestionsReturnDueGrammarProgressRows() {
+        AppUser user = saveUser("learner");
+        GrammarQuestion dueQuestion = saveQuestion(40, "Due question");
+        GrammarQuestion futureQuestion = saveQuestion(41, "Future question");
+
+        saveGrammarProgress(user, dueQuestion, Instant.now().minusSeconds(60));
+        saveGrammarProgress(user, futureQuestion, Instant.now().plusSeconds(86400));
+
+        List<GrammarPracticeQuestionResponse> questions = grammarService.getReviewQuestions(user.getUsername());
+
+        assertThat(questions).extracting(GrammarPracticeQuestionResponse::id)
+                .containsExactly(dueQuestion.getId());
+    }
+
+    private UserWordProgress saveGrammarProgress(AppUser user, GrammarQuestion question, Instant due) {
+        UserWordProgress progress = new UserWordProgress();
+        progress.setUserId(user.getId());
+        progress.setQuestionId(String.valueOf(question.getId()));
+        progress.setQuestionType("grammar");
+        progress.setDue(due);
+        return userWordProgressRepository.save(progress);
     }
 
     private UserGrammarbook saveGrammarbook(

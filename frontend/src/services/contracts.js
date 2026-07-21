@@ -48,13 +48,18 @@ export const contractShapes = {
     },
     vocabulary: {
       completed: 0,
-      total: 0
+      total: 0,
+      remaining: 0,
+      done: false
     },
     grammar: {
       completed: 0,
-      total: 0
+      total: 0,
+      remaining: 0,
+      done: false
     },
-    streakDays: 0
+    streakDays: 0,
+    allDone: false
   },
   dashboardWeeklyOverview: {
     speakingDuration: "string",
@@ -179,7 +184,9 @@ export const contractShapes = {
   },
   vocabularyPracticeProgress: {
     completed: 0,
-    total: 0
+    total: 0,
+    remaining: 0,
+    done: false
   },
   vocabularyPracticeWords: [
     {
@@ -304,7 +311,9 @@ export const contractShapes = {
   ],
   grammarProgress: {
     completed: 0,
-    total: 0
+    total: 0,
+    remaining: 0,
+    done: false
   },
   grammarTopics: [
     {
@@ -329,8 +338,49 @@ export const contractShapes = {
     dailyPlan: {
       autoPilotEnabled: true,
       weeklyImprovement: "string",
+      dailyVocabularyGoal: 0,
+      dailyGrammarGoal: 0,
+      vocabulary: {
+        completed: 0,
+        total: 0,
+        remaining: 0,
+        done: false
+      },
+      grammar: {
+        completed: 0,
+        total: 0,
+        remaining: 0,
+        done: false
+      },
+      allDone: false,
       items: [{ id: "string", time: "string", task: "string", meta: "string", done: false }],
       progress: [{ id: "string", label: "string", value: 0, tone: "default" }]
     }
+  },
+  learningPlanRequest: {
+    dailyVocabularyGoal: 0,
+    dailyGrammarGoal: 0
+  },
+  learningPlanResponse: {
+    dailyVocabularyGoal: 0,
+    dailyGrammarGoal: 0,
+    enabled: true
+  },
+  dailyLearningStatus: {
+    date: "2026-07-20",
+    vocabulary: {
+      completed: 0,
+      total: 0,
+      remaining: 0,
+      done: false
+    },
+    grammar: {
+      completed: 0,
+      total: 0,
+      remaining: 0,
+      done: false
+    },
+    allDone: false,
+    streakDays: 0
   }
 };

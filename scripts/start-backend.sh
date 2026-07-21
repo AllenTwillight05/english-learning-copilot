@@ -1,0 +1,13 @@
+#!/bin/bash
+# 启动后端 - English Learning Copilot
+# 在 WSL 中执行
+
+cd "$(dirname "$0")/../backend" || { echo "无法进入 backend 目录"; exit 1; }
+
+export SPRING_DATASOURCE_URL="jdbc:mysql://127.0.0.1:3306/english_learning_copilot?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
+export SPRING_DATASOURCE_USERNAME=root
+export SPRING_DATASOURCE_PASSWORD=""
+export APP_JWT_SECRET="dev-only-change-me-dev-only-change-me-32-bytes"
+
+echo "=== 启动后端 (8080) ==="
+mvn spring-boot:run -DskipTests

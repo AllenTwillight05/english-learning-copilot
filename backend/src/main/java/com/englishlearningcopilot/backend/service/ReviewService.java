@@ -1,12 +1,14 @@
 package com.englishlearningcopilot.backend.service;
 
 import com.englishlearningcopilot.backend.dto.DueVocabularyCard;
+import com.englishlearningcopilot.backend.dto.GrammarPracticeQuestionResponse;
 import com.englishlearningcopilot.backend.entity.AppUser;
 import com.englishlearningcopilot.backend.entity.UserWordProgress;
 import com.englishlearningcopilot.backend.exception.ResourceNotFoundException;
 import com.englishlearningcopilot.backend.fsrs.FSRS;
 import com.englishlearningcopilot.backend.fsrs.FSRS.CardState;
 import com.englishlearningcopilot.backend.fsrs.FSRS.Rating;
+import com.englishlearningcopilot.backend.repository.GrammarQuestionRepository;
 import com.englishlearningcopilot.backend.repository.UserRepository;
 import com.englishlearningcopilot.backend.repository.UserWordProgressRepository;
 import com.englishlearningcopilot.backend.repository.VocabularyRepository;
@@ -19,19 +21,23 @@ import org.springframework.transaction.annotation.Transactional;
 public class ReviewService {
 
     private static final String QUESTION_TYPE_VOCABULARY = "vocabulary";
+    private static final String QUESTION_TYPE_GRAMMAR = "grammar";
 
     private final FSRS fsrs = new FSRS(0.9, FSRS.defaultParams());
     private final UserWordProgressRepository userWordProgressRepository;
     private final VocabularyRepository vocabularyRepository;
+    private final GrammarQuestionRepository grammarQuestionRepository;
     private final UserRepository userRepository;
 
     public ReviewService(
             UserWordProgressRepository userWordProgressRepository,
             VocabularyRepository vocabularyRepository,
+            GrammarQuestionRepository grammarQuestionRepository,
             UserRepository userRepository
     ) {
         this.userWordProgressRepository = userWordProgressRepository;
         this.vocabularyRepository = vocabularyRepository;
+        this.grammarQuestionRepository = grammarQuestionRepository;
         this.userRepository = userRepository;
     }
 
@@ -44,6 +50,23 @@ public class ReviewService {
         UserWordProgress progress = userWordProgressRepository
                 .findByUserIdAndQuestionIdAndQuestionType(userId, questionId, QUESTION_TYPE_VOCABULARY)
                 .orElseGet(() -> newProgress(userId, questionId));
+
+        CardState card = toCardState(progress);
+        CardState reviewed = fsrs.review(card, Rating.fromInt(rating));
+        applyCardState(progress, reviewed);
+        userWordProgressRepository.save(progress);
+    }
+
+    @Transactional
+    public void submitGrammarRating(Long userId, Integer grammarQuestionId, int rating) {
+        if (!grammarQuestionRepository.existsById(grammarQuestionId)) {
+            throw new ResourceNotFoundException("Grammar question was not found.");
+        }
+
+        String questionId = String.valueOf(grammarQuestionId);
+        UserWordProgress progress = userWordProgressRepository
+                .findByUserIdAndQuestionIdAndQuestionType(userId, questionId, QUESTION_TYPE_GRAMMAR)
+                .orElseGet(() -> newProgress(userId, questionId, QUESTION_TYPE_GRAMMAR));
 
         CardState card = toCardState(progress);
         CardState reviewed = fsrs.review(card, Rating.fromInt(rating));
@@ -69,6 +92,23 @@ public class ReviewService {
     }
 
     @Transactional(readOnly = true)
+    public List<GrammarPracticeQuestionResponse> getDueGrammar(Long userId) {
+        return userWordProgressRepository
+                .findByUserIdAndQuestionTypeAndDueBeforeOrderByDueAsc(
+                        userId,
+                        QUESTION_TYPE_GRAMMAR,
+                        Instant.now()
+                )
+                .stream()
+                .map(UserWordProgress::getQuestionId)
+                .map(this::parseGrammarQuestionId)
+                .map(grammarQuestionRepository::findById)
+                .flatMap(optionalQuestion -> optionalQuestion.stream())
+                .map(GrammarPracticeQuestionResponse::from)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
     public Long getUserIdByUsername(String username) {
         AppUser user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("Current user was not found."));
@@ -76,10 +116,14 @@ public class ReviewService {
     }
 
     private UserWordProgress newProgress(Long userId, String questionId) {
+        return newProgress(userId, questionId, QUESTION_TYPE_VOCABULARY);
+    }
+
+    private UserWordProgress newProgress(Long userId, String questionId, String questionType) {
         UserWordProgress progress = new UserWordProgress();
         progress.setUserId(userId);
         progress.setQuestionId(questionId);
-        progress.setQuestionType(QUESTION_TYPE_VOCABULARY);
+        progress.setQuestionType(questionType);
         progress.setDifficulty(2.5);
         progress.setStability(2.5);
         progress.setInterval(0);
@@ -121,6 +165,14 @@ public class ReviewService {
             return Long.parseLong(questionId);
         } catch (NumberFormatException ex) {
             throw new IllegalArgumentException("Invalid vocabulary questionId: " + questionId);
+        }
+    }
+
+    private Integer parseGrammarQuestionId(String questionId) {
+        try {
+            return Integer.parseInt(questionId);
+        } catch (NumberFormatException ex) {
+            throw new IllegalArgumentException("Invalid grammar questionId: " + questionId);
         }
     }
 

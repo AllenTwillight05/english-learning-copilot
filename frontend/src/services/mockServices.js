@@ -38,6 +38,13 @@ const mockUsers = [
 let nextSpeakingSessionId = 1;
 let nextSpeakingMessageId = 1;
 const mockSpeakingSessions = new Map();
+const mockLearningPlanState = {
+  dailyVocabularyGoal: vocabularyPracticeProgressMock.total,
+  dailyGrammarGoal: grammarProgressMock.total,
+  vocabularyCompleted: vocabularyPracticeProgressMock.completed,
+  grammarCompleted: grammarProgressMock.completed,
+  streakDays: dashboardStudyPlanMock.streakDays
+};
 
 function toUserResponse(user) {
   const { password, ...safeUser } = user;
@@ -67,6 +74,96 @@ function simulateLatency(value, delay = 120) {
       resolve(structuredClone(value));
     }, delay);
   });
+}
+
+function toPracticeProgress(completed, total) {
+  return {
+    completed,
+    total,
+    remaining: Math.max(total - completed, 0),
+    done: completed >= total
+  };
+}
+
+function createMockDailyStatus() {
+  const vocabulary = toPracticeProgress(
+    mockLearningPlanState.vocabularyCompleted,
+    mockLearningPlanState.dailyVocabularyGoal
+  );
+  const grammar = toPracticeProgress(
+    mockLearningPlanState.grammarCompleted,
+    mockLearningPlanState.dailyGrammarGoal
+  );
+
+  return {
+    date: new Date().toISOString().slice(0, 10),
+    vocabulary,
+    grammar,
+    allDone: vocabulary.done && grammar.done,
+    streakDays: mockLearningPlanState.streakDays
+  };
+}
+
+function createMockStudyPlan() {
+  const status = createMockDailyStatus();
+
+  return {
+    vocabulary: status.vocabulary,
+    grammar: status.grammar,
+    streakDays: status.streakDays,
+    allDone: status.allDone
+  };
+}
+
+function createMockProfileSnapshot() {
+  const status = createMockDailyStatus();
+  const percent = (progress) => progress.total > 0
+    ? Math.min(100, Math.round((progress.completed / progress.total) * 100))
+    : 100;
+
+  return {
+    ...profileSnapshotMock,
+    streak: `${status.streakDays} 天`,
+    dailyPlan: {
+      ...profileSnapshotMock.dailyPlan,
+      dailyVocabularyGoal: status.vocabulary.total,
+      dailyGrammarGoal: status.grammar.total,
+      vocabulary: status.vocabulary,
+      grammar: status.grammar,
+      allDone: status.allDone,
+      weeklyImprovement: status.allDone ? "今日已完成" : "进行中",
+      items: [
+        {
+          id: "vocabulary",
+          time: "今日",
+          task: "词汇练习",
+          meta: `已完成 ${status.vocabulary.completed} / ${status.vocabulary.total}，待练 ${status.vocabulary.remaining}`,
+          done: status.vocabulary.done
+        },
+        {
+          id: "grammar",
+          time: "今日",
+          task: "语法练习",
+          meta: `已完成 ${status.grammar.completed} / ${status.grammar.total}，待练 ${status.grammar.remaining}`,
+          done: status.grammar.done
+        }
+      ],
+      progress: [
+        {
+          id: "vocabulary",
+          label: "词汇",
+          value: percent(status.vocabulary),
+          tone: "teal"
+        },
+        {
+          id: "grammar",
+          label: "语法",
+          value: percent(status.grammar),
+          tone: "gold"
+        }
+      ]
+    }
+  };
 }
 
 function toSpeakingMessageResponse({ sender, content, instantTip = null, turnIndex }) {
@@ -150,8 +247,8 @@ export function createMockServices() {
     dashboard: {
       getOverview: () => simulateLatency(dashboardOverviewMock),
       getRecommendedTask: () => simulateLatency(dashboardRecommendedTaskMock),
-      getStudyPlan: () => simulateLatency(dashboardStudyPlanMock),
-      getWeeklyOverview: () => simulateLatency(dashboardWeeklyOverviewMock),
+      getStudyPlan: () => httpServices.dashboard.getStudyPlan(),
+      getWeeklyOverview: () => httpServices.dashboard.getWeeklyOverview(),
       getCommunityLearningTrends: () => httpServices.dashboard.getCommunityLearningTrends()
     },
     speaking: {
@@ -264,7 +361,7 @@ export function createMockServices() {
     vocabulary: {
       getSnapshot: () => simulateLatency(vocabularySnapshotMock),
       getVocabularyMemory: () => simulateLatency(vocabularyMemoryMock),
-      getVocabularyPracticeProgress: () => simulateLatency(vocabularyPracticeProgressMock),
+      getVocabularyPracticeProgress: () => httpServices.vocabulary.getVocabularyPracticeProgress(),
       getVocabularyPracticeWords: (options) =>
         httpServices.vocabulary.getVocabularyPracticeWords(options),
       submitVocabularyRating: (payload) => httpServices.vocabulary.submitVocabularyRating(payload),
@@ -282,12 +379,30 @@ export function createMockServices() {
       getOverview: () => simulateLatency(grammarOverviewMock),
       getReviewGrammar: () => simulateLatency(reviewGrammarMock),
       getPracticeQuestions: (options) => httpServices.grammar.getPracticeQuestions(options),
-      getProgress: () => simulateLatency(grammarProgressMock),
+      getProgress: () => httpServices.grammar.getProgress(),
       getTopics: () => simulateLatency(grammarTopicsMock),
       getSnapshot: () => simulateLatency(grammarSnapshotMock)
     },
     profile: {
-      getSnapshot: () => simulateLatency(profileSnapshotMock)
+      getSnapshot: async () => {
+        const snapshot = await httpServices.profile.getSnapshot();
+
+        return {
+          ...profileSnapshotMock,
+          dailyPlan: {
+            ...profileSnapshotMock.dailyPlan,
+            dailyVocabularyGoal: snapshot.dailyPlan.dailyVocabularyGoal,
+            dailyGrammarGoal: snapshot.dailyPlan.dailyGrammarGoal,
+            vocabulary: snapshot.dailyPlan.vocabulary,
+            grammar: snapshot.dailyPlan.grammar,
+            allDone: snapshot.dailyPlan.allDone,
+            items: snapshot.dailyPlan.items
+          }
+        };
+      },
+      getLearningPlan: () => httpServices.profile.getLearningPlan(),
+      updateLearningPlan: (payload) => httpServices.profile.updateLearningPlan(payload),
+      getDailyStatus: () => httpServices.profile.getDailyStatus()
     }
   };
 }

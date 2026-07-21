@@ -1,6 +1,8 @@
 import { useCallback } from "react";
-import { Typography } from "antd";
-import { useNavigate } from "react-router-dom";
+import { LoginOutlined, UserOutlined } from "@ant-design/icons";
+import { Button, Result, Typography } from "antd";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../auth/AuthContext";
 import { DashboardCommunityLearning } from "../components/Dashboard/DashboardCommunityLearning";
 import { DashboardHeroCard } from "../components/Dashboard/DashboardHeroCard";
 import { DashboardModuleGrid } from "../components/Dashboard/DashboardModuleGrid";
@@ -20,10 +22,16 @@ const weeklyOverviewItems = [
 ];
 
 export function DashboardPage() {
+  const auth = useAuth();
+  const location = useLocation();
   const navigate = useNavigate();
   const { dashboard, profile } = useAppServices();
 
   const loader = useCallback(async () => {
+    if (auth.loading || !auth.isAuthenticated) {
+      return null;
+    }
+
     const [
       recommendedTask,
       studyPlan,
@@ -45,9 +53,36 @@ export function DashboardPage() {
       communityLearningTrends,
       profileSnapshot
     };
-  }, [dashboard, profile]);
+  }, [auth.isAuthenticated, auth.loading, dashboard, profile]);
 
   const { data, loading, error } = useAsyncData(loader, [loader]);
+
+  if (auth.loading) {
+    return <AsyncPage loading error={null} />;
+  }
+
+  if (!auth.isAuthenticated) {
+    return (
+      <div className="page-stack">
+        <section className="glass-panel profile-empty-state">
+          <Result
+            icon={<UserOutlined />}
+            title="个人页面需要登录"
+            subTitle="登录后可以查看你的学习计划、能力进度和最近反馈。"
+            extra={
+              <Button
+                type="primary"
+                icon={<LoginOutlined />}
+                onClick={() => navigate("/login", { state: { from: location } })}
+              >
+                请先登录
+              </Button>
+            }
+          />
+        </section>
+      </div>
+    );
+  }
 
   return (
     <AsyncPage loading={loading} error={error}>

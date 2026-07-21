@@ -45,9 +45,18 @@ public class SecurityConfig {
                 .authenticationProvider(authenticationProvider)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/profile/**").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/profile/learning-plan").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/dashboard/study-plan").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/dashboard/weekly-overview").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/vocabulary/practice-progress").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/vocabulary/wordbook-words").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/vocabulary/memory").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/vocabulary/review-vocabulary").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/grammar/progress").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/grammar/notebook-questions").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/grammar/practice-questions").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/grammar/review-grammar").authenticated()
                         .requestMatchers(
                                 HttpMethod.POST,
                                 "/api/grammar/practice-results",

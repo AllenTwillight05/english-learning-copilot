@@ -35,5 +35,7 @@ export const API_ENDPOINTS = {
   grammarProgress: "/api/grammar/progress",
   grammarTopics: "/api/grammar/topics",
   grammarSnapshot: "/api/grammar/snapshot",
-  profileSnapshot: "/api/profile/snapshot"
+  profileSnapshot: "/api/profile/snapshot",
+  profileLearningPlan: "/api/profile/learning-plan",
+  profileDailyStatus: "/api/profile/daily-status"
 };
