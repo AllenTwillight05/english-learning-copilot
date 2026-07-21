@@ -27,6 +27,7 @@ import com.englishlearningcopilot.backend.service.speech.AsrService;
 import com.englishlearningcopilot.backend.service.speech.IseService;
 import com.englishlearningcopilot.backend.service.speech.PronunciationScore;
 import com.englishlearningcopilot.backend.service.speech.TtsService;
+import com.englishlearningcopilot.backend.service.speech.xfyun.XfyunAsrException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
@@ -171,6 +172,11 @@ public class SpeakingServiceImpl implements SpeakingService {
         try {
             transcribedText = asrFuture.join();
             pronunciationScore = iseFuture.join();
+        } catch (java.util.concurrent.CompletionException e) {
+            if (e.getCause() instanceof XfyunAsrException asrException) {
+                throw asrException;
+            }
+            throw new RuntimeException("Speech processing failed: " + e.getMessage(), e);
         } catch (Exception e) {
             throw new RuntimeException("Speech processing failed: " + e.getMessage(), e);
         }

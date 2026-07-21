@@ -13,6 +13,7 @@ import { AsyncPage } from "../components/common/AsyncPage";
 import { PageSectionHeader } from "../components/common/PageSectionHeader";
 import { useAsyncData } from "../hooks/useAsyncData";
 import { useAppServices } from "../services/ServiceContext";
+import { toBackendAssetUrl } from "../services/assetUrls";
 
 const { Text, Title } = Typography;
 
@@ -114,7 +115,7 @@ export function SpeakingFeedbackPage() {
         const message = replayMessages[index];
         await new Promise((resolve) => {
           if (message.audioUrl) {
-            const audio = new Audio(message.audioUrl);
+            const audio = new Audio(toBackendAssetUrl(message.audioUrl));
             currentAudioRef.current = audio;
             audio.onended = resolve;
             audio.onerror = resolve;
@@ -126,6 +127,7 @@ export function SpeakingFeedbackPage() {
       }
       if (!stopReplayRef.current && runId === replayRunRef.current) {
         setIsPlaying(false);
+        setActiveTurn(0);
       }
     },
     [replayMessages, stopReplay]

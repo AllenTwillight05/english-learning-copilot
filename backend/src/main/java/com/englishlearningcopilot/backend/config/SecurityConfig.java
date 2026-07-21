@@ -55,6 +55,7 @@ public class SecurityConfig {
                                 "/api/grammar/notebook-favorites"
                         ).authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/speaking/scenarios/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/dashboard/**", "/api/vocabulary/**", "/api/grammar/**").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()

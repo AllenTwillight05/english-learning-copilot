@@ -12,6 +12,7 @@ import { AsyncPage } from "../components/common/AsyncPage";
 import { PageSectionHeader } from "../components/common/PageSectionHeader";
 import { useAsyncData } from "../hooks/useAsyncData";
 import { useAppServices } from "../services/ServiceContext";
+import { toBackendAssetUrl } from "../services/assetUrls";
 
 function speakText(text) {
   if (!window.speechSynthesis || !text) {
@@ -26,7 +27,7 @@ function playAudioUrl(audioUrl, onEnd) {
     onEnd();
     return null;
   }
-  const audio = new Audio(audioUrl);
+  const audio = new Audio(toBackendAssetUrl(audioUrl));
   audio.onended = onEnd;
   audio.onerror = onEnd;
   audio.play().catch(onEnd);
@@ -73,6 +74,17 @@ export function SpeakingConversationPage() {
     [activeSession]
   );
   const lastTip = [...messages].reverse().find((message) => message.instantTip)?.instantTip;
+  const notice = sendError
+    ? {
+        role: "alert",
+        text: sendError.message || "消息发送失败，请稍后重试。"
+      }
+    : lastTip
+      ? {
+          role: "status",
+          text: lastTip
+        }
+      : null;
 
   const playMessageAudio = useCallback((message) => {
     if (message.audioUrl) {
@@ -214,14 +226,9 @@ export function SpeakingConversationPage() {
               ))}
             </div>
 
-            {lastTip ? (
-              <div className="speaking-alert" role="status">
-                {lastTip}
-              </div>
-            ) : null}
-            {sendError ? (
-              <div className="speaking-alert" role="alert">
-                {sendError.message || "消息发送失败，请稍后重试。"}
+            {notice ? (
+              <div className="speaking-alert" role={notice.role}>
+                {notice.text}
               </div>
             ) : null}
 

@@ -27,12 +27,12 @@ public class SpeakingAudioStorageService {
     }
 
     /**
-     * Save audio bytes for a message and return a relative URL path.
+     * Save audio bytes for a message and return a URL path.
      *
      * @param sessionId  the owning session ID
      * @param messageId  the message ID (used as filename stem)
      * @param audioBytes raw audio data
-     * @return relative path suitable for storage in DB, e.g. "speaking/42/5.webm"
+     * @return URL path suitable for storage in DB, e.g. "/uploads/speaking/42/5.webm"
      */
     public String save(Long sessionId, Long messageId, byte[] audioBytes) {
         Path sessionDir = uploadRoot.resolve(String.valueOf(sessionId));
@@ -50,17 +50,21 @@ public class SpeakingAudioStorageService {
             throw new RuntimeException("Failed to write audio file: " + filePath, e);
         }
 
-        return uploadRoot.getFileName() + "/" + sessionId + "/" + filename;
+        return "/uploads/" + uploadRoot.getFileName() + "/" + sessionId + "/" + filename;
     }
 
     /**
      * Read audio bytes from a stored file.
      *
-     * @param relativePath the relative path previously returned by {@link #save}
+     * @param relativePath the path previously returned by {@link #save}
      * @return raw audio bytes
      */
     public byte[] load(String relativePath) {
-        Path filePath = uploadRoot.resolveSibling(relativePath).normalize();
+        String normalizedPath = relativePath;
+        if (normalizedPath.startsWith("/uploads/")) {
+            normalizedPath = normalizedPath.substring("/uploads/".length());
+        }
+        Path filePath = uploadRoot.resolveSibling(normalizedPath).normalize();
         try {
             return Files.readAllBytes(filePath);
         } catch (IOException e) {
