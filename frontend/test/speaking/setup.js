@@ -83,3 +83,44 @@ globalThis.Audio = class AudioMock {
 
   pause() {}
 };
+
+// ---- MediaRecorder / getUserMedia mocks for recording tests ----
+const mockMediaStream = {
+  getTracks: () => []
+};
+
+Object.defineProperty(window.navigator, "mediaDevices", {
+  writable: true,
+  configurable: true,
+  value: {
+    getUserMedia: vi.fn().mockResolvedValue(mockMediaStream)
+  }
+});
+
+globalThis.MediaRecorder = class MediaRecorderMock {
+  constructor(stream, options) {
+    this.state = "inactive";
+    this.stream = stream;
+    this.ondataavailable = null;
+    this.onstop = null;
+    this.onerror = null;
+  }
+
+  start() {
+    this.state = "recording";
+  }
+
+  stop() {
+    this.state = "inactive";
+    if (this.ondataavailable) {
+      this.ondataavailable({ data: new Blob(["mock-audio"], { type: "audio/webm" }) });
+    }
+    if (this.onstop) {
+      setTimeout(() => this.onstop(), 0);
+    }
+  }
+
+  static isTypeSupported() {
+    return true;
+  }
+};

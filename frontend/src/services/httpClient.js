@@ -13,9 +13,10 @@ export class HttpError extends Error {
 
 function buildHeaders(init) {
   const { token } = getStoredAuth();
+  const isFormData = typeof FormData !== "undefined" && init?.body instanceof FormData;
   const headers = {
     Accept: "application/json",
-    ...(init?.body ? { "Content-Type": "application/json" } : {}),
+    ...(init?.body && !isFormData ? { "Content-Type": "application/json" } : {}),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...(init?.headers ?? {})
   };

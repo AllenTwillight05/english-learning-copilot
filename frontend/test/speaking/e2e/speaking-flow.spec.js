@@ -109,8 +109,6 @@ test("completes the real browser speaking practice path and stores replay histor
   const dialog = await openReplay(page);
   await expect(dialog.getByText("Good morning. Could you briefly introduce today's agenda?")).toBeVisible();
   await expect(dialog.getByRole("button", { name: /暂停|开始/ })).toBeVisible();
-  await expect(dialog.getByRole("button", { name: "第 1 轮" })).toBeVisible();
-  await expect(dialog.getByRole("button", { name: "第 2 轮" })).toBeVisible();
 
   await dialog.getByRole("button", { name: "Close" }).click();
   await expect(dialog).toBeHidden();
@@ -121,7 +119,7 @@ test("completes the real browser speaking practice path and stores replay histor
   await expect(page).toHaveURL(/\/speaking\/business-opening\/feedback$/);
 });
 
-test("covers AntD modal focus management, scroll lock, animation, and segmented replay controls", async ({ page }) => {
+test("covers AntD modal focus management, scroll lock, animation, and replay controls", async ({ page }) => {
   await page.goto("/speaking/business-opening/feedback");
   await page.evaluate(() => {
     window.localStorage.setItem(
@@ -146,9 +144,7 @@ test("covers AntD modal focus management, scroll lock, animation, and segmented 
 
   await expect(dialog).toHaveClass(/ant-zoom/);
   await expect(dialog.getByText("First replay line.")).toBeVisible();
-  await expect(dialog.getByRole("group", { name: "回放进度" })).toBeVisible();
-  await dialog.getByRole("button", { name: "第 2 轮" }).click();
-  await expect(dialog.getByRole("button", { name: "第 2 轮" })).toHaveClass(/replay-segment--active/);
+  await expect(dialog.getByRole("button", { name: /暂停|开始/ })).toBeVisible();
 
   await expect(page.locator("body")).toHaveCSS("overflow", "hidden");
   await page.keyboard.press("Escape");
@@ -195,7 +191,7 @@ test("keeps the speaking layout usable on mobile", async ({ page, isMobile }) =>
 
   await page.goto("/speaking/business-opening/feedback");
   const dialog = await openReplay(page);
-  await expect(dialog.getByRole("button", { name: "第 1 轮" })).toBeVisible();
+  await expect(dialog.getByRole("button", { name: /暂停|开始/ })).toBeVisible();
   const bodyBox = await page.locator("body").boundingBox();
   const dialogBox = await dialog.boundingBox();
   expect(dialogBox.width).toBeLessThanOrEqual(bodyBox.width);

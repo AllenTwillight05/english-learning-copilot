@@ -7,6 +7,10 @@ public record SpeakingMessageResponse(
         Long id,
         String sender,
         String content,
+        String audioUrl,
+        String transcribedText,
+        Double pronunciationScore,
+        String pronunciationDetail,
         String instantTip,
         int turnIndex,
         Instant createdAt
@@ -17,6 +21,10 @@ public record SpeakingMessageResponse(
                 message.getId(),
                 message.getSender().name(),
                 message.getContent(),
+                message.getAudioUrl(),
+                message.getTranscribedText(),
+                message.getPronunciationScore(),
+                message.getPronunciationDetail(),
                 message.getInstantTip(),
                 message.getTurnIndex(),
                 message.getCreatedAt()

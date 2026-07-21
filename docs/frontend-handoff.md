@@ -197,8 +197,8 @@ VITE_API_MODE=mixed VITE_API_BASE_URL=http://localhost:8080 npm run dev
 
 - 页面：`frontend/src/pages/SpeakingPage.jsx`
 - 私有组件：`frontend/src/components/Speaking/`
-- 数据：`speaking.listScenarios()`、`speaking.getScenario(scenarioId)`
-- 后续接口：会话创建、录音上传、口语评分、用户场景完成进度。
+- 数据：`speaking.listScenarios()`、`speaking.getScenario(scenarioId)`、`speaking.createSession(scenarioId)`、`speaking.submitRecording(sessionId, audioBlob)`、`speaking.getFeedback(sessionId)`
+- 后续接口：结束 session、稳定保存评分报告、用户场景完成进度、真实 ASR/发音评分/Agent 接入。
 
 词汇负责人：
 

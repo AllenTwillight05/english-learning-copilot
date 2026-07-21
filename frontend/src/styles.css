@@ -1704,13 +1704,6 @@ a {
   padding: 14px;
 }
 
-.speaking-message-composer {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 12px;
-  align-items: end;
-}
-
 .recorder-strip__label {
   display: flex;
   align-items: center;
@@ -1766,6 +1759,33 @@ a {
   align-items: flex-start;
 }
 
+.score-card__main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.score-card__label {
+  font-size: 14px;
+}
+
+.score-card__score-row {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.score-card__value.ant-typography {
+  font-size: 52px;
+  font-weight: 700;
+  line-height: 1.1;
+  color: #0f766e;
+}
+
+.score-card__unit.ant-typography {
+  font-size: 16px;
+}
+
 .score-card__icon {
   color: #0f9f75;
   font-size: 28px;
@@ -1776,6 +1796,33 @@ a {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
+}
+
+.feedback-metric-item {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.metric-label {
+  font-size: 13px;
+}
+
+.metric-score-row {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+}
+
+.metric-value.ant-typography {
+  color: #111;
+  font-weight: 600;
+}
+
+.metric-unit.ant-typography {
+  font-size: 14px;
 }
 
 .feedback-detail-grid {
@@ -1792,6 +1839,26 @@ a {
   color: rgba(17, 17, 17, 0.72);
 }
 
+.feedback-issue-list,
+.feedback-suggestion-list {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+}
+
+.feedback-issue-item,
+.feedback-suggestion-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.feedback-issue-item:last-child,
+.feedback-suggestion-item:last-child {
+  margin-bottom: 0;
+}
+
 .replay-modal-body {
   display: grid;
   gap: 14px;
@@ -1799,36 +1866,33 @@ a {
 
 .replay-chat-window {
   max-height: min(58vh, 520px);
-  overflow-y: auto;
+  overflow-y: scroll;
+  scroll-behavior: smooth;
+  padding-right: 8px;
+}
+
+.replay-chat-window::-webkit-scrollbar {
+  width: 6px;
+}
+
+.replay-chat-window::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: 3px;
+}
+
+.replay-chat-window::-webkit-scrollbar-thumb {
+  background: rgba(15, 118, 110, 0.28);
+  border-radius: 3px;
+}
+
+.replay-chat-window::-webkit-scrollbar-thumb:hover {
+  background: rgba(15, 118, 110, 0.48);
 }
 
 .replay-controls {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 12px;
+  display: flex;
   align-items: center;
-}
-
-.replay-segments {
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: minmax(86px, 1fr);
-  gap: 6px;
-  overflow-x: auto;
-}
-
-.replay-segment {
-  min-height: 32px;
-  border: 1px solid rgba(15, 118, 110, 0.2);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.64);
-  color: rgba(17, 17, 17, 0.72);
-  cursor: pointer;
-}
-
-.replay-segment--active {
-  background: #0f766e;
-  color: #ffffff;
+  gap: 12px;
 }
 
 @keyframes waveformPulse {
@@ -1968,6 +2032,7 @@ a {
   .metrics-grid,
   .metrics-grid--compact,
   .speaking-session-meta,
+  .feedback-layout,
   .feedback-metrics,
   .feedback-detail-grid,
   .scenario-detail-grid {
@@ -1988,7 +2053,7 @@ a {
   }
 
   .replay-controls {
-    grid-template-columns: 1fr;
+    flex-wrap: wrap;
   }
 
   .memory-stat-grid {

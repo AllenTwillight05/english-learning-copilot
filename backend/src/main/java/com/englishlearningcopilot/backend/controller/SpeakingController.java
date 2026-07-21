@@ -1,7 +1,7 @@
 package com.englishlearningcopilot.backend.controller;
 
-import com.englishlearningcopilot.backend.dto.CreateSpeakingMessageRequest;
 import com.englishlearningcopilot.backend.dto.CreateSpeakingSessionRequest;
+import com.englishlearningcopilot.backend.dto.SpeakingFeedbackResponse;
 import com.englishlearningcopilot.backend.dto.SpeakingScenarioResponse;
 import com.englishlearningcopilot.backend.dto.SpeakingSessionResponse;
 import com.englishlearningcopilot.backend.dto.SpeakingTurnResponse;
@@ -10,13 +10,16 @@ import jakarta.validation.Valid;
 import java.security.Principal;
 import java.util.List;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/speaking")
@@ -78,15 +81,25 @@ public class SpeakingController {
     }
 
     /**
-     * POST /api/speaking/sessions/{sessionId}/messages
-     * Add a message to a speaking session
+     * POST /api/speaking/sessions/{sessionId}/messages (multipart)
+     * Submit a voice recording. Backend runs ASR + ISE in parallel,
+     * then calls the reply agent and TTS.
      */
-    @PostMapping("/sessions/{sessionId}/messages")
-    public SpeakingTurnResponse addMessage(
+    @PostMapping(value = "/sessions/{sessionId}/messages", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public SpeakingTurnResponse submitRecording(
             Principal principal,
             @PathVariable Long sessionId,
-            @Valid @RequestBody CreateSpeakingMessageRequest request
+            @RequestParam("audio") MultipartFile audio
     ) {
-        return speakingService.addMessage(principal.getName(), sessionId, request);
+        return speakingService.submitRecording(principal.getName(), sessionId, audio);
+    }
+
+    /**
+     * GET /api/speaking/sessions/{sessionId}/feedback
+     * Get feedback for a speaking session
+     */
+    @GetMapping("/sessions/{sessionId}/feedback")
+    public SpeakingFeedbackResponse getFeedback(Principal principal, @PathVariable Long sessionId) {
+        return speakingService.getFeedback(principal.getName(), sessionId);
     }
 }

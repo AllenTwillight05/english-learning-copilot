@@ -1,18 +1,23 @@
 package com.englishlearningcopilot.backend.exception;
 
 import com.englishlearningcopilot.backend.dto.ErrorResponse;
+import com.englishlearningcopilot.backend.service.speech.xfyun.XfyunAsrException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MultipartException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -60,6 +65,31 @@ public class GlobalExceptionHandler {
             HttpServletRequest request
     ) {
         return error(HttpStatus.BAD_REQUEST, exception.getMessage(), request, null);
+    }
+
+    @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+    public ResponseEntity<ErrorResponse> handleUnsupportedMediaType(
+            HttpMediaTypeNotSupportedException exception,
+            HttpServletRequest request
+    ) {
+        return error(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Unsupported request content type.", request, null);
+    }
+
+    @ExceptionHandler({
+            HttpMessageNotReadableException.class,
+            MissingServletRequestPartException.class,
+            MultipartException.class
+    })
+    public ResponseEntity<ErrorResponse> handleMalformedRequest(Exception exception, HttpServletRequest request) {
+        return error(HttpStatus.BAD_REQUEST, "Malformed request body.", request, null);
+    }
+
+    @ExceptionHandler(XfyunAsrException.class)
+    public ResponseEntity<ErrorResponse> handleSpeechRecognition(
+            XfyunAsrException exception,
+            HttpServletRequest request
+    ) {
+        return error(HttpStatus.BAD_GATEWAY, exception.getMessage(), request, null);
     }
 
     @ExceptionHandler(Exception.class)

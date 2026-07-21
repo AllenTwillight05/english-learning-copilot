@@ -1,11 +1,12 @@
 package com.englishlearningcopilot.backend.service.impl;
 
-import com.englishlearningcopilot.backend.dto.CreateSpeakingMessageRequest;
 import com.englishlearningcopilot.backend.dto.CreateSpeakingSessionRequest;
+import com.englishlearningcopilot.backend.dto.SpeakingFeedbackResponse;
 import com.englishlearningcopilot.backend.dto.SpeakingMessageResponse;
 import com.englishlearningcopilot.backend.dto.SpeakingScenarioResponse;
 import com.englishlearningcopilot.backend.dto.SpeakingSessionResponse;
 import com.englishlearningcopilot.backend.dto.SpeakingTurnResponse;
+import com.englishlearningcopilot.backend.dto.TurnFeedback;
 import com.englishlearningcopilot.backend.entity.AppUser;
 import com.englishlearningcopilot.backend.entity.SpeakingMessage;
 import com.englishlearningcopilot.backend.entity.SpeakingMessageSender;
@@ -18,13 +19,26 @@ import com.englishlearningcopilot.backend.repository.SpeakingMessageRepository;
 import com.englishlearningcopilot.backend.repository.SpeakingScenarioRepository;
 import com.englishlearningcopilot.backend.repository.SpeakingSessionRepository;
 import com.englishlearningcopilot.backend.repository.UserRepository;
+import com.englishlearningcopilot.backend.service.SpeakingAudioStorageService;
 import com.englishlearningcopilot.backend.service.SpeakingService;
 import com.englishlearningcopilot.backend.service.agent.SpeakingAgentClient;
 import com.englishlearningcopilot.backend.service.agent.SpeakingAgentReply;
+import com.englishlearningcopilot.backend.service.speech.AsrService;
+import com.englishlearningcopilot.backend.service.speech.IseService;
+import com.englishlearningcopilot.backend.service.speech.PronunciationScore;
+import com.englishlearningcopilot.backend.service.speech.TtsService;
+import com.englishlearningcopilot.backend.service.speech.xfyun.XfyunAsrException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ThreadLocalRandom;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class SpeakingServiceImpl implements SpeakingService {
@@ -34,19 +48,34 @@ public class SpeakingServiceImpl implements SpeakingService {
     private final SpeakingMessageRepository messageRepository;
     private final UserRepository userRepository;
     private final SpeakingAgentClient agentClient;
+    private final AsrService asrService;
+    private final TtsService ttsService;
+    private final IseService iseService;
+    private final SpeakingAudioStorageService audioStorageService;
+    private final ObjectMapper objectMapper;
 
     public SpeakingServiceImpl(
             SpeakingScenarioRepository scenarioRepository,
             SpeakingSessionRepository sessionRepository,
             SpeakingMessageRepository messageRepository,
             UserRepository userRepository,
-            SpeakingAgentClient agentClient
+            SpeakingAgentClient agentClient,
+            AsrService asrService,
+            TtsService ttsService,
+            IseService iseService,
+            SpeakingAudioStorageService audioStorageService,
+            ObjectMapper objectMapper
     ) {
         this.scenarioRepository = scenarioRepository;
         this.sessionRepository = sessionRepository;
         this.messageRepository = messageRepository;
         this.userRepository = userRepository;
         this.agentClient = agentClient;
+        this.asrService = asrService;
+        this.ttsService = ttsService;
+        this.iseService = iseService;
+        this.audioStorageService = audioStorageService;
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -106,25 +135,76 @@ public class SpeakingServiceImpl implements SpeakingService {
 
     @Override
     @Transactional
-    public SpeakingTurnResponse addMessage(String username, Long sessionId, CreateSpeakingMessageRequest request) {
+    public SpeakingTurnResponse submitRecording(String username, Long sessionId, MultipartFile audio) {
         SpeakingSession session = findOwnedSession(username, sessionId);
         if (session.getStatus() != SpeakingSessionStatus.ACTIVE) {
             throw new BadRequestException("Speaking session is not active.");
         }
 
-        String userContent = request.content().trim();
+        byte[] audioBytes;
+        try {
+            audioBytes = audio.getBytes();
+        } catch (IOException e) {
+            throw new BadRequestException("Failed to read uploaded audio file.");
+        }
+
         int nextTurn = session.getCurrentTurn() + 1;
 
+        // Save a placeholder USER message first to get an ID for file naming
         SpeakingMessage userMessage = new SpeakingMessage();
         userMessage.setSession(session);
         userMessage.setSender(SpeakingMessageSender.USER);
-        userMessage.setContent(userContent);
+        userMessage.setContent(""); // will be filled after ASR
         userMessage.setTurnIndex(nextTurn);
         SpeakingMessage savedUserMessage = messageRepository.save(userMessage);
 
-        List<SpeakingMessage> history = messageRepository.findBySessionIdOrderByTurnIndexAscCreatedAtAsc(sessionId);
-        SpeakingAgentReply reply = agentClient.reply(session.getScenario(), history, userContent, nextTurn);
+        // Save audio file
+        String audioUrl = audioStorageService.save(sessionId, savedUserMessage.getId(), audioBytes);
 
+        // Parallel: ASR and ISE
+        CompletableFuture<String> asrFuture = CompletableFuture.supplyAsync(
+                () -> asrService.transcribe(audioBytes));
+        CompletableFuture<PronunciationScore> iseFuture = CompletableFuture.supplyAsync(
+                () -> iseService.evaluate(audioBytes, null));
+
+        String transcribedText;
+        PronunciationScore pronunciationScore;
+        try {
+            transcribedText = asrFuture.join();
+            pronunciationScore = iseFuture.join();
+        } catch (java.util.concurrent.CompletionException e) {
+            if (e.getCause() instanceof XfyunAsrException asrException) {
+                throw asrException;
+            }
+            throw new RuntimeException("Speech processing failed: " + e.getMessage(), e);
+        } catch (Exception e) {
+            throw new RuntimeException("Speech processing failed: " + e.getMessage(), e);
+        }
+
+        // Serialize ISE detail to JSON
+        String pronunciationDetail;
+        try {
+            pronunciationDetail = objectMapper.writeValueAsString(pronunciationScore);
+        } catch (JsonProcessingException e) {
+            pronunciationDetail = null;
+        }
+
+        // Update USER message with ASR + ISE results
+        savedUserMessage.setContent(transcribedText);
+        savedUserMessage.setAudioUrl(audioUrl);
+        savedUserMessage.setTranscribedText(transcribedText);
+        savedUserMessage.setPronunciationScore(pronunciationScore.totalScore());
+        savedUserMessage.setPronunciationDetail(pronunciationDetail);
+        savedUserMessage = messageRepository.save(savedUserMessage);
+
+        // Agent reply
+        List<SpeakingMessage> history = messageRepository.findBySessionIdOrderByTurnIndexAscCreatedAtAsc(sessionId);
+        SpeakingAgentReply reply = agentClient.reply(session.getScenario(), history, transcribedText, nextTurn);
+
+        // TTS
+        byte[] agentAudioBytes = ttsService.synthesize(reply.content());
+
+        // Save AGENT message
         SpeakingMessage agentMessage = new SpeakingMessage();
         agentMessage.setSession(session);
         agentMessage.setSender(SpeakingMessageSender.AGENT);
@@ -133,18 +213,121 @@ public class SpeakingServiceImpl implements SpeakingService {
         agentMessage.setTurnIndex(nextTurn);
         SpeakingMessage savedAgentMessage = messageRepository.save(agentMessage);
 
+        // Save agent audio if TTS produced any
+        if (agentAudioBytes.length > 0) {
+            String agentAudioUrl = audioStorageService.save(sessionId, savedAgentMessage.getId(), agentAudioBytes);
+            savedAgentMessage.setAudioUrl(agentAudioUrl);
+            savedAgentMessage = messageRepository.save(savedAgentMessage);
+        }
+
         session.setCurrentTurn(nextTurn);
         SpeakingSession savedSession = sessionRepository.save(session);
 
         return new SpeakingTurnResponse(
                 SpeakingMessageResponse.from(savedUserMessage),
                 SpeakingMessageResponse.from(savedAgentMessage),
+                pronunciationScore,
                 toSessionResponse(savedSession)
         );
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public SpeakingFeedbackResponse getFeedback(String username, Long sessionId) {
+        SpeakingSession session = findOwnedSession(username, sessionId);
+        List<SpeakingMessage> messages = messageRepository.findBySessionIdOrderByTurnIndexAscCreatedAtAsc(sessionId);
+
+        // Summary scores (mock aggregation from per-message ISE scores or random)
+        List<SpeakingMessage> userMessages = messages.stream()
+                .filter(m -> m.getSender() == SpeakingMessageSender.USER)
+                .toList();
+
+        ThreadLocalRandom rng = ThreadLocalRandom.current();
+        int totalScore = 78 + rng.nextInt(18);
+        int pronunciation = 76 + rng.nextInt(20);
+        int fluency = 72 + rng.nextInt(24);
+        int wpm = 108 + rng.nextInt(37);
+        String speed = wpm + " WPM";
+
+        // Issue sentences from user messages
+        List<String> issueSentences = new ArrayList<>();
+        if (!userMessages.isEmpty()) {
+            int pickCount = Math.min(userMessages.size(), 2);
+            for (int i = 0; i < pickCount; i++) {
+                issueSentences.add(userMessages.get(rng.nextInt(userMessages.size())).getContent());
+            }
+        }
+
+        List<String> suggestions = List.of(
+                "Try adding more detail to make your responses fuller and more natural.",
+                "Pay attention to sentence stress — emphasize key words for clearer communication.",
+                "Practice linking words together to improve your overall fluency."
+        );
+
+        // Per-turn feedback
+        List<TurnFeedback> turns = new ArrayList<>();
+        double iseSum = 0;
+        int iseCount = 0;
+
+        for (int turnIdx = 1; turnIdx <= session.getCurrentTurn(); turnIdx++) {
+            final int t = turnIdx;
+            List<SpeakingMessage> turnMsgs = messages.stream()
+                    .filter(m -> m.getTurnIndex() == t)
+                    .toList();
+
+            SpeakingMessage userMsg = turnMsgs.stream()
+                    .filter(m -> m.getSender() == SpeakingMessageSender.USER)
+                    .findFirst().orElse(null);
+            SpeakingMessage agentMsg = turnMsgs.stream()
+                    .filter(m -> m.getSender() == SpeakingMessageSender.AGENT)
+                    .findFirst().orElse(null);
+
+            PronunciationScore ps;
+            if (userMsg != null && userMsg.getPronunciationScore() != null) {
+                // Reconstruct from stored data (mock since we don't store full detail yet)
+                ps = new PronunciationScore(
+                        userMsg.getPronunciationScore(),
+                        70 + rng.nextDouble() * 25,
+                        68 + rng.nextDouble() * 27,
+                        75 + rng.nextDouble() * 20,
+                        90 + rng.nextDouble() * 60
+                );
+                iseSum += ps.totalScore();
+                iseCount++;
+            } else {
+                ps = null;
+            }
+
+            turns.add(new TurnFeedback(
+                    turnIdx,
+                    userMsg != null ? userMsg.getContent() : "",
+                    agentMsg != null ? agentMsg.getContent() : "",
+                    ps
+            ));
+        }
+
+        double averagePronunciationScore = iseCount > 0
+                ? Math.round(iseSum / iseCount * 10.0) / 10.0
+                : 0;
+
+        return new SpeakingFeedbackResponse(
+                totalScore,
+                pronunciation,
+                fluency,
+                speed,
+                issueSentences,
+                suggestions,
+                session.getScenario().getTitle(),
+                session.getCurrentTurn(),
+                averagePronunciationScore,
+                turns,
+                "Keep practicing! Focus on clarity and natural pacing."
+        );
+    }
+
     private SpeakingSessionResponse toSessionResponse(SpeakingSession session) {
-        List<SpeakingMessageResponse> messages = messageRepository.findBySessionIdOrderByTurnIndexAscCreatedAtAsc(session.getId())
+        List<SpeakingMessageResponse> messages = messageRepository
+                .findBySessionIdOrderByTurnIndexAscCreatedAtAsc(session.getId())
                 .stream()
                 .map(SpeakingMessageResponse::from)
                 .toList();
@@ -169,7 +352,8 @@ public class SpeakingServiceImpl implements SpeakingService {
         SpeakingSession session = sessionRepository.findById(sessionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Speaking session was not found."));
         if (!session.getUser().getUsername().equals(username)) {
-            throw new org.springframework.security.access.AccessDeniedException("This speaking session belongs to another user.");
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "This speaking session belongs to another user.");
         }
         return session;
     }

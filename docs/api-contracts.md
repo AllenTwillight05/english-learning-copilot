@@ -222,17 +222,11 @@ GET/POST/PUT/DELETE /api/admin/vocabulary-entries
 
 如完成情况依赖当前用户，优先新增用户进度接口，例如 `GET /api/speaking/progress`，再由前端按 `scenarioId` 合并展示。
 
-后续可扩展接口：
-
-- `POST /api/speaking/sessions`：创建口语练习会话。
-- `POST /api/speaking/recordings`：上传录音。
-- `GET /api/speaking/sessions/{id}/feedback`：获取口语反馈。
-
 ### 2.2 创建口语会话
 
 `POST /api/speaking/sessions`
 
-用途：登录用户选择场景后创建一次文本口语练习 session，并自动保存场景开场白作为第一条 Agent 消息。
+用途：登录用户选择场景后创建一次口语练习 session，并自动保存场景开场白作为第一条 Agent 消息。
 
 请求头：
 
@@ -273,29 +267,73 @@ Authorization: Bearer <token>
 }
 ```
 
-### 2.3 发送文本消息
+### 2.3 提交录音消息
 
 `POST /api/speaking/sessions/{sessionId}/messages`
 
-用途：保存用户文本发言，调用预留的 Agent 接口生成回复，并保存 Agent 回复。当前后端使用 mock Agent 实现，后续可替换为真实 Agent 客户端。
+用途：上传用户本轮录音。后端保存音频文件，生成转写文本和发音分数，再调用预留的 Agent 接口生成回复并保存 Agent 回复。
 
-请求结构：
+该接口目前只接受 multipart 录音，不再接受 JSON 文本消息。
 
-```js
-{
-  content: "Today I would like to discuss the delivery timeline."
-}
+请求头：
+
+```http
+Authorization: Bearer <token>
+Content-Type: multipart/form-data
+```
+
+表单字段：
+
+```text
+audio: recording.webm
 ```
 
 响应核心结构：
 
 ```js
 {
-  userMessage: { sender: "USER", content: "string" },
-  agentMessage: { sender: "AGENT", content: "string", instantTip: "string" },
-  session: { id: 1, currentTurn: 1, messages: [] }
+  userMessage: {
+    id: 2,
+    sender: "USER",
+    content: "This is a mock transcript of the recorded speech.",
+    audioUrl: "speaking/1/2.webm",
+    transcribedText: "This is a mock transcript of the recorded speech.",
+    pronunciationScore: 85.3,
+    pronunciationDetail: "{\"totalScore\":85.3,\"accuracy\":86.1}",
+    instantTip: null,
+    turnIndex: 1,
+    createdAt: "2026-07-14T00:01:00Z"
+  },
+  agentMessage: {
+    id: 3,
+    sender: "AGENT",
+    content: "Thanks for clarifying. Could you also explain the main risk we should discuss today?",
+    audioUrl: null,
+    instantTip: "Try expanding your answer with one reason or detail so the conversation feels more natural.",
+    turnIndex: 1,
+    createdAt: "2026-07-14T00:01:01Z"
+  },
+  pronunciationScore: {
+    totalScore: 85.3,
+    accuracy: 86.1,
+    fluency: 82.4,
+    integrity: 88.0,
+    speed: 121.0
+  },
+  session: {
+    id: 1,
+    currentTurn: 1,
+    messages: []
+  }
 }
 ```
+
+当前 ASR、发音评分、Agent 和 TTS 都是 mock 实现：
+
+- `MockAsrService` 返回固定转写文本。
+- `MockIseService` 返回 70–95 分附近的随机发音分数。
+- `MockSpeakingAgentClient` 按场景和轮次返回模拟回复。
+- `MockTtsService` 返回空音频，前端会退回浏览器 TTS 播放 Agent 文本。
 
 ### 2.4 查询会话与历史
 
@@ -306,7 +344,7 @@ GET /api/speaking/history
 
 用途：查询当前用户自己的口语会话详情或历史 session 列表。接口需要登录；访问他人 session 返回 `403`。
 
-`GET /api/speaking/history` 返回当前用户所有口语 session，按 `startedAt` 倒序排列。前端详情页点击“历史记录”时，会调用该接口，并按当前 `scenarioId` 取最新一条 session 作为回放入口。
+`GET /api/speaking/history` 返回当前用户所有口语 session，按 `startedAt` 倒序排列。前端详情页点击”历史记录”时，会调用该接口，并按当前 `scenarioId` 取最新一条 session 作为回放入口。
 
 `GET /api/speaking/sessions/{sessionId}` 返回单条 session 的完整消息列表。前端反馈/回放页优先使用 URL 中的 `sessionId` 调用该接口；如果 URL 没有 `sessionId`，则回退到 `GET /api/speaking/history` 查找当前情景最新一条 session。
 
@@ -317,47 +355,111 @@ GET /api/speaking/history
   id: 1,
   userId: 1,
   scenario: {
-    id: "business-opening",
-    title: "Business Meeting"
+    id: “business-opening”,
+    title: “Business Meeting”
   },
-  status: "ACTIVE",
-  startedAt: "2026-07-14T00:00:00Z",
+  status: “ACTIVE”,
+  startedAt: “2026-07-14T00:00:00Z”,
   completedAt: null,
   currentTurn: 1,
   targetTurns: 6,
   messages: [
     {
       id: 1,
-      sender: "AGENT",
-      content: "Good morning. Could you briefly introduce today's agenda?",
+      sender: “AGENT”,
+      content: “Good morning. Could you briefly introduce today's agenda?”,
+      audioUrl: null,
+      transcribedText: null,
+      pronunciationScore: null,
+      pronunciationDetail: null,
       instantTip: null,
       turnIndex: 0,
-      createdAt: "2026-07-14T00:00:00Z"
+      createdAt: “2026-07-14T00:00:00Z”
     },
     {
       id: 2,
-      sender: "USER",
-      content: "Today I would like to discuss the delivery timeline.",
+      sender: “USER”,
+      content: “This is a mock transcript of the recorded speech.”,
+      audioUrl: “speaking/1/2.webm”,
+      transcribedText: “This is a mock transcript of the recorded speech.”,
+      pronunciationScore: 85.3,
+      pronunciationDetail: “{...}”,
       instantTip: null,
       turnIndex: 1,
-      createdAt: "2026-07-14T00:01:00Z"
+      createdAt: “2026-07-14T00:01:00Z”
     }
   ]
 }
 ```
 
-当前阶段仅保存纯文本消息。后续接入录音、转写和发音评价时，建议优先在消息或独立评价对象上扩展：
+### 2.5 获取口语反馈
+
+`GET /api/speaking/sessions/{sessionId}/feedback`
+
+用途：获取某次口语练习的评分反馈。接口需要登录；访问他人 session 返回 `403`。
+
+当前阶段后端使用 mock 评分。它会从 session 消息中读取用户发言和已保存的发音分数，再生成总分、建议和每轮反馈。后续可接入真实 ASR、发音评估和 LLM 反馈。
+
+请求头：
+
+```http
+Authorization: Bearer <token>
+```
+
+响应核心结构：
 
 ```js
 {
-  audioUrl: "string",
-  transcript: "string",
-  pronunciationScore: 0,
-  fluencyScore: 0,
-  speechRateWpm: 0,
-  evaluationTips: ["string"]
+  totalScore: 88,
+  pronunciation: 91,
+  fluency: 84,
+  speed: “136 WPM”,
+  issueSentences: [
+    “Today I would like to discuss the delivery timeline.”
+  ],
+  suggestions: [
+    “Try adding more detail to make your responses fuller and more natural.”,
+    “Pay attention to sentence stress — emphasize key words for clearer communication.”,
+    “Practice linking words together to improve your overall fluency.”
+  ],
+  scenarioTitle: "Business Meeting",
+  totalTurns: 1,
+  averagePronunciationScore: 85.3,
+  turns: [
+    {
+      turnIndex: 1,
+      userText: "This is a mock transcript of the recorded speech.",
+      agentText: "Thanks for clarifying. Could you also explain the main risk we should discuss today?",
+      score: {
+        totalScore: 85.3,
+        accuracy: 86.1,
+        fluency: 82.4,
+        integrity: 88.0,
+        speed: 121.0
+      }
+    }
+  ],
+  agentOverallComment: "Keep practicing! Focus on clarity and natural pacing."
 }
 ```
+
+字段说明：
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `totalScore` | `int` | 总分，范围 0–100 |
+| `pronunciation` | `int` | 发音准确性评分，范围 0–100 |
+| `fluency` | `int` | 流畅度评分，范围 0–100 |
+| `speed` | `string` | 语速，格式如 `”136 WPM”` |
+| `issueSentences` | `string[]` | 需要改进的句子列表（从用户消息中选取） |
+| `suggestions` | `string[]` | 改进建议列表 |
+| `scenarioTitle` | `string` | 当前 session 对应的场景标题 |
+| `totalTurns` | `int` | 当前 session 已完成的轮数 |
+| `averagePronunciationScore` | `number` | 用户消息发音分数均值。没有用户录音时为 0 |
+| `turns` | `array` | 每轮用户文本、Agent 文本和发音分数 |
+| `agentOverallComment` | `string` | 总体建议 |
+
+录音文件当前不进数据库。后端把文件写到 `app.speaking.upload-dir` 配置的目录里，数据库保存 `audioUrl` 作为引用路径。生产部署时应把该目录配置到服务器持久化路径，或者改成对象存储。
 
 ## 3. 词汇模块
 

@@ -19,17 +19,24 @@ export const dashboardRecommendedTaskMock = {
 export const dashboardStudyPlanMock = {
   speaking: {
     completed: 0,
-    total: 1
+    total: 1,
+    remaining: 1,
+    done: false
   },
   vocabulary: {
     completed: 2,
-    total: 8
+    total: 8,
+    remaining: 6,
+    done: false
   },
   grammar: {
     completed: 3,
-    total: 6
+    total: 6,
+    remaining: 3,
+    done: false
   },
-  streakDays: 2
+  streakDays: 2,
+  allDone: false
 };
 
 export const dashboardWeeklyOverviewMock = {
@@ -381,7 +388,9 @@ export const vocabularyMemoryMock = {
 
 export const vocabularyPracticeProgressMock = {
   completed: 8,
-  total: 20
+  total: 20,
+  remaining: 12,
+  done: false
 };
 
 export const vocabularyPracticeWordsMock = [
@@ -474,7 +483,9 @@ export const grammarOverviewMock = {
 
 export const grammarProgressMock = {
   completed: 5,
-  total: 12
+  total: 12,
+  remaining: 7,
+  done: false
 };
 
 export const grammarTopicsMock = [

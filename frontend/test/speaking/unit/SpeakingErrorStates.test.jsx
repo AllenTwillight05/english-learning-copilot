@@ -62,9 +62,8 @@ function createScenarioServices(scenarios) {
       },
       getSession: () => Promise.reject(new Error("Speaking session was not found.")),
       listHistory: () => Promise.resolve([]),
-      addMessage: () => Promise.reject(new Error("Not implemented in this test."))
-    }
-  };
+      }
+    };
 }
 
 describe("speaking exceptional states", () => {
@@ -136,7 +135,7 @@ describe("speaking exceptional states", () => {
     expect(screen.getByRole("button", { name: /交卷/ })).toBeDisabled();
 
     await userEvent.click(screen.getByRole("button", { name: /开始录音/ }));
-    expect(screen.getByText("正在录音")).toBeInTheDocument();
+    expect(screen.getByText(/正在录音/)).toBeInTheDocument();
     expect(window.localStorage.getItem("speaking-history:incomplete")).toBeNull();
   });
 

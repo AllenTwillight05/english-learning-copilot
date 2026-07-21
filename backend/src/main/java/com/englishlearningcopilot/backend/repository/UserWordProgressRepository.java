@@ -14,6 +14,8 @@ public interface UserWordProgressRepository extends JpaRepository<UserWordProgre
             String questionType
     );
 
+    List<UserWordProgress> findByUserIdAndQuestionType(Long userId, String questionType);
+
     List<UserWordProgress> findByUserIdAndQuestionTypeAndDueBeforeOrderByDueAsc(
             Long userId,
             String questionType,

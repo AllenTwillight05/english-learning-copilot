@@ -67,13 +67,20 @@ function createTestServices(scenarios = speakingScenariosMock) {
           .sort((left, right) => new Date(right.startedAt).getTime() - new Date(left.startedAt).getTime());
         return Promise.resolve(structuredClone(history));
       },
-      addMessage: (sessionId, content) => {
+      submitRecording: (sessionId, _audioBlob) => {
         const session = sessions.get(Number(sessionId));
         if (!session) {
           return Promise.reject(new Error("Speaking session was not found."));
         }
         const turnIndex = session.currentTurn + 1;
-        const userMessage = createMessage({ sender: "USER", content, turnIndex });
+        const transcribedText = "This is a mock transcript of the recorded speech.";
+        const userMessage = {
+          ...createMessage({ sender: "USER", content: transcribedText, turnIndex }),
+          audioUrl: `speaking/${sessionId}/99.webm`,
+          transcribedText,
+          pronunciationScore: 85,
+          pronunciationDetail: JSON.stringify({ totalScore: 85, accuracy: 87, fluency: 82, integrity: 88, speed: 120 })
+        };
         const agentMessage = createMessage({
           sender: "AGENT",
           content: "Nice answer. Could you add one more detail?",
@@ -89,9 +96,23 @@ function createTestServices(scenarios = speakingScenariosMock) {
         return Promise.resolve(structuredClone({
           userMessage,
           agentMessage,
+          pronunciationScore: { totalScore: 85, accuracy: 87, fluency: 82, integrity: 88, speed: 120 },
           session: updatedSession
         }));
-      }
+      },
+      getFeedback: (sessionId) => Promise.resolve({
+        totalScore: 85,
+        pronunciation: 87,
+        fluency: 82,
+        speed: "120 WPM",
+        issueSentences: ["Test sentence."],
+        suggestions: ["Suggestion 1", "Suggestion 2", "Suggestion 3"],
+        scenarioTitle: "Test Scenario",
+        totalTurns: 1,
+        averagePronunciationScore: 85,
+        turns: [{ turnIndex: 1, userText: "test", agentText: "reply", score: null }],
+        agentOverallComment: "Keep practicing!"
+      })
     }
   };
 }
