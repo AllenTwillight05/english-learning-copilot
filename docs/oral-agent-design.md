@@ -517,3 +517,5 @@ export XFYUN_TTS_PITCH=50
 export XFYUN_TTS_VOLUME=50
 export XFYUN_TTS_TIMEOUT_MS=30000
 ```
+### TTS问题
+  语音人机感太重，完全没有语音语调，流畅度也不佳。
