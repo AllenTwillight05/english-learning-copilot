@@ -14,3 +14,4 @@ frontend/.env.local
 frontend/.env.*.local
 myreference.md
 docs/AGENT.md
+docs/server-deploy.local.md
