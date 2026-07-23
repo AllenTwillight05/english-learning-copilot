@@ -153,7 +153,7 @@ export function SpeakingScenarioDetailPage() {
             <PageSectionHeader
               eyebrow=""
               title={`对话示例`}
-              description="当前为前端 mock 脚本；真实 HTTP 会话会由后端 session 消息驱动。"
+              description=""
             />
             {hasSampleDialogue ? (
               <ScriptPreview lines={sampleDialogueLines} />

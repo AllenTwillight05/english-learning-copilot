@@ -6,9 +6,27 @@ import { speakingScenariosMock } from "../../../src/services/mockData";
 import { renderWithProviders } from "../utils/renderWithProviders";
 
 const defaultScenario = speakingScenariosMock[0];
+const defaultAudioMock = globalThis.Audio;
+
+function createConversationServices(messages) {
+  return {
+    speaking: {
+      listScenarios: () => Promise.resolve([defaultScenario]),
+      getScenario: () => Promise.resolve(defaultScenario),
+      createSession: () => Promise.resolve({
+        id: 1,
+        scenario: defaultScenario,
+        currentTurn: 1,
+        messages
+      }),
+      submitRecording: () => Promise.reject(new Error("not used"))
+    }
+  };
+}
 
 describe("SpeakingConversationPage", () => {
   afterEach(() => {
+    globalThis.Audio = defaultAudioMock;
     window.localStorage.clear();
     vi.clearAllMocks();
   });
@@ -24,6 +42,43 @@ describe("SpeakingConversationPage", () => {
 
     await userEvent.click(playbackButtons[0]);
     expect(window.speechSynthesis.speak).toHaveBeenCalledTimes(1);
+  });
+
+  it("auto-plays the backend TTS audio for the opening agent message", async () => {
+    const audioInstances = [];
+    globalThis.Audio = class AudioMock {
+      constructor(src) {
+        this.src = src;
+        this.onended = null;
+        this.onerror = null;
+        this.play = vi.fn().mockResolvedValue();
+        this.pause = vi.fn();
+        audioInstances.push(this);
+      }
+    };
+
+    renderWithProviders(<SpeakingConversationPage />, {
+      path: "/speaking/:scenarioId/conversation",
+      route: `/speaking/${defaultScenario.id}/conversation`,
+      services: createConversationServices([
+        {
+          id: 1,
+          sender: "AGENT",
+          content: "Generated opening from agent.",
+          audioUrl: "/uploads/speaking/1/1.mp3",
+          turnIndex: 0
+        }
+      ])
+    });
+
+    await screen.findByText("Generated opening from agent.");
+
+    await waitFor(() => {
+      expect(audioInstances).toHaveLength(1);
+      expect(audioInstances[0].play).toHaveBeenCalledTimes(1);
+    });
+    expect(audioInstances[0].src).toMatch(/\/uploads\/speaking\/1\/1\.mp3$/);
+    expect(window.speechSynthesis.speak).not.toHaveBeenCalled();
   });
 
   it("does not render the removed text message composer", async () => {
@@ -82,5 +137,88 @@ describe("SpeakingConversationPage", () => {
       expect(screen.queryByText("Try using a complete sentence.")).not.toBeInTheDocument();
       expect(container.querySelectorAll(".speaking-alert")).toHaveLength(1);
     });
+  });
+
+  it("disables other playback buttons while a speech-synthesis message is playing", async () => {
+    renderWithProviders(<SpeakingConversationPage />, {
+      path: "/speaking/:scenarioId/conversation",
+      route: `/speaking/${defaultScenario.id}/conversation`,
+      services: createConversationServices([
+        {
+          id: 1,
+          sender: "AGENT",
+          content: "Good morning. Could you briefly introduce today's agenda?",
+          turnIndex: 0
+        },
+        {
+          id: 2,
+          sender: "USER",
+          content: "I want to discuss the project timeline.",
+          audioUrl: "speaking/1/2.webm",
+          turnIndex: 1
+        }
+      ])
+    });
+
+    const playbackButtons = await screen.findAllByRole("button", { name: "播放此句音频" });
+    await userEvent.click(playbackButtons[0]);
+
+    expect(screen.getByRole("button", { name: "停止播放" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "播放此句音频" })).toBeDisabled();
+
+    await userEvent.click(screen.getByRole("button", { name: "停止播放" }));
+
+    const restoredButtons = screen.getAllByRole("button", { name: "播放此句音频" });
+    expect(restoredButtons).toHaveLength(2);
+    expect(restoredButtons[0]).toBeEnabled();
+    expect(restoredButtons[1]).toBeEnabled();
+  });
+
+  it("stops the current audio recording when its playback button is clicked again", async () => {
+    const audioInstances = [];
+    globalThis.Audio = class AudioMock {
+      constructor(src) {
+        this.src = src;
+        this.onended = null;
+        this.onerror = null;
+        this.play = vi.fn().mockResolvedValue();
+        this.pause = vi.fn();
+        audioInstances.push(this);
+      }
+    };
+
+    renderWithProviders(<SpeakingConversationPage />, {
+      path: "/speaking/:scenarioId/conversation",
+      route: `/speaking/${defaultScenario.id}/conversation`,
+      services: createConversationServices([
+        {
+          id: 1,
+          sender: "USER",
+          content: "First recording.",
+          audioUrl: "speaking/1/1.webm",
+          turnIndex: 1
+        },
+        {
+          id: 2,
+          sender: "USER",
+          content: "Second recording.",
+          audioUrl: "speaking/1/2.webm",
+          turnIndex: 2
+        }
+      ])
+    });
+
+    const playbackButtons = await screen.findAllByRole("button", { name: "播放此句音频" });
+    await userEvent.click(playbackButtons[0]);
+
+    expect(audioInstances).toHaveLength(1);
+    expect(audioInstances[0].play).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole("button", { name: "播放此句音频" })).toBeDisabled();
+
+    await userEvent.click(screen.getByRole("button", { name: "停止播放" }));
+
+    expect(audioInstances[0].pause).toHaveBeenCalledTimes(1);
+    expect(audioInstances[0].play).toHaveBeenCalledTimes(1);
+    expect(screen.getAllByRole("button", { name: "播放此句音频" })).toHaveLength(2);
   });
 });

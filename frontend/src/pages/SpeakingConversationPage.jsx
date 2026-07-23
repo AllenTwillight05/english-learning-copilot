@@ -16,10 +16,12 @@ import { toBackendAssetUrl } from "../services/assetUrls";
 
 function speakText(text) {
   if (!window.speechSynthesis || !text) {
-    return;
+    return null;
   }
   window.speechSynthesis.cancel();
-  window.speechSynthesis.speak(new SpeechSynthesisUtterance(text));
+  const utterance = new SpeechSynthesisUtterance(text);
+  window.speechSynthesis.speak(utterance);
+  return utterance;
 }
 
 function playAudioUrl(audioUrl, onEnd) {
@@ -41,8 +43,13 @@ function toChatMessage(message) {
     role: isUser ? "learner" : "coach",
     text: message.content,
     audioUrl: message.audioUrl,
-    instantTip: message.instantTip
+    instantTip: message.instantTip,
+    turnIndex: message.turnIndex
   };
+}
+
+function getMessagePlaybackKey(message) {
+  return message.id ?? `${message.role}-${message.turnIndex ?? "unknown"}-${message.text}`;
 }
 
 export function SpeakingConversationPage() {
@@ -62,10 +69,12 @@ export function SpeakingConversationPage() {
   const [sendError, setSendError] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingCount, setRecordingCount] = useState(0);
+  const [playingMessageKey, setPlayingMessageKey] = useState(null);
 
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
-  const agentAudioRef = useRef(null);
+  const activePlaybackRef = useRef({ key: null, audio: null, utterance: null });
+  const autoPlayedOpeningKeyRef = useRef(null);
 
   const activeSession = session ?? data;
   const scenario = activeSession?.scenario;
@@ -86,18 +95,82 @@ export function SpeakingConversationPage() {
         }
       : null;
 
-  const playMessageAudio = useCallback((message) => {
-    if (message.audioUrl) {
-      playAudioUrl(message.audioUrl, () => {});
-    } else {
-      speakText(message.text);
+  const clearPlaybackIfCurrent = useCallback((key) => {
+    if (activePlaybackRef.current.key !== key) {
+      return;
     }
+    activePlaybackRef.current = { key: null, audio: null, utterance: null };
+    setPlayingMessageKey(null);
   }, []);
 
-  const stopAgentAudio = useCallback(() => {
-    agentAudioRef.current?.pause();
-    agentAudioRef.current = null;
+  const stopPlayback = useCallback(() => {
+    const current = activePlaybackRef.current;
+    if (current.audio) {
+      current.audio.onended = null;
+      current.audio.onerror = null;
+      current.audio.pause();
+    }
+    if (current.utterance && window.speechSynthesis) {
+      current.utterance.onend = null;
+      current.utterance.onerror = null;
+      window.speechSynthesis.cancel();
+    }
+    activePlaybackRef.current = { key: null, audio: null, utterance: null };
+    setPlayingMessageKey(null);
   }, []);
+
+  const startPlayback = useCallback((message) => {
+    const key = getMessagePlaybackKey(message);
+    stopPlayback();
+
+    const handleEnd = () => clearPlaybackIfCurrent(key);
+    if (message.audioUrl) {
+      const audio = playAudioUrl(message.audioUrl, handleEnd);
+      if (!audio) {
+        handleEnd();
+        return;
+      }
+      activePlaybackRef.current = { key, audio, utterance: null };
+      setPlayingMessageKey(key);
+      return;
+    }
+
+    const utterance = speakText(message.text);
+    if (!utterance) {
+      handleEnd();
+      return;
+    }
+    utterance.onend = handleEnd;
+    utterance.onerror = handleEnd;
+    activePlaybackRef.current = { key, audio: null, utterance };
+    setPlayingMessageKey(key);
+  }, [clearPlaybackIfCurrent, stopPlayback]);
+
+  const playMessageAudio = useCallback((message) => {
+    const key = getMessagePlaybackKey(message);
+    if (activePlaybackRef.current.key === key) {
+      stopPlayback();
+      return;
+    }
+    startPlayback(message);
+  }, [startPlayback, stopPlayback]);
+
+  useEffect(() => {
+    const openingMessage = messages.find(
+      (message) => message.role === "coach" && message.turnIndex === 0
+    );
+    if (!openingMessage?.audioUrl) {
+      return;
+    }
+
+    const openingKey = getMessagePlaybackKey(openingMessage);
+    if (autoPlayedOpeningKeyRef.current === openingKey) {
+      return;
+    }
+
+    autoPlayedOpeningKeyRef.current = openingKey;
+    startPlayback(openingMessage);
+  }, [messages, startPlayback]);
 
   const startRecording = useCallback(async () => {
     try {
@@ -135,13 +208,8 @@ export function SpeakingConversationPage() {
 
           // Auto-play agent audio if available, else fallback to browser TTS
           const agentMsg = turn.agentMessage;
-          if (agentMsg?.audioUrl) {
-            stopAgentAudio();
-            agentAudioRef.current = playAudioUrl(agentMsg.audioUrl, () => {
-              agentAudioRef.current = null;
-            });
-          } else if (agentMsg?.content) {
-            speakText(agentMsg.content);
+          if (agentMsg?.content) {
+            startPlayback(toChatMessage(agentMsg));
           }
         } catch (err) {
           setSendError(err);
@@ -156,7 +224,7 @@ export function SpeakingConversationPage() {
     } catch (err) {
       console.error("Failed to start recording:", err);
     }
-  }, [activeSession, speaking, stopAgentAudio]);
+  }, [activeSession, speaking, startPlayback]);
 
   const stopRecording = useCallback(() => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
@@ -170,19 +238,19 @@ export function SpeakingConversationPage() {
     if (!scenario || !activeSession?.id) {
       return;
     }
-    stopAgentAudio();
+    stopPlayback();
     navigate(`/speaking/${scenario.id}/feedback?sessionId=${encodeURIComponent(activeSession.id)}`);
-  }, [activeSession, navigate, scenario, stopAgentAudio]);
+  }, [activeSession, navigate, scenario, stopPlayback]);
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      stopAgentAudio();
+      stopPlayback();
       if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
         mediaRecorderRef.current.stop();
       }
     };
-  }, [stopAgentAudio]);
+  }, [stopPlayback]);
 
   return (
     <AsyncPage loading={loading} error={error}>
@@ -206,24 +274,30 @@ export function SpeakingConversationPage() {
             />
 
             <div className="chat-window chat-window--page">
-              {messages.map((message, index) => (
-                <div
-                  className={`chat-bubble-row chat-bubble-row--${message.role}`}
-                  key={message.id ?? `${message.role}-${index}`}
-                >
-                  <div className={`chat-bubble chat-bubble--${message.role}`}>
-                    <span>{message.text}</span>
-                    <Button
-                      aria-label="播放此句音频"
-                      className="chat-audio-button"
-                      icon={<SoundOutlined />}
-                      shape="circle"
-                      size="small"
-                      onClick={() => playMessageAudio(message)}
-                    />
+              {messages.map((message, index) => {
+                const playbackKey = getMessagePlaybackKey(message);
+                const isThisPlaying = playingMessageKey === playbackKey;
+                const isOtherPlaying = playingMessageKey !== null && playingMessageKey !== playbackKey;
+                return (
+                  <div
+                    className={`chat-bubble-row chat-bubble-row--${message.role}`}
+                    key={message.id ?? `${message.role}-${index}`}
+                  >
+                    <div className={`chat-bubble chat-bubble--${message.role}`}>
+                      <span>{message.text}</span>
+                      <Button
+                        aria-label={isThisPlaying ? "停止播放" : "播放此句音频"}
+                        className={`chat-audio-button ${isThisPlaying ? "chat-audio-button--playing" : ""}`}
+                        icon={<SoundOutlined />}
+                        shape="circle"
+                        size="small"
+                        disabled={isOtherPlaying}
+                        onClick={() => playMessageAudio(message)}
+                      />
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {notice ? (

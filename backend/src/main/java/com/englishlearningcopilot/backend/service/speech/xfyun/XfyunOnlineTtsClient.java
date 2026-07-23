@@ -77,27 +77,40 @@ public class XfyunOnlineTtsClient {
     String toRequestPayload(String text, XfyunOnlineTtsProperties properties) {
         byte[] textBytes = text.getBytes(StandardCharsets.UTF_8);
         if (textBytes.length > MAX_TEXT_BYTES) {
-            throw new XfyunTtsException("XFYUN TTS text is too long.");
+            throw new XfyunTtsException("XFYUN Super Smart TTS text is too long.");
         }
 
         ObjectNode root = objectMapper.createObjectNode();
-        ObjectNode common = root.putObject("common");
-        common.put("app_id", properties.appId());
+        ObjectNode header = root.putObject("header");
+        header.put("app_id", properties.appId());
+        header.put("status", 2);
 
-        ObjectNode business = root.putObject("business");
-        business.put("aue", properties.audioEncoding());
-        if ("lame".equalsIgnoreCase(properties.audioEncoding())) {
-            business.put("sfl", 1);
-        }
-        business.put("vcn", properties.voice());
-        business.put("tte", properties.textEncoding());
-        business.put("speed", properties.speed());
-        business.put("pitch", properties.pitch());
-        business.put("volume", properties.volume());
+        ObjectNode parameter = root.putObject("parameter");
+        ObjectNode tts = parameter.putObject("tts");
+        tts.put("vcn", properties.voice());
+        tts.put("speed", properties.speed());
+        tts.put("pitch", properties.pitch());
+        tts.put("volume", properties.volume());
+        tts.put("bgs", 0);
+        tts.put("reg", 0);
+        tts.put("rdn", 0);
+        tts.put("rhy", 0);
 
-        ObjectNode data = root.putObject("data");
-        data.put("status", 2);
-        data.put("text", Base64.getEncoder().encodeToString(textBytes));
+        ObjectNode audio = tts.putObject("audio");
+        audio.put("encoding", properties.audioEncoding());
+        audio.put("sample_rate", properties.sampleRate());
+        audio.put("channels", 1);
+        audio.put("bit_depth", 16);
+        audio.put("frame_size", 0);
+
+        ObjectNode payload = root.putObject("payload");
+        ObjectNode payloadText = payload.putObject("text");
+        payloadText.put("encoding", properties.textEncoding());
+        payloadText.put("compress", "raw");
+        payloadText.put("format", "plain");
+        payloadText.put("status", 2);
+        payloadText.put("seq", 0);
+        payloadText.put("text", Base64.getEncoder().encodeToString(textBytes));
 
         try {
             return objectMapper.writeValueAsString(root);
@@ -110,12 +123,12 @@ public class XfyunOnlineTtsClient {
         validate(properties);
         URI baseUri = URI.create(properties.url());
         if (!"wss".equalsIgnoreCase(baseUri.getScheme())) {
-            throw new XfyunTtsException("XFYUN TTS URL must use wss.");
+            throw new XfyunTtsException("XFYUN Super Smart TTS URL must use wss.");
         }
 
         String host = toSignedHost(baseUri);
         String path = baseUri.getRawPath() == null || baseUri.getRawPath().isBlank()
-                ? "/v2/tts"
+                ? "/v1/private/mcd9m97e6"
                 : baseUri.getRawPath();
         String date = RFC1123.format(dateTime.withZoneSameInstant(ZoneOffset.UTC));
         String signatureSource = "host: " + host + "\n"
@@ -158,13 +171,13 @@ public class XfyunOnlineTtsClient {
 
     private void validate(XfyunOnlineTtsProperties properties) {
         if (properties.appId() == null || properties.appId().isBlank()) {
-            throw new XfyunTtsException("XFYUN TTS APPID is not configured.");
+            throw new XfyunTtsException("XFYUN Super Smart TTS APPID is not configured.");
         }
         if (properties.apiKey() == null || properties.apiKey().isBlank()) {
-            throw new XfyunTtsException("XFYUN TTS API key is not configured.");
+            throw new XfyunTtsException("XFYUN Super Smart TTS API key is not configured.");
         }
         if (properties.apiSecret() == null || properties.apiSecret().isBlank()) {
-            throw new XfyunTtsException("XFYUN TTS API secret is not configured.");
+            throw new XfyunTtsException("XFYUN Super Smart TTS API secret is not configured.");
         }
     }
 
@@ -199,7 +212,7 @@ public class XfyunOnlineTtsClient {
         public CompletionStage<?> onClose(WebSocket webSocket, int statusCode, String reason) {
             if (!completed.isDone()) {
                 completed.completeExceptionally(
-                        new XfyunTtsException("XFYUN TTS connection closed before synthesis completed.")
+                        new XfyunTtsException("XFYUN Super Smart TTS connection closed before synthesis completed.")
                 );
             }
             return CompletableFuture.completedFuture(null);
@@ -207,29 +220,38 @@ public class XfyunOnlineTtsClient {
 
         @Override
         public void onError(WebSocket webSocket, Throwable error) {
-            completed.completeExceptionally(new XfyunTtsException("XFYUN TTS websocket failed.", error));
+            completed.completeExceptionally(new XfyunTtsException("XFYUN Super Smart TTS websocket failed.", error));
         }
 
         private void handleMessage(String message) {
             try {
                 JsonNode root = objectMapper.readTree(message);
-                int code = root.path("code").asInt(0);
+                JsonNode header = root.path("header");
+                int code = header.has("code")
+                        ? header.path("code").asInt(0)
+                        : root.path("code").asInt(0);
                 if (code != 0) {
-                    String errorMessage = root.path("message").asText(root.toString());
-                    completed.completeExceptionally(new XfyunTtsException("XFYUN TTS failed: " + errorMessage));
+                    String errorMessage = header.path("message").asText(root.path("message").asText(root.toString()));
+                    completed.completeExceptionally(
+                            new XfyunTtsException("XFYUN Super Smart TTS failed: " + errorMessage)
+                    );
                     return;
                 }
 
-                JsonNode data = root.path("data");
-                String audioChunk = data.path("audio").asText("");
+                JsonNode audioNode = root.path("payload").path("audio");
+                String audioChunk = audioNode.path("audio").asText("");
                 if (!audioChunk.isBlank()) {
                     audio.write(Base64.getDecoder().decode(audioChunk));
                 }
-                if (data.path("status").asInt(-1) == 2) {
+                int headerStatus = header.path("status").asInt(-1);
+                int audioStatus = audioNode.path("status").asInt(-1);
+                if (headerStatus == 2 || audioStatus == 2) {
                     completed.complete(audio.toByteArray());
                 }
             } catch (Exception e) {
-                completed.completeExceptionally(new XfyunTtsException("Failed to parse XFYUN TTS response.", e));
+                completed.completeExceptionally(
+                        new XfyunTtsException("Failed to parse XFYUN Super Smart TTS response.", e)
+                );
             }
         }
 

@@ -97,8 +97,7 @@ export function GrammarNotebookPage() {
         <section className="glass-panel profile-empty-state">
           <Result
             icon={<ReadOutlined />}
-            title="语法练习本需要登录"
-            subTitle="登录后可以查看你的语法错题和收藏题目。"
+            title="请先登录"
             extra={
               <Button
                 type="primary"

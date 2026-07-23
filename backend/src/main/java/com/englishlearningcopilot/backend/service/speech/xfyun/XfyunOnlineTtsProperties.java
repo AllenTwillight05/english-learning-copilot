@@ -12,6 +12,7 @@ public record XfyunOnlineTtsProperties(
         String voice,
         String audioEncoding,
         String textEncoding,
+        int sampleRate,
         int speed,
         int pitch,
         int volume,
@@ -20,16 +21,19 @@ public record XfyunOnlineTtsProperties(
 
     public XfyunOnlineTtsProperties {
         if (url == null || url.isBlank()) {
-            url = "wss://tts-api.xfyun.cn/v2/tts";
+            url = "wss://cbm01.cn-huabei-1.xf-yun.com/v1/private/mcd9m97e6";
         }
         if (voice == null || voice.isBlank()) {
-            voice = "xiaoyan";
+            voice = "x6_lingxiaoxuan_pro";
         }
         if (audioEncoding == null || audioEncoding.isBlank()) {
             audioEncoding = "lame";
         }
         if (textEncoding == null || textEncoding.isBlank()) {
             textEncoding = "utf8";
+        }
+        if (sampleRate <= 0) {
+            sampleRate = 24000;
         }
         if (speed <= 0) {
             speed = 50;

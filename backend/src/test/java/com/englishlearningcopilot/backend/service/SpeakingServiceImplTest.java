@@ -33,6 +33,7 @@ import com.englishlearningcopilot.backend.service.speech.PronunciationScore;
 import com.englishlearningcopilot.backend.service.speech.TtsService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
@@ -91,9 +92,11 @@ class SpeakingServiceImplTest {
     }
 
     @Test
-    void createSessionPersistsSessionAndOpeningMessage() {
+    void createSessionPersistsAgentOpeningMessageWithTtsAudio() {
         AppUser user = user(7L, "learner");
         SpeakingScenario scenario = scenario("business-opening");
+        AtomicLong ids = new AtomicLong(100);
+        List<SpeakingMessage> savedMessages = new ArrayList<>();
         when(userRepository.findByUsername("learner")).thenReturn(Optional.of(user));
         when(scenarioRepository.findById("business-opening")).thenReturn(Optional.of(scenario));
         when(sessionRepository.save(any(SpeakingSession.class))).thenAnswer(invocation -> {
@@ -103,17 +106,31 @@ class SpeakingServiceImplTest {
         });
         when(messageRepository.save(any(SpeakingMessage.class))).thenAnswer(invocation -> {
             SpeakingMessage message = invocation.getArgument(0);
-            ReflectionTestUtils.setField(message, "id", 100L);
+            if (message.getId() == null) {
+                ReflectionTestUtils.setField(message, "id", ids.getAndIncrement());
+                savedMessages.add(message);
+            }
             return message;
         });
-        when(messageRepository.findBySessionIdOrderByTurnIndexAscCreatedAtAsc(99L)).thenReturn(List.of());
+        when(agentClient.reply(eq(scenario), any(), eq(""), eq(0)))
+                .thenReturn(new SpeakingAgentReply("Generated opening from agent.", null));
+        when(ttsService.synthesize("Generated opening from agent.")).thenReturn(new byte[] {4, 2});
+        when(audioStorageService.save(eq(99L), eq(100L), any(), eq("mp3")))
+                .thenReturn("/audio/opening.mp3");
+        when(messageRepository.findBySessionIdOrderByTurnIndexAscCreatedAtAsc(99L))
+                .thenAnswer(invocation -> savedMessages);
 
         SpeakingSessionResponse response =
                 speakingService.createSession("learner", new CreateSpeakingSessionRequest("business-opening"));
 
         assertThat(response.id()).isEqualTo(99L);
         assertThat(response.scenario().id()).isEqualTo("business-opening");
-        verify(messageRepository).save(any(SpeakingMessage.class));
+        assertThat(response.messages()).hasSize(1);
+        assertThat(response.messages().get(0).content()).isEqualTo("Generated opening from agent.");
+        assertThat(response.messages().get(0).audioUrl()).isEqualTo("/audio/opening.mp3");
+        verify(agentClient).reply(eq(scenario), any(), eq(""), eq(0));
+        verify(ttsService).synthesize("Generated opening from agent.");
+        verify(audioStorageService).save(eq(99L), eq(100L), any(), eq("mp3"));
     }
 
     @Test

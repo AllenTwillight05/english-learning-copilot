@@ -15,6 +15,10 @@ public class MockSpeakingAgentClient implements SpeakingAgentClient {
             String userMessage,
             int turnIndex
     ) {
+        if (turnIndex == 0) {
+            return new SpeakingAgentReply(scenario.getOpeningMessage(), null);
+        }
+
         String content = switch (scenario.getId()) {
             case "airport-checkin" -> airportReply(turnIndex);
             case "dinner-smalltalk" -> dinnerReply(turnIndex);

@@ -49,6 +49,7 @@ export function ProfilePage() {
     try {
       await profile.updateLearningPlan(values);
       message.success("学习计划已更新");
+      window.dispatchEvent(new Event("learning-plan-updated"));
       setPlanModalOpen(false);
       setRefreshVersion((version) => version + 1);
     } finally {
@@ -66,8 +67,7 @@ export function ProfilePage() {
         <section className="glass-panel profile-empty-state">
           <Result
             icon={<UserOutlined />}
-            title="个人页面需要登录"
-            subTitle="登录后可以查看你的学习计划、能力进度和最近反馈。"
+            title="请先登录"
             extra={
               <Button
                 type="primary"

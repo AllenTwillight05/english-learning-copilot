@@ -110,12 +110,8 @@ public class SpeakingServiceImpl implements SpeakingService {
         session.setCurrentTurn(0);
         SpeakingSession savedSession = sessionRepository.save(session);
 
-        SpeakingMessage openingMessage = new SpeakingMessage();
-        openingMessage.setSession(savedSession);
-        openingMessage.setSender(SpeakingMessageSender.AGENT);
-        openingMessage.setContent(scenario.getOpeningMessage());
-        openingMessage.setTurnIndex(0);
-        messageRepository.save(openingMessage);
+        SpeakingAgentReply openingReply = agentClient.reply(scenario, List.of(), "", 0);
+        saveAgentMessageWithAudio(savedSession, openingReply, 0);
 
         return toSessionResponse(savedSession);
     }
@@ -195,24 +191,7 @@ public class SpeakingServiceImpl implements SpeakingService {
         List<SpeakingMessage> history = messageRepository.findBySessionIdOrderByTurnIndexAscCreatedAtAsc(sessionId);
         SpeakingAgentReply reply = agentClient.reply(session.getScenario(), history, transcribedText, nextTurn);
 
-        // TTS
-        byte[] agentAudioBytes = synthesizeAgentAudio(reply.content());
-
-        // Save AGENT message
-        SpeakingMessage agentMessage = new SpeakingMessage();
-        agentMessage.setSession(session);
-        agentMessage.setSender(SpeakingMessageSender.AGENT);
-        agentMessage.setContent(reply.content());
-        agentMessage.setInstantTip(reply.instantTip());
-        agentMessage.setTurnIndex(nextTurn);
-        SpeakingMessage savedAgentMessage = messageRepository.save(agentMessage);
-
-        // Save agent audio if TTS produced any
-        if (agentAudioBytes.length > 0) {
-            String agentAudioUrl = audioStorageService.save(sessionId, savedAgentMessage.getId(), agentAudioBytes, "mp3");
-            savedAgentMessage.setAudioUrl(agentAudioUrl);
-            savedAgentMessage = messageRepository.save(savedAgentMessage);
-        }
+        SpeakingMessage savedAgentMessage = saveAgentMessageWithAudio(session, reply, nextTurn);
 
         session.setCurrentTurn(nextTurn);
         SpeakingSession savedSession = sessionRepository.save(session);
@@ -232,6 +211,34 @@ public class SpeakingServiceImpl implements SpeakingService {
             log.warn("Agent TTS synthesis failed. The frontend will fall back to browser speech synthesis.", e);
             return new byte[0];
         }
+    }
+
+    private SpeakingMessage saveAgentMessageWithAudio(
+            SpeakingSession session,
+            SpeakingAgentReply reply,
+            int turnIndex
+    ) {
+        SpeakingMessage agentMessage = new SpeakingMessage();
+        agentMessage.setSession(session);
+        agentMessage.setSender(SpeakingMessageSender.AGENT);
+        agentMessage.setContent(reply.content());
+        agentMessage.setInstantTip(reply.instantTip());
+        agentMessage.setTurnIndex(turnIndex);
+        SpeakingMessage savedAgentMessage = messageRepository.save(agentMessage);
+
+        byte[] agentAudioBytes = synthesizeAgentAudio(reply.content());
+        if (agentAudioBytes.length > 0) {
+            String agentAudioUrl = audioStorageService.save(
+                    session.getId(),
+                    savedAgentMessage.getId(),
+                    agentAudioBytes,
+                    "mp3"
+            );
+            savedAgentMessage.setAudioUrl(agentAudioUrl);
+            savedAgentMessage = messageRepository.save(savedAgentMessage);
+        }
+
+        return savedAgentMessage;
     }
 
     @Override

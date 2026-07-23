@@ -14,7 +14,14 @@ public record ProfileSnapshotResponse(
             String statusLabel,
             String playbackActionLabel,
             List<FeedbackMetric> metrics,
-            List<String> notes
+            List<String> notes,
+            String scenarioTitle,
+            String completedAt,
+            Integer totalScore,
+            Integer pronunciation,
+            Integer fluency,
+            Integer integrity,
+            String issueSentence
     ) {
     }
 

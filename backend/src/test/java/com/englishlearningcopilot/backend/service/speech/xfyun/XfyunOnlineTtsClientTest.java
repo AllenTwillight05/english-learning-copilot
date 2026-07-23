@@ -20,17 +20,18 @@ class XfyunOnlineTtsClientTest {
     private final XfyunOnlineTtsClient client = new XfyunOnlineTtsClient(objectMapper);
 
     @Test
-    void buildsSingleShotTtsPayload() throws Exception {
+    void buildsSuperSmartTtsPayload() throws Exception {
         String payload = client.toRequestPayload("Welcome to the meeting.", properties());
 
         JsonNode root = objectMapper.readTree(payload);
-        assertThat(root.path("common").path("app_id").asText()).isEqualTo("app-id");
-        assertThat(root.path("business").path("aue").asText()).isEqualTo("lame");
-        assertThat(root.path("business").path("sfl").asInt()).isEqualTo(1);
-        assertThat(root.path("business").path("vcn").asText()).isEqualTo("xiaoyan");
-        assertThat(root.path("data").path("status").asInt()).isEqualTo(2);
+        assertThat(root.path("header").path("app_id").asText()).isEqualTo("app-id");
+        assertThat(root.path("header").path("status").asInt()).isEqualTo(2);
+        assertThat(root.path("parameter").path("tts").path("vcn").asText()).isEqualTo("x6_lingxiaoxuan_pro");
+        assertThat(root.path("parameter").path("tts").path("audio").path("encoding").asText()).isEqualTo("lame");
+        assertThat(root.path("parameter").path("tts").path("audio").path("sample_rate").asInt()).isEqualTo(24000);
+        assertThat(root.path("payload").path("text").path("status").asInt()).isEqualTo(2);
 
-        String encodedText = root.path("data").path("text").asText();
+        String encodedText = root.path("payload").path("text").path("text").asText();
         String decodedText = new String(Base64.getDecoder().decode(encodedText), StandardCharsets.UTF_8);
         assertThat(decodedText).isEqualTo("Welcome to the meeting.");
     }
@@ -49,9 +50,9 @@ class XfyunOnlineTtsClientTest {
         );
 
         assertThat(uri.getScheme()).isEqualTo("wss");
-        assertThat(uri.getHost()).isEqualTo("tts-api.xfyun.cn");
-        assertThat(uri.getPath()).isEqualTo("/v2/tts");
-        assertThat(query.get("host")).isEqualTo("tts-api.xfyun.cn");
+        assertThat(uri.getHost()).isEqualTo("cbm01.cn-huabei-1.xf-yun.com");
+        assertThat(uri.getPath()).isEqualTo("/v1/private/mcd9m97e6");
+        assertThat(query.get("host")).isEqualTo("cbm01.cn-huabei-1.xf-yun.com");
         assertThat(query.get("date")).contains("Tue, 21 Jul 2026");
         assertThat(authorization).contains("api_key=\"api-key\"");
         assertThat(authorization).contains("algorithm=\"hmac-sha256\"");
@@ -71,13 +72,14 @@ class XfyunOnlineTtsClientTest {
     private XfyunOnlineTtsProperties properties() {
         return new XfyunOnlineTtsProperties(
                 true,
-                "wss://tts-api.xfyun.cn/v2/tts",
+                "wss://cbm01.cn-huabei-1.xf-yun.com/v1/private/mcd9m97e6",
                 "app-id",
                 "api-key",
                 "api-secret",
-                "xiaoyan",
+                "x6_lingxiaoxuan_pro",
                 "lame",
                 "utf8",
+                24000,
                 50,
                 50,
                 50,

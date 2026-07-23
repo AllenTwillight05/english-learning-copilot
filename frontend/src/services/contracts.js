@@ -335,7 +335,14 @@ export const contractShapes = {
       statusLabel: "string",
       playbackActionLabel: "string",
       metrics: [{ key: "string", label: "string", value: "string" }],
-      notes: ["string"]
+      notes: ["string"],
+      scenarioTitle: "string",
+      completedAt: "2026-07-09T00:00:00Z",
+      totalScore: 0,
+      pronunciation: 0,
+      fluency: 0,
+      integrity: 0,
+      issueSentence: "string"
     },
     dailyPlan: {
       autoPilotEnabled: true,

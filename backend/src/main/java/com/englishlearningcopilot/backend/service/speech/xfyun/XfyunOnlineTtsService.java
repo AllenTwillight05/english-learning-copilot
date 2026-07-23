@@ -31,7 +31,7 @@ public class XfyunOnlineTtsService implements TtsService {
         try {
             return client.synthesize(text, properties);
         } catch (RuntimeException e) {
-            log.warn("XFYUN TTS synthesis failed. Returning empty audio for browser fallback.", e);
+            log.warn("XFYUN Super Smart TTS synthesis failed. Returning empty audio for browser fallback.", e);
             return new byte[0];
         }
     }
