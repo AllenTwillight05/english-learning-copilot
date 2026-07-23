@@ -1,0 +1,33 @@
+.floating-pet__welcome {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 4px 2px 2px;
+  text-align: center;
+}
+
+.floating-pet__welcome > img {
+  width: 140px;
+  height: 140px;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 12px rgba(87, 93, 164, 0.16));
+}
+
+.floating-pet__welcome h5.ant-typography {
+  margin: 0;
+}
+
+.floating-pet__welcome .ant-typography-secondary {
+  max-width: 27ch;
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.floating-pet__welcome-close.ant-btn {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  z-index: 1;
+  box-shadow: none;
+}

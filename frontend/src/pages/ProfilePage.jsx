@@ -49,6 +49,7 @@ export function ProfilePage() {
     try {
       await profile.updateLearningPlan(values);
       message.success("学习计划已更新");
+      window.dispatchEvent(new Event("learning-plan-updated"));
       setPlanModalOpen(false);
       setRefreshVersion((version) => version + 1);
     } finally {

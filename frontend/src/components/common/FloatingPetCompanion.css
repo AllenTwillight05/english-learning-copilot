@@ -4,8 +4,8 @@
   bottom: 24px;
   left: auto;
   z-index: 40;
-  width: 112px;
-  height: 112px;
+  width: 144px;
+  height: 144px;
 }
 
 .floating-pet--positioned {
@@ -15,8 +15,8 @@
 .floating-pet__trigger {
   display: grid;
   place-items: center;
-  width: 112px;
-  height: 112px;
+  width: 144px;
+  height: 144px;
   padding: 0;
   overflow: visible;
   cursor: grab;
@@ -41,15 +41,15 @@
 }
 
 .floating-pet__trigger img {
-  width: 112px;
-  height: 112px;
+  width: 144px;
+  height: 144px;
   object-fit: contain;
   filter: drop-shadow(0 6px 7px rgba(87, 93, 164, 0.14));
 }
 
 .floating-pet__panel {
   position: absolute;
-  bottom: 126px;
+  bottom: 158px;
   left: 0;
   display: grid;
   gap: 16px;
@@ -72,7 +72,7 @@
 }
 
 .floating-pet--top .floating-pet__panel {
-  top: 126px;
+  top: 158px;
   bottom: auto;
   transform-origin: top left;
 }
@@ -118,6 +118,24 @@
   color: #526eb5;
   font-size: 12px;
   font-weight: 700;
+}
+
+.floating-pet__advice {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 14px;
+  background: rgba(109, 143, 237, 0.09);
+}
+
+.floating-pet__advice .ant-typography-secondary {
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.floating-pet__plan-link.ant-btn {
+  color: #526eb5;
+  box-shadow: none;
 }
 
 .floating-pet__progress .ant-progress {
