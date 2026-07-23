@@ -32,9 +32,12 @@ export function createHttpServices(baseUrl = "") {
       getSession: (sessionId) =>
         getJson(withBaseUrl(baseUrl, API_ENDPOINTS.speakingSession(sessionId))),
       listHistory: () => getJson(withBaseUrl(baseUrl, API_ENDPOINTS.speakingHistory)),
-      submitRecording: (sessionId, audioBlob) => {
+      submitRecording: (sessionId, audioBlob, durationMs) => {
         const formData = new FormData();
         formData.append("audio", audioBlob, "recording.webm");
+        if (durationMs) {
+          formData.append("durationMs", String(durationMs));
+        }
         const { token } = getStoredAuth();
         return requestJson(withBaseUrl(baseUrl, API_ENDPOINTS.speakingSessionMessages(sessionId)), {
           method: "POST",

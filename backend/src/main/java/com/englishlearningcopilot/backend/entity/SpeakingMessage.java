@@ -53,6 +53,9 @@ public class SpeakingMessage {
     @Column(name = "pronunciation_detail", length = 4000)
     private String pronunciationDetail;
 
+    @Column(name = "duration_ms")
+    private Long durationMs;
+
     @Column(name = "instant_tip", length = 1000)
     private String instantTip;
 

@@ -89,9 +89,10 @@ public class SpeakingController {
     public SpeakingTurnResponse submitRecording(
             Principal principal,
             @PathVariable Long sessionId,
-            @RequestParam("audio") MultipartFile audio
+            @RequestParam("audio") MultipartFile audio,
+            @RequestParam(value = "durationMs", required = false) Long durationMs
     ) {
-        return speakingService.submitRecording(principal.getName(), sessionId, audio);
+        return speakingService.submitRecording(principal.getName(), sessionId, audio, durationMs);
     }
 
     /**

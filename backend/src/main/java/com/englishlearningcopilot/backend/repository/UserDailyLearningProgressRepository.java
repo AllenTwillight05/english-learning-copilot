@@ -26,4 +26,17 @@ public interface UserDailyLearningProgressRepository extends JpaRepository<UserD
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate
     );
+
+    @Query("""
+            SELECT progress.planDate
+            FROM UserDailyLearningProgress progress
+            WHERE progress.userId = :userId
+              AND progress.planDate BETWEEN :startDate AND :endDate
+              AND (progress.vocabularyCompleted > 0 OR progress.grammarCompleted > 0)
+            """)
+    List<LocalDate> findLearningDatesInRange(
+            @Param("userId") Long userId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
+    );
 }

@@ -134,7 +134,7 @@ public class SpeakingServiceImpl implements SpeakingService {
 
     @Override
     @Transactional
-    public SpeakingTurnResponse submitRecording(String username, Long sessionId, MultipartFile audio) {
+    public SpeakingTurnResponse submitRecording(String username, Long sessionId, MultipartFile audio, Long durationMs) {
         SpeakingSession session = findOwnedSession(username, sessionId);
         if (session.getStatus() != SpeakingSessionStatus.ACTIVE) {
             throw new BadRequestException("Speaking session is not active.");
@@ -185,6 +185,7 @@ public class SpeakingServiceImpl implements SpeakingService {
         savedUserMessage.setTranscribedText(transcribedText);
         savedUserMessage.setPronunciationScore(pronunciationScore.totalScore());
         savedUserMessage.setPronunciationDetail(pronunciationDetail);
+        savedUserMessage.setDurationMs(normalizeDurationMs(durationMs));
         savedUserMessage = messageRepository.save(savedUserMessage);
 
         // Agent reply
@@ -211,6 +212,13 @@ public class SpeakingServiceImpl implements SpeakingService {
             log.warn("Agent TTS synthesis failed. The frontend will fall back to browser speech synthesis.", e);
             return new byte[0];
         }
+    }
+
+    private Long normalizeDurationMs(Long durationMs) {
+        if (durationMs == null || durationMs <= 0) {
+            return null;
+        }
+        return durationMs;
     }
 
     private SpeakingMessage saveAgentMessageWithAudio(

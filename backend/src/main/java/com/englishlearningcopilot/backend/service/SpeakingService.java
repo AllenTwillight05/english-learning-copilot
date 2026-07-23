@@ -20,7 +20,7 @@ public interface SpeakingService {
 
     List<SpeakingSessionResponse> listHistory(String username);
 
-    SpeakingTurnResponse submitRecording(String username, Long sessionId, MultipartFile audio);
+    SpeakingTurnResponse submitRecording(String username, Long sessionId, MultipartFile audio, Long durationMs);
 
     SpeakingFeedbackResponse getFeedback(String username, Long sessionId);
 }

@@ -73,6 +73,7 @@ export function SpeakingConversationPage() {
 
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
+  const recordingStartedAtRef = useRef(null);
   const activePlaybackRef = useRef({ key: null, audio: null, utterance: null });
   const autoPlayedOpeningKeyRef = useRef(null);
 
@@ -197,12 +198,16 @@ export function SpeakingConversationPage() {
         }
 
         const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+        const durationMs = recordingStartedAtRef.current
+          ? Date.now() - recordingStartedAtRef.current
+          : undefined;
+        recordingStartedAtRef.current = null;
         audioChunksRef.current = [];
 
         setIsSending(true);
         setSendError(null);
         try {
-          const turn = await speaking.submitRecording(activeSession.id, audioBlob);
+          const turn = await speaking.submitRecording(activeSession.id, audioBlob, durationMs);
           setSession(turn.session);
           setRecordingCount((current) => current + 1);
 
@@ -219,6 +224,7 @@ export function SpeakingConversationPage() {
       };
 
       mediaRecorderRef.current = mediaRecorder;
+      recordingStartedAtRef.current = Date.now();
       mediaRecorder.start();
       setIsRecording(true);
     } catch (err) {

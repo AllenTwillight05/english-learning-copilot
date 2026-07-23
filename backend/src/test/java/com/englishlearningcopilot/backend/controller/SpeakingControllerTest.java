@@ -102,7 +102,7 @@ class SpeakingControllerTest {
     void submitRecordingPassesMultipartAudio() throws Exception {
         SpeakingMessageResponse userMessage = message(1L, "USER", "hello");
         SpeakingMessageResponse agentMessage = message(2L, "AGENT", "welcome");
-        when(speakingService.submitRecording(eq("learner"), eq(99L), any()))
+        when(speakingService.submitRecording(eq("learner"), eq(99L), any(), eq(1234L)))
                 .thenReturn(new SpeakingTurnResponse(
                         userMessage,
                         agentMessage,
@@ -119,13 +119,14 @@ class SpeakingControllerTest {
 
         mockMvc.perform(multipart("/api/speaking/sessions/99/messages")
                         .file(audio)
+                        .param("durationMs", "1234")
                         .principal(() -> "learner"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.userMessage.content").value("hello"))
                 .andExpect(jsonPath("$.agentMessage.content").value("welcome"))
                 .andExpect(jsonPath("$.pronunciationScore.totalScore").value(88.0));
 
-        verify(speakingService).submitRecording(eq("learner"), eq(99L), any());
+        verify(speakingService).submitRecording(eq("learner"), eq(99L), any(), eq(1234L));
     }
 
     @Test

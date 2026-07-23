@@ -7,10 +7,13 @@ import com.englishlearningcopilot.backend.dto.DashboardStudyPlanResponse;
 import com.englishlearningcopilot.backend.dto.DashboardWeeklyOverviewResponse;
 import com.englishlearningcopilot.backend.dto.DailyLearningStatusResponse;
 import com.englishlearningcopilot.backend.entity.AppUser;
+import com.englishlearningcopilot.backend.entity.SpeakingMessage;
+import com.englishlearningcopilot.backend.entity.SpeakingMessageSender;
 import com.englishlearningcopilot.backend.dto.VocabularyLeaderboardItemResponse;
 import com.englishlearningcopilot.backend.entity.Vocabulary;
 import com.englishlearningcopilot.backend.exception.ResourceNotFoundException;
 import com.englishlearningcopilot.backend.repository.GrammarLeaderboardProjection;
+import com.englishlearningcopilot.backend.repository.SpeakingMessageRepository;
 import com.englishlearningcopilot.backend.repository.SpeakingLeaderboardProjection;
 import com.englishlearningcopilot.backend.repository.SpeakingSessionRepository;
 import com.englishlearningcopilot.backend.repository.UserDailyLearningProgressRepository;
@@ -22,12 +25,18 @@ import com.englishlearningcopilot.backend.repository.VocabularyLeaderboardProjec
 import com.englishlearningcopilot.backend.repository.VocabularyRepository;
 import com.englishlearningcopilot.backend.service.DashboardService;
 import com.englishlearningcopilot.backend.service.LearningPlanService;
+import com.englishlearningcopilot.backend.service.speech.PronunciationScore;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.DayOfWeek;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.springframework.data.domain.PageRequest;
@@ -45,6 +54,7 @@ public class DashboardServiceImpl implements DashboardService {
     private static final String PRACTICE_TYPE_GRAMMAR = "GRAMMAR";
 
     private final SpeakingSessionRepository speakingSessionRepository;
+    private final SpeakingMessageRepository speakingMessageRepository;
     private final UserGrammarbookRepository userGrammarbookRepository;
     private final UserWordbookRepository userWordbookRepository;
     private final VocabularyRepository vocabularyRepository;
@@ -52,18 +62,22 @@ public class DashboardServiceImpl implements DashboardService {
     private final UserRepository userRepository;
     private final UserDailyLearningProgressRepository userDailyLearningProgressRepository;
     private final UserDailyPracticeLogRepository userDailyPracticeLogRepository;
+    private final ObjectMapper objectMapper;
 
     public DashboardServiceImpl(
             SpeakingSessionRepository speakingSessionRepository,
+            SpeakingMessageRepository speakingMessageRepository,
             UserGrammarbookRepository userGrammarbookRepository,
             UserWordbookRepository userWordbookRepository,
             VocabularyRepository vocabularyRepository,
             LearningPlanService learningPlanService,
             UserRepository userRepository,
             UserDailyLearningProgressRepository userDailyLearningProgressRepository,
-            UserDailyPracticeLogRepository userDailyPracticeLogRepository
+            UserDailyPracticeLogRepository userDailyPracticeLogRepository,
+            ObjectMapper objectMapper
     ) {
         this.speakingSessionRepository = speakingSessionRepository;
+        this.speakingMessageRepository = speakingMessageRepository;
         this.userGrammarbookRepository = userGrammarbookRepository;
         this.userWordbookRepository = userWordbookRepository;
         this.vocabularyRepository = vocabularyRepository;
@@ -71,6 +85,7 @@ public class DashboardServiceImpl implements DashboardService {
         this.userRepository = userRepository;
         this.userDailyLearningProgressRepository = userDailyLearningProgressRepository;
         this.userDailyPracticeLogRepository = userDailyPracticeLogRepository;
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -102,12 +117,15 @@ public class DashboardServiceImpl implements DashboardService {
         LocalDate today = LocalDate.now(ZoneId.systemDefault());
         LocalDate weekStart = today.with(DayOfWeek.MONDAY);
         LocalDate weekEnd = weekStart.plusDays(6);
+        ZoneId zone = ZoneId.systemDefault();
+        Instant weekStartInstant = weekStart.atStartOfDay(zone).toInstant();
+        Instant weekEndExclusiveInstant = weekEnd.plusDays(1).atStartOfDay(zone).toInstant();
 
-        long learningDays = userDailyLearningProgressRepository.countLearningDaysInRange(
+        Set<LocalDate> learningDates = new HashSet<>(userDailyLearningProgressRepository.findLearningDatesInRange(
                 user.getId(),
                 weekStart,
                 weekEnd
-        );
+        ));
         long vocabularyLearned = userDailyPracticeLogRepository.countByUserIdAndPlanDateBetweenAndPracticeType(
                 user.getId(),
                 weekStart,
@@ -120,11 +138,33 @@ public class DashboardServiceImpl implements DashboardService {
                 weekEnd,
                 PRACTICE_TYPE_GRAMMAR
         );
+        List<SpeakingMessage> weeklyUserMessages = speakingMessageRepository
+                .findBySessionUserIdAndSenderAndCreatedAtBetween(
+                        user.getId(),
+                        SpeakingMessageSender.USER,
+                        weekStartInstant,
+                        weekEndExclusiveInstant
+                );
+        weeklyUserMessages.stream()
+                .map(SpeakingMessage::getCreatedAt)
+                .filter(createdAt -> createdAt != null)
+                .map(createdAt -> LocalDate.ofInstant(createdAt, zone))
+                .forEach(learningDates::add);
+        long speakingDurationMs = weeklyUserMessages.stream()
+                .map(SpeakingMessage::getDurationMs)
+                .filter(durationMs -> durationMs != null && durationMs > 0)
+                .mapToLong(Long::longValue)
+                .sum();
+        double averageAccuracy = weeklyUserMessages.stream()
+                .filter(message -> message.getPronunciationScore() != null)
+                .mapToDouble(this::readAccuracy)
+                .average()
+                .orElse(Double.NaN);
 
         return new DashboardWeeklyOverviewResponse(
-                "148 min",
-                "92%",
-                learningDays + " 天",
+                formatDurationMinutes(speakingDurationMs),
+                formatAccuracy(averageAccuracy),
+                learningDates.size() + " 天",
                 vocabularyLearned + " 词",
                 grammarPracticed + " 题"
         );
@@ -198,6 +238,32 @@ public class DashboardServiceImpl implements DashboardService {
 
     private String nullToEmpty(String value) {
         return value == null ? "" : value;
+    }
+
+    private double readAccuracy(SpeakingMessage message) {
+        if (message.getPronunciationDetail() != null && !message.getPronunciationDetail().isBlank()) {
+            try {
+                return objectMapper.readValue(message.getPronunciationDetail(), PronunciationScore.class).accuracy();
+            } catch (JsonProcessingException ignored) {
+                // Fall back to stored total score below.
+            }
+        }
+        return message.getPronunciationScore() != null ? message.getPronunciationScore() : Double.NaN;
+    }
+
+    private String formatDurationMinutes(long durationMs) {
+        if (durationMs <= 0) {
+            return "0 min";
+        }
+        long minutes = Math.round(durationMs / 60000.0);
+        return Math.max(minutes, 1) + " min";
+    }
+
+    private String formatAccuracy(double accuracy) {
+        if (Double.isNaN(accuracy)) {
+            return "-";
+        }
+        return Math.round(accuracy) + "%";
     }
 
     private AppUser getCurrentUser(String username) {
