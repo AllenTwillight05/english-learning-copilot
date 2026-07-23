@@ -8,6 +8,7 @@ public record SpeakingFeedbackResponse(
         int totalScore,
         int pronunciation,
         int fluency,
+        int integrity,
         String speed,
         List<String> issueSentences,
         List<String> suggestions,

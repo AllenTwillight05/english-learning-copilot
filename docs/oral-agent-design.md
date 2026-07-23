@@ -455,3 +455,67 @@ export XFYUN_ASR_FILE_NAME=recording.webm
 - `XFYUN_ASR_ENABLED=true` 表示后端使用真实讯飞 ASR；如果改成 `false` 或不配置，就继续使用 `MockAsrService`。
 - `XFYUN_ASR_FILE_NAME=recording.webm` 表示当前先按浏览器上传的录音文件名提交给讯飞。如果后续发现讯飞不接受 `webm/opus`，再在后端加入转码，把上传给讯飞的文件改成 `recording.wav`。
 - 因为文件里已经写了 `export`，启动时使用 `source .env.local` 即可。
+
+- **目前问题**:
+  - 采用的不是流式处理，实时语音转文字，而是一次性录入一长条message，再将信息发送给讯飞大模型转文字。该操作费时较久，后续应改进为建立websocket连接，实时传送小粒度音频到讯飞转文字。
+
+## 2026-07-22 在线语音合成接入记录
+
+现在 TTS 是“可选真实讯飞在线语音合成”的状态。Agent 回复的文字目前还是后端的 `MockSpeakingAgentClient` 生成的。TTS 做的事情只是把这段已经生成好的文字变成音频。
+
+### 当前后端流程
+
+用户停止录音后，后端现在的流程是：
+
+```text
+1. 保存用户录音，文件后缀仍然是 .webm
+2. 调用 ASR，把用户录音转成文本
+3. 调用 ISE，得到发音评分
+4. 保存 USER 消息
+5. 调用 mock Agent，得到一段回复文字
+6. 调用 TTS，把这段回复文字合成 mp3
+7. 保存 AGENT 消息，并把 mp3 地址写入 audioUrl
+8. 返回本轮对话结果给前端
+```
+
+如果讯飞 TTS 调用成功，前端会优先播放后端返回的 `audioUrl`。
+
+如果讯飞 TTS 调用失败，后端不会让整轮会话失败，而是返回空音频。前端会继续用浏览器自己的 `speechSynthesis` 播放 Agent 文本。这样本地联调时即使讯飞网络、密钥、配额临时出问题，也不会影响 ASR 和会话主流程继续跑。
+
+
+### 本地 `.env.local` 的 TTS 配置格式
+
+如果 ASR 和 TTS 使用同一个讯飞应用，推荐这样写：
+
+```bash
+export XFYUN_TTS_ENABLED=true
+
+export XFYUN_APP_ID=你的APPID
+export XFYUN_API_KEY=你的APIKey
+export XFYUN_API_SECRET=你的APISecret
+```
+
+如果 TTS 单独使用另一个讯飞应用，可以写成：
+
+```bash
+export XFYUN_TTS_ENABLED=true
+
+export XFYUN_TTS_APP_ID=你的TTS_APPID
+export XFYUN_TTS_API_KEY=你的TTS_APIKey
+export XFYUN_TTS_API_SECRET=你的TTS_APISecret
+```
+
+其他可选配置：
+
+```bash
+export XFYUN_TTS_URL=wss://tts-api.xfyun.cn/v2/tts
+export XFYUN_TTS_VOICE=xiaoyan
+export XFYUN_TTS_AUDIO_ENCODING=lame
+export XFYUN_TTS_TEXT_ENCODING=utf8
+export XFYUN_TTS_SPEED=50
+export XFYUN_TTS_PITCH=50
+export XFYUN_TTS_VOLUME=50
+export XFYUN_TTS_TIMEOUT_MS=30000
+```
+### TTS问题
+  语音人机感太重，完全没有语音语调，流畅度也不佳。

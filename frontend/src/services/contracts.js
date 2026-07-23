@@ -117,6 +117,7 @@ export const contractShapes = {
         totalScore: 0,
         pronunciation: 0,
         fluency: 0,
+        integrity: 0,
         speed: "string",
         issueSentences: ["string"],
         suggestions: ["string"]
@@ -150,6 +151,7 @@ export const contractShapes = {
       totalScore: 0,
       pronunciation: 0,
       fluency: 0,
+      integrity: 0,
       speed: "string",
       issueSentences: ["string"],
       suggestions: ["string"],

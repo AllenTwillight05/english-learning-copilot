@@ -28,20 +28,23 @@ import com.englishlearningcopilot.backend.service.speech.IseService;
 import com.englishlearningcopilot.backend.service.speech.PronunciationScore;
 import com.englishlearningcopilot.backend.service.speech.TtsService;
 import com.englishlearningcopilot.backend.service.speech.xfyun.XfyunAsrException;
+import com.englishlearningcopilot.backend.service.speech.xfyun.XfyunIseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ThreadLocalRandom;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class SpeakingServiceImpl implements SpeakingService {
+
+    private static final Logger log = LoggerFactory.getLogger(SpeakingServiceImpl.class);
 
     private final SpeakingScenarioRepository scenarioRepository;
     private final SpeakingSessionRepository sessionRepository;
@@ -161,22 +164,13 @@ public class SpeakingServiceImpl implements SpeakingService {
         // Save audio file
         String audioUrl = audioStorageService.save(sessionId, savedUserMessage.getId(), audioBytes);
 
-        // Parallel: ASR and ISE
-        CompletableFuture<String> asrFuture = CompletableFuture.supplyAsync(
-                () -> asrService.transcribe(audioBytes));
-        CompletableFuture<PronunciationScore> iseFuture = CompletableFuture.supplyAsync(
-                () -> iseService.evaluate(audioBytes, null));
-
         String transcribedText;
         PronunciationScore pronunciationScore;
         try {
-            transcribedText = asrFuture.join();
-            pronunciationScore = iseFuture.join();
-        } catch (java.util.concurrent.CompletionException e) {
-            if (e.getCause() instanceof XfyunAsrException asrException) {
-                throw asrException;
-            }
-            throw new RuntimeException("Speech processing failed: " + e.getMessage(), e);
+            transcribedText = asrService.transcribe(audioBytes);
+            pronunciationScore = iseService.evaluate(audioBytes, transcribedText);
+        } catch (XfyunAsrException | XfyunIseException e) {
+            throw e;
         } catch (Exception e) {
             throw new RuntimeException("Speech processing failed: " + e.getMessage(), e);
         }
@@ -202,7 +196,7 @@ public class SpeakingServiceImpl implements SpeakingService {
         SpeakingAgentReply reply = agentClient.reply(session.getScenario(), history, transcribedText, nextTurn);
 
         // TTS
-        byte[] agentAudioBytes = ttsService.synthesize(reply.content());
+        byte[] agentAudioBytes = synthesizeAgentAudio(reply.content());
 
         // Save AGENT message
         SpeakingMessage agentMessage = new SpeakingMessage();
@@ -215,7 +209,7 @@ public class SpeakingServiceImpl implements SpeakingService {
 
         // Save agent audio if TTS produced any
         if (agentAudioBytes.length > 0) {
-            String agentAudioUrl = audioStorageService.save(sessionId, savedAgentMessage.getId(), agentAudioBytes);
+            String agentAudioUrl = audioStorageService.save(sessionId, savedAgentMessage.getId(), agentAudioBytes, "mp3");
             savedAgentMessage.setAudioUrl(agentAudioUrl);
             savedAgentMessage = messageRepository.save(savedAgentMessage);
         }
@@ -231,6 +225,15 @@ public class SpeakingServiceImpl implements SpeakingService {
         );
     }
 
+    private byte[] synthesizeAgentAudio(String text) {
+        try {
+            return ttsService.synthesize(text);
+        } catch (RuntimeException e) {
+            log.warn("Agent TTS synthesis failed. The frontend will fall back to browser speech synthesis.", e);
+            return new byte[0];
+        }
+    }
+
     @Override
     @Transactional(readOnly = true)
     public SpeakingFeedbackResponse getFeedback(String username, Long sessionId) {
@@ -242,19 +245,16 @@ public class SpeakingServiceImpl implements SpeakingService {
                 .filter(m -> m.getSender() == SpeakingMessageSender.USER)
                 .toList();
 
-        ThreadLocalRandom rng = ThreadLocalRandom.current();
-        int totalScore = 78 + rng.nextInt(18);
-        int pronunciation = 76 + rng.nextInt(20);
-        int fluency = 72 + rng.nextInt(24);
-        int wpm = 108 + rng.nextInt(37);
-        String speed = wpm + " WPM";
-
-        // Issue sentences from user messages
+        // Issue sentences from low-scoring user turns.
         List<String> issueSentences = new ArrayList<>();
-        if (!userMessages.isEmpty()) {
-            int pickCount = Math.min(userMessages.size(), 2);
-            for (int i = 0; i < pickCount; i++) {
-                issueSentences.add(userMessages.get(rng.nextInt(userMessages.size())).getContent());
+        for (SpeakingMessage userMessage : userMessages) {
+            if (userMessage.getPronunciationScore() == null || userMessage.getContent() == null
+                    || userMessage.getContent().isBlank()) {
+                continue;
+            }
+            PronunciationScore score = readPronunciationScore(userMessage);
+            if (score.totalScore() < 60) {
+                issueSentences.add(userMessage.getContent());
             }
         }
 
@@ -266,8 +266,7 @@ public class SpeakingServiceImpl implements SpeakingService {
 
         // Per-turn feedback
         List<TurnFeedback> turns = new ArrayList<>();
-        double iseSum = 0;
-        int iseCount = 0;
+        List<PronunciationScore> turnScores = new ArrayList<>();
 
         for (int turnIdx = 1; turnIdx <= session.getCurrentTurn(); turnIdx++) {
             final int t = turnIdx;
@@ -284,16 +283,8 @@ public class SpeakingServiceImpl implements SpeakingService {
 
             PronunciationScore ps;
             if (userMsg != null && userMsg.getPronunciationScore() != null) {
-                // Reconstruct from stored data (mock since we don't store full detail yet)
-                ps = new PronunciationScore(
-                        userMsg.getPronunciationScore(),
-                        70 + rng.nextDouble() * 25,
-                        68 + rng.nextDouble() * 27,
-                        75 + rng.nextDouble() * 20,
-                        90 + rng.nextDouble() * 60
-                );
-                iseSum += ps.totalScore();
-                iseCount++;
+                ps = readPronunciationScore(userMsg);
+                turnScores.add(ps);
             } else {
                 ps = null;
             }
@@ -306,14 +297,32 @@ public class SpeakingServiceImpl implements SpeakingService {
             ));
         }
 
-        double averagePronunciationScore = iseCount > 0
-                ? Math.round(iseSum / iseCount * 10.0) / 10.0
+        double averagePronunciationScore = !turnScores.isEmpty()
+                ? round1(turnScores.stream().mapToDouble(PronunciationScore::totalScore).average().orElse(0))
                 : 0;
+        int totalScore = toDisplayScore(averagePronunciationScore);
+        int pronunciation = toDisplayScore(turnScores.stream()
+                .mapToDouble(PronunciationScore::accuracy)
+                .average()
+                .orElse(averagePronunciationScore));
+        int fluency = toDisplayScore(turnScores.stream()
+                .mapToDouble(PronunciationScore::fluency)
+                .average()
+                .orElse(averagePronunciationScore));
+        int integrity = toDisplayScore(turnScores.stream()
+                .mapToDouble(PronunciationScore::integrity)
+                .average()
+                .orElse(averagePronunciationScore));
+        String speed = formatSpeed(turnScores.stream()
+                .mapToDouble(PronunciationScore::speed)
+                .average()
+                .orElse(0));
 
         return new SpeakingFeedbackResponse(
                 totalScore,
                 pronunciation,
                 fluency,
+                integrity,
                 speed,
                 issueSentences,
                 suggestions,
@@ -323,6 +332,33 @@ public class SpeakingServiceImpl implements SpeakingService {
                 turns,
                 "Keep practicing! Focus on clarity and natural pacing."
         );
+    }
+
+    private PronunciationScore readPronunciationScore(SpeakingMessage message) {
+        if (message.getPronunciationDetail() != null && !message.getPronunciationDetail().isBlank()) {
+            try {
+                return objectMapper.readValue(message.getPronunciationDetail(), PronunciationScore.class);
+            } catch (JsonProcessingException e) {
+                log.warn("Failed to parse stored pronunciation detail for speaking message {}.", message.getId(), e);
+            }
+        }
+        double total = message.getPronunciationScore() != null ? message.getPronunciationScore() : 0;
+        return new PronunciationScore(total, total, total, total, 0);
+    }
+
+    private int toDisplayScore(double value) {
+        return (int) Math.round(value);
+    }
+
+    private double round1(double value) {
+        return Math.round(value * 10.0) / 10.0;
+    }
+
+    private String formatSpeed(double value) {
+        if (value <= 0) {
+            return "0 WPM";
+        }
+        return toDisplayScore(value) + " WPM";
     }
 
     private SpeakingSessionResponse toSessionResponse(SpeakingSession session) {

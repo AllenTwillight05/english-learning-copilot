@@ -8,6 +8,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.englishlearningcopilot.backend.dto.CreateSpeakingSessionRequest;
+import com.englishlearningcopilot.backend.dto.SpeakingFeedbackResponse;
 import com.englishlearningcopilot.backend.dto.SpeakingSessionResponse;
 import com.englishlearningcopilot.backend.dto.SpeakingTurnResponse;
 import com.englishlearningcopilot.backend.entity.AppUser;
@@ -156,12 +157,14 @@ class SpeakingServiceImplTest {
         });
         when(audioStorageService.save(eq(99L), any(), any())).thenReturn("/audio/turn.wav");
         when(asrService.transcribe(any())).thenReturn("Hello, nice to meet you.");
-        when(iseService.evaluate(any(), eq(null))).thenReturn(new PronunciationScore(88, 87, 86, 85, 120));
+        when(iseService.evaluate(any(), eq("Hello, nice to meet you.")))
+                .thenReturn(new PronunciationScore(88, 87, 86, 85, 120));
         when(objectMapper.writeValueAsString(any())).thenReturn("{}");
         when(messageRepository.findBySessionIdOrderByTurnIndexAscCreatedAtAsc(99L)).thenReturn(List.of());
         when(agentClient.reply(eq(scenario), any(), eq("Hello, nice to meet you."), eq(1)))
                 .thenReturn(new SpeakingAgentReply("Welcome to the meeting.", "Use a fuller greeting."));
         when(ttsService.synthesize("Welcome to the meeting.")).thenReturn(new byte[] {9, 8});
+        when(audioStorageService.save(eq(99L), any(), any(), eq("mp3"))).thenReturn("/audio/agent.mp3");
         when(sessionRepository.save(session)).thenReturn(session);
 
         SpeakingTurnResponse response = speakingService.submitRecording(
@@ -176,6 +179,7 @@ class SpeakingServiceImplTest {
         assertThat(response.session().currentTurn()).isEqualTo(1);
         verify(agentClient).reply(eq(scenario), any(), eq("Hello, nice to meet you."), eq(1));
         verify(ttsService).synthesize("Welcome to the meeting.");
+        verify(audioStorageService).save(eq(99L), eq(101L), any(), eq("mp3"));
     }
 
     @Test
@@ -191,6 +195,90 @@ class SpeakingServiceImplTest {
         ))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("Speaking session is not active.");
+    }
+
+    @Test
+    void getFeedbackUsesAverageStoredPronunciationScoresForSummary() throws Exception {
+        AppUser user = user(7L, "learner");
+        SpeakingScenario scenario = scenario("business-opening");
+        SpeakingSession session = session(99L, user, scenario);
+        session.setCurrentTurn(2);
+        SpeakingMessage opening = agentMessage(session, 1L, 0, "Hello", null);
+        SpeakingMessage userTurn1 = userMessage(
+                session,
+                2L,
+                1,
+                "I would like to discuss the agenda.",
+                new PronunciationScore(80, 70, 60, 90, 110)
+        );
+        SpeakingMessage agentTurn1 = agentMessage(session, 3L, 1, "Could you explain the first item?", null);
+        SpeakingMessage userTurn2 = userMessage(
+                session,
+                4L,
+                2,
+                "The first item is our timeline.",
+                new PronunciationScore(90, 80, 70, 100, 130)
+        );
+        SpeakingMessage agentTurn2 = agentMessage(session, 5L, 2, "What is the main risk?", null);
+        when(sessionRepository.findById(99L)).thenReturn(Optional.of(session));
+        when(messageRepository.findBySessionIdOrderByTurnIndexAscCreatedAtAsc(99L))
+                .thenReturn(List.of(opening, userTurn1, agentTurn1, userTurn2, agentTurn2));
+        when(objectMapper.readValue(userTurn1.getPronunciationDetail(), PronunciationScore.class))
+                .thenReturn(new PronunciationScore(80, 70, 60, 90, 110));
+        when(objectMapper.readValue(userTurn2.getPronunciationDetail(), PronunciationScore.class))
+                .thenReturn(new PronunciationScore(90, 80, 70, 100, 130));
+
+        SpeakingFeedbackResponse feedback = speakingService.getFeedback("learner", 99L);
+
+        assertThat(feedback.totalScore()).isEqualTo(85);
+        assertThat(feedback.pronunciation()).isEqualTo(75);
+        assertThat(feedback.fluency()).isEqualTo(65);
+        assertThat(feedback.integrity()).isEqualTo(95);
+        assertThat(feedback.speed()).isEqualTo("120 WPM");
+        assertThat(feedback.issueSentences()).isEmpty();
+        assertThat(feedback.averagePronunciationScore()).isEqualTo(85.0);
+        assertThat(feedback.turns()).hasSize(2);
+        assertThat(feedback.turns().get(0).score().integrity()).isEqualTo(90);
+        assertThat(feedback.turns().get(1).score().integrity()).isEqualTo(100);
+    }
+
+    @Test
+    void getFeedbackUsesLowTotalScoreUserMessagesAsIssueSentences() throws Exception {
+        AppUser user = user(7L, "learner");
+        SpeakingScenario scenario = scenario("business-opening");
+        SpeakingSession session = session(99L, user, scenario);
+        session.setCurrentTurn(2);
+        SpeakingMessage lowScoreTurn = userMessage(
+                session,
+                2L,
+                1,
+                "I need book room.",
+                new PronunciationScore(55, 52, 58, 70, 90)
+        );
+        SpeakingMessage passingTurn = userMessage(
+                session,
+                4L,
+                2,
+                "I would like to book a room.",
+                new PronunciationScore(60, 62, 61, 75, 100)
+        );
+        when(sessionRepository.findById(99L)).thenReturn(Optional.of(session));
+        when(messageRepository.findBySessionIdOrderByTurnIndexAscCreatedAtAsc(99L))
+                .thenReturn(List.of(
+                        agentMessage(session, 1L, 0, "Hello", null),
+                        lowScoreTurn,
+                        agentMessage(session, 3L, 1, "Could you say that again?", null),
+                        passingTurn,
+                        agentMessage(session, 5L, 2, "Sure.", null)
+                ));
+        when(objectMapper.readValue(lowScoreTurn.getPronunciationDetail(), PronunciationScore.class))
+                .thenReturn(new PronunciationScore(55, 52, 58, 70, 90));
+        when(objectMapper.readValue(passingTurn.getPronunciationDetail(), PronunciationScore.class))
+                .thenReturn(new PronunciationScore(60, 62, 61, 75, 100));
+
+        SpeakingFeedbackResponse feedback = speakingService.getFeedback("learner", 99L);
+
+        assertThat(feedback.issueSentences()).containsExactly("I need book room.");
     }
 
     private static AppUser user(Long id, String username) {
@@ -235,5 +323,49 @@ class SpeakingServiceImplTest {
         session.setTargetTurns(3);
         session.setCurrentTurn(0);
         return session;
+    }
+
+    private static SpeakingMessage userMessage(
+            SpeakingSession session,
+            Long id,
+            int turnIndex,
+            String content,
+            PronunciationScore score
+    ) {
+        SpeakingMessage message = message(session, id, turnIndex, SpeakingMessageSender.USER, content);
+        message.setPronunciationScore(score.totalScore());
+        message.setPronunciationDetail("""
+                {"totalScore":%s,"accuracy":%s,"fluency":%s,"integrity":%s,"speed":%s}
+                """.formatted(score.totalScore(), score.accuracy(), score.fluency(), score.integrity(), score.speed()));
+        return message;
+    }
+
+    private static SpeakingMessage agentMessage(
+            SpeakingSession session,
+            Long id,
+            int turnIndex,
+            String content,
+            String instantTip
+    ) {
+        SpeakingMessage message = message(session, id, turnIndex, SpeakingMessageSender.AGENT, content);
+        message.setInstantTip(instantTip);
+        return message;
+    }
+
+    private static SpeakingMessage message(
+            SpeakingSession session,
+            Long id,
+            int turnIndex,
+            SpeakingMessageSender sender,
+            String content
+    ) {
+        SpeakingMessage message = new SpeakingMessage();
+        ReflectionTestUtils.setField(message, "id", id);
+        ReflectionTestUtils.setField(message, "createdAt", Instant.parse("2026-07-21T00:00:00Z"));
+        message.setSession(session);
+        message.setTurnIndex(turnIndex);
+        message.setSender(sender);
+        message.setContent(content);
+        return message;
     }
 }

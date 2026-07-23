@@ -22,4 +22,15 @@ class SpeakingAudioStorageServiceTest {
         assertThat(storageService.load(audioUrl)).containsExactly(1, 2, 3);
         assertThat(storageService.load("speaking/42/7.webm")).containsExactly(1, 2, 3);
     }
+
+    @Test
+    void saveCanUseMp3ExtensionForSynthesizedAgentAudio() {
+        SpeakingAudioStorageService storageService =
+                new SpeakingAudioStorageService(tempDir.resolve("uploads/speaking").toString());
+
+        String audioUrl = storageService.save(42L, 8L, new byte[]{4, 5}, "mp3");
+
+        assertThat(audioUrl).isEqualTo("/uploads/speaking/42/8.mp3");
+        assertThat(storageService.load(audioUrl)).containsExactly(4, 5);
+    }
 }

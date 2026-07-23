@@ -104,6 +104,7 @@ function createTestServices(scenarios = speakingScenariosMock) {
         totalScore: 85,
         pronunciation: 87,
         fluency: 82,
+        integrity: 88,
         speed: "120 WPM",
         issueSentences: ["Test sentence."],
         suggestions: ["Suggestion 1", "Suggestion 2", "Suggestion 3"],

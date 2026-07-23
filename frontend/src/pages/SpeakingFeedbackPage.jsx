@@ -11,6 +11,7 @@ import { Button, Modal, Space, Typography } from "antd";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { AsyncPage } from "../components/common/AsyncPage";
 import { PageSectionHeader } from "../components/common/PageSectionHeader";
+import { SpeakingTurnFeedbackCard } from "../components/Speaking/SpeakingTurnFeedbackCard";
 import { useAsyncData } from "../hooks/useAsyncData";
 import { useAppServices } from "../services/ServiceContext";
 import { toBackendAssetUrl } from "../services/assetUrls";
@@ -167,7 +168,7 @@ export function SpeakingFeedbackPage() {
                   </div>
 
                   {/* Sub-metrics */}
-                  <div className="feedback-metrics">
+                  <div className="feedback-metrics feedback-metrics--summary">
                     <div className="glass-panel feedback-metric-item">
                       <Text type="secondary" className="metric-label">发音准确性</Text>
                       <div className="metric-score-row">
@@ -187,28 +188,29 @@ export function SpeakingFeedbackPage() {
                       </div>
                     </div>
                     <div className="glass-panel feedback-metric-item">
-                      <Text type="secondary" className="metric-label">语速</Text>
-                      <Title level={4} className="metric-value" style={{ margin: 0 }}>
-                        {feedback.speed}
-                      </Title>
+                      <Text type="secondary" className="metric-label">完整度</Text>
+                      <div className="metric-score-row">
+                        <Title level={4} className="metric-value" style={{ margin: 0 }}>
+                          {feedback.integrity}
+                        </Title>
+                        <Text type="secondary" className="metric-unit">/ 100</Text>
+                      </div>
                     </div>
                   </div>
                 </div>
 
                 {/* Issue sentences */}
-                {feedback.issueSentences && feedback.issueSentences.length > 0 && (
-                  <div className="feedback-list glass-panel" style={{ marginBottom: 12 }}>
-                    <Text strong className="panel-title">问题句子</Text>
-                    <ul className="feedback-issue-list">
-                      {feedback.issueSentences.map((sentence, idx) => (
-                        <li key={idx} className="feedback-issue-item">
-                          <span className="feedback-bullet" aria-hidden="true" />
-                          <Text>{sentence}</Text>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
+                <div className="feedback-list glass-panel" style={{ marginBottom: 12 }}>
+                  <Text strong className="panel-title">问题句子</Text>
+                  <ul className="feedback-issue-list">
+                    {(feedback.issueSentences?.length ? feedback.issueSentences : ["无"]).map((sentence, idx) => (
+                      <li key={idx} className="feedback-issue-item">
+                        <span className="feedback-bullet" aria-hidden="true" />
+                        <Text>{sentence}</Text>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
 
                 {/* Suggestions */}
                 {feedback.suggestions && feedback.suggestions.length > 0 && (
@@ -222,6 +224,17 @@ export function SpeakingFeedbackPage() {
                         </li>
                       ))}
                     </ul>
+                  </div>
+                )}
+
+                {feedback.turns && feedback.turns.length > 0 && (
+                  <div className="feedback-turns">
+                    <Text strong className="panel-title">每轮发音明细</Text>
+                    <div className="feedback-turn-list">
+                      {feedback.turns.map((turn) => (
+                        <SpeakingTurnFeedbackCard turn={turn} key={turn.turnIndex} />
+                      ))}
+                    </div>
                   </div>
                 )}
               </>

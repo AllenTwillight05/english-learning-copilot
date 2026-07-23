@@ -1,5 +1,6 @@
 package com.englishlearningcopilot.backend.service.speech;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 /**
@@ -8,6 +9,7 @@ import org.springframework.stereotype.Component;
  * Replace with real iFlytek TTS (语音合成) when API credentials are available.
  */
 @Component
+@ConditionalOnProperty(name = "xfyun.tts.enabled", havingValue = "false", matchIfMissing = true)
 public class MockTtsService implements TtsService {
 
     @Override

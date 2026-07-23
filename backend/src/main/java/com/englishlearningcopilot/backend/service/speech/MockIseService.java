@@ -1,6 +1,7 @@
 package com.englishlearningcopilot.backend.service.speech;
 
 import java.util.concurrent.ThreadLocalRandom;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 /**
@@ -8,6 +9,7 @@ import org.springframework.stereotype.Component;
  * Replace with real iFlytek ISE (语音评测) when API credentials are available.
  */
 @Component
+@ConditionalOnProperty(name = "xfyun.ise.enabled", havingValue = "false", matchIfMissing = true)
 public class MockIseService implements IseService {
 
     @Override

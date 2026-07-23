@@ -348,6 +348,7 @@ export function createMockServices() {
           totalScore: rng(),
           pronunciation: rng(),
           fluency: rng(),
+          integrity: rng(),
           speed: (108 + Math.floor(Math.random() * 37)) + " WPM",
           issueSentences: userMessages.slice(0, 2),
           suggestions: [

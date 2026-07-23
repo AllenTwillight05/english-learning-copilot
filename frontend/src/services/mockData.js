@@ -122,6 +122,7 @@ export const speakingScenariosMock = [
         totalScore: 88,
         pronunciation: 91,
         fluency: 84,
+        integrity: 89,
         speed: "136 WPM",
         issueSentences: [
           "Could we confirm whether Friday is still realistic for delivery?"
@@ -164,6 +165,7 @@ export const speakingScenariosMock = [
         totalScore: 82,
         pronunciation: 86,
         fluency: 78,
+        integrity: 84,
         speed: "121 WPM",
         issueSentences: ["I'd prefer an aisle seat if one is available."],
         suggestions: [
@@ -204,6 +206,7 @@ export const speakingScenariosMock = [
         totalScore: 85,
         pronunciation: 87,
         fluency: 86,
+        integrity: 88,
         speed: "128 WPM",
         issueSentences: ["Do you have any recommendations?"],
         suggestions: [
@@ -244,6 +247,7 @@ export const speakingScenariosMock = [
         totalScore: 80,
         pronunciation: 83,
         fluency: 79,
+        integrity: 82,
         speed: "118 WPM",
         issueSentences: ["I've had a sore throat and a headache for the past three days."],
         suggestions: [
@@ -284,6 +288,7 @@ export const speakingScenariosMock = [
         totalScore: 83,
         pronunciation: 85,
         fluency: 81,
+        integrity: 84,
         speed: "124 WPM",
         issueSentences: ["I'd like to return this jacket. It's too small for me."],
         suggestions: [
@@ -324,6 +329,7 @@ export const speakingScenariosMock = [
         totalScore: 86,
         pronunciation: 88,
         fluency: 85,
+        integrity: 87,
         speed: "132 WPM",
         issueSentences: ["Could I have a medium latte with oat milk, please?"],
         suggestions: [

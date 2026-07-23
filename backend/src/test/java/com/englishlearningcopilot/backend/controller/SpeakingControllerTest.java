@@ -135,6 +135,7 @@ class SpeakingControllerTest {
                         90,
                         88,
                         86,
+                        84,
                         "120 WPM",
                         List.of("hello"),
                         List.of("add detail"),

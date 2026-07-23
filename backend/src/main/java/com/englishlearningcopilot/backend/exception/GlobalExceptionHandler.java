@@ -2,6 +2,7 @@ package com.englishlearningcopilot.backend.exception;
 
 import com.englishlearningcopilot.backend.dto.ErrorResponse;
 import com.englishlearningcopilot.backend.service.speech.xfyun.XfyunAsrException;
+import com.englishlearningcopilot.backend.service.speech.xfyun.XfyunIseException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.Instant;
 import java.util.LinkedHashMap;
@@ -84,9 +85,9 @@ public class GlobalExceptionHandler {
         return error(HttpStatus.BAD_REQUEST, "Malformed request body.", request, null);
     }
 
-    @ExceptionHandler(XfyunAsrException.class)
+    @ExceptionHandler({XfyunAsrException.class, XfyunIseException.class})
     public ResponseEntity<ErrorResponse> handleSpeechRecognition(
-            XfyunAsrException exception,
+            RuntimeException exception,
             HttpServletRequest request
     ) {
         return error(HttpStatus.BAD_GATEWAY, exception.getMessage(), request, null);

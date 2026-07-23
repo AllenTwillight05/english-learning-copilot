@@ -1798,6 +1798,10 @@ a {
   gap: 12px;
 }
 
+.feedback-metrics--summary {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .feedback-metric-item {
   padding: 16px;
   display: flex;
@@ -1857,6 +1861,109 @@ a {
 .feedback-issue-item:last-child,
 .feedback-suggestion-item:last-child {
   margin-bottom: 0;
+}
+
+.feedback-turns {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.feedback-turn-list {
+  display: grid;
+  gap: 12px;
+}
+
+.feedback-turn-card {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+}
+
+.feedback-turn-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.feedback-turn-card__badge {
+  padding: 5px 10px;
+  border-radius: 999px;
+  color: #0f766e;
+  background:
+    linear-gradient(145deg, rgba(214, 250, 239, 0.92), rgba(255, 255, 255, 0.42)),
+    rgba(15, 118, 110, 0.08);
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.feedback-turn-copy {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.feedback-turn-copy > div {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.52), rgba(255, 255, 255, 0.22)),
+    rgba(17, 17, 17, 0.03);
+}
+
+.turn-copy-label {
+  font-size: 12px;
+}
+
+.turn-copy-text {
+  color: rgba(17, 17, 17, 0.82);
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.turn-score-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.turn-score-metric {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 12px;
+  border-radius: 14px;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.56), rgba(255, 255, 255, 0.24)),
+    rgba(17, 17, 17, 0.03);
+}
+
+.turn-score-metric__label {
+  font-size: 12px;
+}
+
+.turn-score-metric__value-row {
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+  min-width: 0;
+}
+
+.turn-score-metric__value {
+  color: #111111;
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+.turn-score-metric__unit {
+  font-size: 12px;
+  white-space: nowrap;
 }
 
 .replay-modal-body {
@@ -2040,6 +2147,11 @@ a {
   }
 
   .dashboard-weekly-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .feedback-turn-copy,
+  .turn-score-grid {
     grid-template-columns: 1fr;
   }
 
