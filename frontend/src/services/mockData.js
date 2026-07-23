@@ -341,18 +341,17 @@ export const speakingScenariosMock = [
 ];
 
 export const feedbackSummaryMock = {
-  statusLabel: "实时采样中",
-  playbackActionLabel: "语音回放",
-  metrics: [
-    { key: "accuracy", label: "发音准确性", value: "91%" },
-    { key: "speed", label: "语速控制", value: "136 WPM" },
-    { key: "fluency", label: "流利度", value: "8.7 / 10" }
-  ],
-  notes: [
-    "把 /r/ 的卷舌力度再收一点，整体会更自然。",
-    "回应速度很好，建议在长句里增加停顿层次。",
-    "旅行问路场景词汇掌握稳定，可以升级到陌生城市导航。"
-  ]
+  statusLabel: "Ready",
+  playbackActionLabel: "",
+  metrics: [],
+  notes: [],
+  scenarioTitle: "mock1-tittle",
+  completedAt: "2026-07-23T10:30:00Z",
+  totalScore: 88,
+  pronunciation: 91,
+  fluency: 84,
+  integrity: 89,
+  issueSentence: "Could we confirm whether Friday is still realistic for delivery?"
 };
 
 export const vocabularySnapshotMock = {

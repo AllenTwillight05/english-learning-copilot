@@ -103,8 +103,7 @@ export function VocabularyWordbookPage() {
         <section className="glass-panel profile-empty-state">
           <Result
             icon={<ReadOutlined />}
-            title="单词本需要登录"
-            subTitle="登录后可以查看你已经学过的单词。"
+            title="请先登录"
             extra={
               <Button
                 type="primary"

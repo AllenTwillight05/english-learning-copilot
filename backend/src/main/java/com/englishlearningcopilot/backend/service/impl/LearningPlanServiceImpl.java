@@ -6,15 +6,23 @@ import com.englishlearningcopilot.backend.dto.LearningPlanRequest;
 import com.englishlearningcopilot.backend.dto.LearningPlanResponse;
 import com.englishlearningcopilot.backend.dto.ProfileSnapshotResponse;
 import com.englishlearningcopilot.backend.entity.AppUser;
+import com.englishlearningcopilot.backend.entity.SpeakingMessage;
+import com.englishlearningcopilot.backend.entity.SpeakingMessageSender;
+import com.englishlearningcopilot.backend.entity.SpeakingSession;
 import com.englishlearningcopilot.backend.entity.UserDailyLearningProgress;
 import com.englishlearningcopilot.backend.entity.UserDailyPracticeLog;
 import com.englishlearningcopilot.backend.entity.UserLearningPlan;
 import com.englishlearningcopilot.backend.exception.ResourceNotFoundException;
+import com.englishlearningcopilot.backend.repository.SpeakingMessageRepository;
+import com.englishlearningcopilot.backend.repository.SpeakingSessionRepository;
 import com.englishlearningcopilot.backend.repository.UserDailyLearningProgressRepository;
 import com.englishlearningcopilot.backend.repository.UserDailyPracticeLogRepository;
 import com.englishlearningcopilot.backend.repository.UserLearningPlanRepository;
 import com.englishlearningcopilot.backend.repository.UserRepository;
 import com.englishlearningcopilot.backend.service.LearningPlanService;
+import com.englishlearningcopilot.backend.service.speech.PronunciationScore;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -33,17 +41,26 @@ public class LearningPlanServiceImpl implements LearningPlanService {
     private final UserLearningPlanRepository userLearningPlanRepository;
     private final UserDailyLearningProgressRepository userDailyLearningProgressRepository;
     private final UserDailyPracticeLogRepository userDailyPracticeLogRepository;
+    private final SpeakingSessionRepository speakingSessionRepository;
+    private final SpeakingMessageRepository speakingMessageRepository;
+    private final ObjectMapper objectMapper;
 
     public LearningPlanServiceImpl(
             UserRepository userRepository,
             UserLearningPlanRepository userLearningPlanRepository,
             UserDailyLearningProgressRepository userDailyLearningProgressRepository,
-            UserDailyPracticeLogRepository userDailyPracticeLogRepository
+            UserDailyPracticeLogRepository userDailyPracticeLogRepository,
+            SpeakingSessionRepository speakingSessionRepository,
+            SpeakingMessageRepository speakingMessageRepository,
+            ObjectMapper objectMapper
     ) {
         this.userRepository = userRepository;
         this.userLearningPlanRepository = userLearningPlanRepository;
         this.userDailyLearningProgressRepository = userDailyLearningProgressRepository;
         this.userDailyPracticeLogRepository = userDailyPracticeLogRepository;
+        this.speakingSessionRepository = speakingSessionRepository;
+        this.speakingMessageRepository = speakingMessageRepository;
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -134,23 +151,7 @@ public class LearningPlanServiceImpl implements LearningPlanService {
                 )
         );
 
-        ProfileSnapshotResponse.FeedbackSummary feedback = new ProfileSnapshotResponse.FeedbackSummary(
-                "Ready",
-                "Review",
-                List.of(
-                        new ProfileSnapshotResponse.FeedbackMetric(
-                                "vocabulary",
-                                "Vocabulary remaining",
-                                String.valueOf(status.vocabulary().remaining())
-                        ),
-                        new ProfileSnapshotResponse.FeedbackMetric(
-                                "grammar",
-                                "Grammar remaining",
-                                String.valueOf(status.grammar().remaining())
-                        )
-                ),
-                List.of("Keep today's vocabulary and grammar practice moving from the plan.")
-        );
+        ProfileSnapshotResponse.FeedbackSummary feedback = latestSpeakingFeedback(username);
 
         ProfileSnapshotResponse.ProfileDailyPlan dailyPlan = new ProfileSnapshotResponse.ProfileDailyPlan(
                 true,
@@ -319,6 +320,82 @@ public class LearningPlanServiceImpl implements LearningPlanService {
         }
 
         return Math.min(100, Math.round((progress.completed() * 100f) / progress.total()));
+    }
+
+    private ProfileSnapshotResponse.FeedbackSummary latestSpeakingFeedback(String username) {
+        for (SpeakingSession session : speakingSessionRepository.findByUserUsernameOrderByStartedAtDesc(username)) {
+            List<SpeakingMessage> userMessages = speakingMessageRepository
+                    .findBySessionIdOrderByTurnIndexAscCreatedAtAsc(session.getId())
+                    .stream()
+                    .filter(message -> message.getSender() == SpeakingMessageSender.USER)
+                    .filter(message -> message.getPronunciationScore() != null)
+                    .toList();
+
+            if (userMessages.isEmpty()) {
+                continue;
+            }
+
+            List<PronunciationScore> scores = userMessages.stream()
+                    .map(this::readPronunciationScore)
+                    .toList();
+            String issueSentence = userMessages.stream()
+                    .filter(message -> readPronunciationScore(message).totalScore() < 60)
+                    .map(SpeakingMessage::getContent)
+                    .filter(content -> content != null && !content.isBlank())
+                    .findFirst()
+                    .orElse("无");
+
+            return new ProfileSnapshotResponse.FeedbackSummary(
+                    "Ready",
+                    "",
+                    List.of(),
+                    List.of(),
+                    session.getScenario().getTitle(),
+                    feedbackTime(session),
+                    toDisplayScore(scores.stream().mapToDouble(PronunciationScore::totalScore).average().orElse(0)),
+                    toDisplayScore(scores.stream().mapToDouble(PronunciationScore::accuracy).average().orElse(0)),
+                    toDisplayScore(scores.stream().mapToDouble(PronunciationScore::fluency).average().orElse(0)),
+                    toDisplayScore(scores.stream().mapToDouble(PronunciationScore::integrity).average().orElse(0)),
+                    issueSentence
+            );
+        }
+
+        return new ProfileSnapshotResponse.FeedbackSummary(
+                "No speaking feedback",
+                "",
+                List.of(),
+                List.of(),
+                "暂无口语练习",
+                "",
+                null,
+                null,
+                null,
+                null,
+                "无"
+        );
+    }
+
+    private PronunciationScore readPronunciationScore(SpeakingMessage message) {
+        if (message.getPronunciationDetail() != null && !message.getPronunciationDetail().isBlank()) {
+            try {
+                return objectMapper.readValue(message.getPronunciationDetail(), PronunciationScore.class);
+            } catch (JsonProcessingException ignored) {
+                // Fall back to the stored total score below.
+            }
+        }
+        double total = message.getPronunciationScore() != null ? message.getPronunciationScore() : 0;
+        return new PronunciationScore(total, total, total, total, 0);
+    }
+
+    private int toDisplayScore(double value) {
+        return (int) Math.round(value);
+    }
+
+    private String feedbackTime(SpeakingSession session) {
+        Instant time = session.getCompletedAt() != null
+                ? session.getCompletedAt()
+                : session.getUpdatedAt() != null ? session.getUpdatedAt() : session.getStartedAt();
+        return time != null ? time.toString() : "";
     }
 
     private AppUser getCurrentUser(String username) {

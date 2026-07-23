@@ -390,6 +390,7 @@ export function createMockServices() {
 
         return {
           ...profileSnapshotMock,
+          feedback: snapshot.feedback,
           dailyPlan: {
             ...profileSnapshotMock.dailyPlan,
             dailyVocabularyGoal: snapshot.dailyPlan.dailyVocabularyGoal,
