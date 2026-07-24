@@ -253,6 +253,60 @@ class SpeakingServiceImplTest {
     }
 
     @Test
+    void submitRecordingSkipsPronunciationEvaluationForChineseHelpRequest() throws Exception {
+        AppUser user = user(7L, "learner");
+        SpeakingScenario scenario = scenario("business-opening");
+        SpeakingSession session = session(99L, user, scenario);
+        AtomicLong ids = new AtomicLong(100);
+        when(sessionRepository.findById(99L)).thenReturn(Optional.of(session));
+        when(messageRepository.save(any(SpeakingMessage.class))).thenAnswer(invocation -> {
+            SpeakingMessage message = invocation.getArgument(0);
+            if (message.getId() == null) {
+                ReflectionTestUtils.setField(message, "id", ids.getAndIncrement());
+            }
+            return message;
+        });
+        when(audioStorageService.save(eq(99L), any(), any())).thenReturn("/audio/turn.webm");
+        when(asrService.transcribe(any(), any())).thenReturn("这个问题我不会回答");
+        when(messageRepository.findBySessionIdOrderByTurnIndexAscCreatedAtAsc(99L)).thenReturn(List.of());
+        when(agentClient.reply(eq(scenario), any(), any(), eq("这个问题我不会回答"), eq(1)))
+                .thenReturn(new SpeakingAgentReply(
+                        "Let me explain it.",
+                        "Let me explain it.",
+                        "You can say: I am not sure."
+                ));
+        when(ttsService.synthesize(any())).thenReturn(new byte[] {9});
+        when(sessionRepository.save(session)).thenReturn(session);
+
+        speakingService = new SpeakingServiceImpl(
+                scenarioRepository,
+                sessionRepository,
+                messageRepository,
+                userRepository,
+                agentClient,
+                asrService,
+                ttsService,
+                iseService,
+                audioStorageService,
+                pronunciationEvaluationService,
+                objectMapper,
+                true,
+                true
+        );
+
+        SpeakingTurnResponse response = speakingService.submitRecording(
+                "learner",
+                99L,
+                new MockMultipartFile("audio", "turn.webm", "audio/webm", new byte[] {1, 2, 3}),
+                1200L
+        );
+
+        assertThat(response.userMessage().pronunciationScore()).isNull();
+        verify(iseService, never()).evaluate(any(), any());
+        verify(pronunciationEvaluationService, never()).evaluateUserMessageAsync(any(), any(), any());
+    }
+
+    @Test
     void getFeedbackUsesAverageStoredPronunciationScoresForSummary() throws Exception {
         AppUser user = user(7L, "learner");
         SpeakingScenario scenario = scenario("business-opening");

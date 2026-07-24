@@ -2,6 +2,7 @@ package com.englishlearningcopilot.backend.service;
 
 import com.englishlearningcopilot.backend.entity.SpeakingMessage;
 import com.englishlearningcopilot.backend.repository.SpeakingMessageRepository;
+import com.englishlearningcopilot.backend.service.speech.EnglishSpeechText;
 import com.englishlearningcopilot.backend.service.speech.IseService;
 import com.englishlearningcopilot.backend.service.speech.PronunciationScore;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -41,6 +42,9 @@ public class SpeakingPronunciationEvaluationService {
     public Optional<PronunciationScore> evaluateUserMessage(Long messageId, byte[] audioBytes, String referenceText) {
         if (messageId == null || audioBytes == null || audioBytes.length == 0
                 || referenceText == null || referenceText.isBlank()) {
+            return Optional.empty();
+        }
+        if (!EnglishSpeechText.isEligibleForPronunciationEvaluation(referenceText)) {
             return Optional.empty();
         }
 

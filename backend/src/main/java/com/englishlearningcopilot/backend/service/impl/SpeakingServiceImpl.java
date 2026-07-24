@@ -25,6 +25,7 @@ import com.englishlearningcopilot.backend.service.SpeakingService;
 import com.englishlearningcopilot.backend.service.agent.SpeakingAgentClient;
 import com.englishlearningcopilot.backend.service.agent.SpeakingAgentReply;
 import com.englishlearningcopilot.backend.service.speech.AsrService;
+import com.englishlearningcopilot.backend.service.speech.EnglishSpeechText;
 import com.englishlearningcopilot.backend.service.speech.IseService;
 import com.englishlearningcopilot.backend.service.speech.PronunciationScore;
 import com.englishlearningcopilot.backend.service.speech.TtsService;
@@ -178,7 +179,8 @@ public class SpeakingServiceImpl implements SpeakingService {
         PronunciationScore pronunciationScore = null;
         try {
             transcribedText = asrService.transcribe(audioBytes, audio.getOriginalFilename());
-            if (evaluatePronunciationOnTurn) {
+            if (evaluatePronunciationOnTurn
+                    && EnglishSpeechText.isEligibleForPronunciationEvaluation(transcribedText)) {
                 pronunciationScore = iseService.evaluate(audioBytes, transcribedText);
             }
         } catch (XfyunAsrException | XfyunIseException e) {
@@ -205,7 +207,9 @@ public class SpeakingServiceImpl implements SpeakingService {
         savedUserMessage.setPronunciationDetail(pronunciationDetail);
         savedUserMessage.setDurationMs(normalizeDurationMs(durationMs));
         savedUserMessage = messageRepository.save(savedUserMessage);
-        if (pronunciationScore == null && evaluatePronunciationAsync) {
+        if (pronunciationScore == null
+                && evaluatePronunciationAsync
+                && EnglishSpeechText.isEligibleForPronunciationEvaluation(transcribedText)) {
             scheduleAsyncPronunciationEvaluation(savedUserMessage.getId(), audioBytes, transcribedText);
         }
 
@@ -418,6 +422,9 @@ public class SpeakingServiceImpl implements SpeakingService {
     private PronunciationScore evaluateMissingPronunciation(SpeakingMessage message) {
         if (message.getAudioUrl() == null || message.getAudioUrl().isBlank()
                 || message.getTranscribedText() == null || message.getTranscribedText().isBlank()) {
+            return null;
+        }
+        if (!EnglishSpeechText.isEligibleForPronunciationEvaluation(message.getTranscribedText())) {
             return null;
         }
         return pronunciationEvaluationService
