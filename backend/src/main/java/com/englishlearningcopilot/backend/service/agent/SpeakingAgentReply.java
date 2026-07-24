@@ -6,6 +6,6 @@ public record SpeakingAgentReply(
         String instantTip
 ) {
     public static SpeakingAgentReply of(String content, String instantTip) {
-        return new SpeakingAgentReply(content, content, instantTip);
+        return new SpeakingAgentReply(content, null, instantTip);
     }
 }

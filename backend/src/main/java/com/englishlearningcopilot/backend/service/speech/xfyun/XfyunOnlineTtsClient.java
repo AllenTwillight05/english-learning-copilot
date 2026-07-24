@@ -33,9 +33,11 @@ public class XfyunOnlineTtsClient {
     private static final int MAX_TEXT_BYTES = 8000;
 
     private final ObjectMapper objectMapper;
+    private final HttpClient httpClient;
 
     public XfyunOnlineTtsClient(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
+        this.httpClient = HttpClient.newBuilder().build();
     }
 
     public byte[] synthesize(String text, XfyunOnlineTtsProperties properties) {
@@ -43,10 +45,6 @@ public class XfyunOnlineTtsClient {
 
         URI uri = buildAuthenticatedUri(properties, ZonedDateTime.now(ZoneOffset.UTC));
         TtsWebSocketListener listener = new TtsWebSocketListener(objectMapper);
-        HttpClient httpClient = HttpClient.newBuilder()
-                .connectTimeout(Duration.ofMillis(properties.timeoutMs()))
-                .build();
-
         WebSocket webSocket = null;
         try {
             webSocket = httpClient.newWebSocketBuilder()

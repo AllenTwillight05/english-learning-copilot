@@ -14,16 +14,6 @@ import { useAsyncData } from "../hooks/useAsyncData";
 import { useAppServices } from "../services/ServiceContext";
 import { toBackendAssetUrl } from "../services/assetUrls";
 
-function speakText(text) {
-  if (!window.speechSynthesis || !text) {
-    return null;
-  }
-  window.speechSynthesis.cancel();
-  const utterance = new SpeechSynthesisUtterance(text);
-  window.speechSynthesis.speak(utterance);
-  return utterance;
-}
-
 function playAudioUrl(audioUrl, onEnd) {
   if (!audioUrl) {
     onEnd();
@@ -89,6 +79,7 @@ function toChatMessage(message) {
     text: message.content,
     spokenText: message.spokenText,
     audioUrl: message.audioUrl,
+    audioPending: message.audioPending,
     autoPlay: message.autoPlay,
     instantTip: message.instantTip,
     turnIndex: message.turnIndex
@@ -150,6 +141,7 @@ export function SpeakingConversationPage() {
   const recordingStartedAtRef = useRef(null);
   const activePlaybackRef = useRef({ key: null, audio: null, utterance: null });
   const autoPlayedOpeningKeyRef = useRef(null);
+  const pendingAutoPlayMessageIdRef = useRef(null);
   const isMountedRef = useRef(true);
   const recordingStartCancelledRef = useRef(false);
   const audioContextRef = useRef(null);
@@ -317,16 +309,6 @@ export function SpeakingConversationPage() {
       setPlayingMessageKey(key);
       return;
     }
-
-    const utterance = speakText(message.spokenText || message.text);
-    if (!utterance) {
-      handleEnd();
-      return;
-    }
-    utterance.onend = handleEnd;
-    utterance.onerror = handleEnd;
-    activePlaybackRef.current = { key, audio: null, utterance };
-    setPlayingMessageKey(key);
   }, [clearPlaybackIfCurrent, stopPlayback]);
 
   const playMessageAudio = useCallback((message) => {
@@ -342,7 +324,7 @@ export function SpeakingConversationPage() {
     const openingMessage = messages.find(
       (message) => message.role === "coach" && message.turnIndex === 0
     );
-    if (!openingMessage?.autoPlay && !openingMessage?.audioUrl) {
+    if (!openingMessage?.autoPlay || !openingMessage.audioUrl) {
       return;
     }
 
@@ -354,6 +336,56 @@ export function SpeakingConversationPage() {
     autoPlayedOpeningKeyRef.current = openingKey;
     startPlayback(openingMessage);
   }, [messages, startPlayback]);
+
+  useEffect(() => {
+    const pendingMessageId = pendingAutoPlayMessageIdRef.current;
+    if (!pendingMessageId) {
+      return;
+    }
+    const readyMessage = messages.find(
+      (message) => message.id === pendingMessageId && message.audioUrl
+    );
+    if (!readyMessage) {
+      return;
+    }
+    pendingAutoPlayMessageIdRef.current = null;
+    startPlayback(readyMessage);
+  }, [messages, startPlayback]);
+
+  useEffect(() => {
+    const sessionId = activeSession?.id;
+    const hasPendingAudio = messages.some(
+      (message) => message.role === "coach" && message.audioPending
+    );
+    if (!sessionId || !hasPendingAudio) {
+      return undefined;
+    }
+
+    let cancelled = false;
+    let requestInFlight = false;
+    const refreshSessionAudio = async () => {
+      if (cancelled || requestInFlight) {
+        return;
+      }
+      requestInFlight = true;
+      try {
+        const refreshedSession = await speaking.getSession(sessionId);
+        if (!cancelled && isMountedRef.current) {
+          setSession(refreshedSession);
+        }
+      } catch {
+        // Keep the current text usable if a short-lived polling request fails.
+      } finally {
+        requestInFlight = false;
+      }
+    };
+
+    const intervalId = window.setInterval(refreshSessionAudio, 1200);
+    return () => {
+      cancelled = true;
+      window.clearInterval(intervalId);
+    };
+  }, [activeSession?.id, messages, speaking]);
 
   const startRecording = useCallback(async () => {
     if (isRecording || isPreparingRecording || isSending) {
@@ -440,10 +472,14 @@ export function SpeakingConversationPage() {
           setSession(turn.session);
           setRecordingCount((current) => current + 1);
 
-          // Auto-play agent audio if available, else fallback to browser TTS
+          // High-quality audio may still be synthesizing when the text response arrives.
           const agentMsg = turn.agentMessage;
           if (agentMsg?.content) {
-            startPlayback(toChatMessage(agentMsg));
+            if (agentMsg.audioUrl) {
+              startPlayback(toChatMessage(agentMsg));
+            } else if (agentMsg.audioPending) {
+              pendingAutoPlayMessageIdRef.current = agentMsg.id;
+            }
           }
         } catch (err) {
           setSendError(err);
@@ -599,15 +635,27 @@ export function SpeakingConversationPage() {
                       <div className={`chat-bubble chat-bubble--${message.role}`}>
                         <span>{message.text}</span>
                         <Button
-                          aria-label={isThisPlaying ? "停止播放" : "播放此句音频"}
+                          aria-label={
+                            message.audioPending
+                              ? "高质量音频生成中"
+                              : isThisPlaying
+                                ? "停止播放"
+                                : "播放此句音频"
+                          }
                           className={`chat-audio-button ${isThisPlaying ? "chat-audio-button--playing" : ""}`}
                           icon={<SoundOutlined />}
                           shape="circle"
                           size="small"
-                          disabled={isOtherPlaying}
+                          disabled={isOtherPlaying || (message.role === "coach" && !message.audioUrl)}
+                          title={message.audioPending ? "正在生成高质量语音" : "播放此句音频"}
                           onClick={() => playMessageAudio(message)}
                         />
                       </div>
+                      {message.audioPending ? (
+                        <div className="chat-audio-pending" role="status">正在生成高质量语音...</div>
+                      ) : message.role === "coach" && !message.audioUrl ? (
+                        <div className="chat-audio-pending">高质量语音暂不可用</div>
+                      ) : null}
                       {message.instantTip ? (
                         <div className="chat-instant-tip" role="note">
                           {message.instantTip}
@@ -634,7 +682,7 @@ export function SpeakingConversationPage() {
                     : isPreparingRecording
                       ? "正在连接麦克风..."
                     : isSending
-                      ? "正在处理语音..."
+                      ? "正在识别语音并生成回复..."
                       : "点击「开始录音」录入语音"}
                 </span>
               </div>

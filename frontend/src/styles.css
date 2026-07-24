@@ -1755,6 +1755,12 @@ a {
   line-height: 1.5;
 }
 
+.chat-audio-pending {
+  color: var(--text-soft);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
 .recorder-strip {
   display: grid;
   gap: 12px;

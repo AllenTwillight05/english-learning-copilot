@@ -20,4 +20,14 @@ fi
 set +a
 
 echo "=== 启动后端 (8080) ==="
-mvn spring-boot:run -DskipTests
+
+# DrvFS exposes POSIX permissions but cannot apply chmod without the WSL
+# metadata mount option. Maven 3.3.1 tries to copy those permissions after
+# filtering resources, so prepare the only runtime resource ourselves there.
+if [[ "$(pwd -P)" == /mnt/* ]]; then
+  mkdir -p target/classes
+  cp src/main/resources/application.properties target/classes/application.properties
+  mvn -Dmaven.resources.skip=true -Dmaven.test.skip=true spring-boot:run
+else
+  mvn -DskipTests spring-boot:run
+fi

@@ -20,6 +20,7 @@ import com.englishlearningcopilot.backend.repository.SpeakingScenarioRepository;
 import com.englishlearningcopilot.backend.repository.SpeakingSessionRepository;
 import com.englishlearningcopilot.backend.repository.UserRepository;
 import com.englishlearningcopilot.backend.service.SpeakingAudioStorageService;
+import com.englishlearningcopilot.backend.service.SpeakingAgentAudioSynthesisService;
 import com.englishlearningcopilot.backend.service.SpeakingPronunciationEvaluationService;
 import com.englishlearningcopilot.backend.service.SpeakingService;
 import com.englishlearningcopilot.backend.service.agent.SpeakingAgentClient;
@@ -28,7 +29,6 @@ import com.englishlearningcopilot.backend.service.speech.AsrService;
 import com.englishlearningcopilot.backend.service.speech.EnglishSpeechText;
 import com.englishlearningcopilot.backend.service.speech.IseService;
 import com.englishlearningcopilot.backend.service.speech.PronunciationScore;
-import com.englishlearningcopilot.backend.service.speech.TtsService;
 import com.englishlearningcopilot.backend.service.speech.xfyun.XfyunAsrException;
 import com.englishlearningcopilot.backend.service.speech.xfyun.XfyunIseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -57,9 +57,9 @@ public class SpeakingServiceImpl implements SpeakingService {
     private final UserRepository userRepository;
     private final SpeakingAgentClient agentClient;
     private final AsrService asrService;
-    private final TtsService ttsService;
     private final IseService iseService;
     private final SpeakingAudioStorageService audioStorageService;
+    private final SpeakingAgentAudioSynthesisService agentAudioSynthesisService;
     private final SpeakingPronunciationEvaluationService pronunciationEvaluationService;
     private final ObjectMapper objectMapper;
     private final boolean evaluatePronunciationOnTurn;
@@ -72,9 +72,9 @@ public class SpeakingServiceImpl implements SpeakingService {
             UserRepository userRepository,
             SpeakingAgentClient agentClient,
             AsrService asrService,
-            TtsService ttsService,
             IseService iseService,
             SpeakingAudioStorageService audioStorageService,
+            SpeakingAgentAudioSynthesisService agentAudioSynthesisService,
             SpeakingPronunciationEvaluationService pronunciationEvaluationService,
             ObjectMapper objectMapper,
             @Value("${speaking.pronunciation.evaluate-on-turn:false}") boolean evaluatePronunciationOnTurn,
@@ -86,9 +86,9 @@ public class SpeakingServiceImpl implements SpeakingService {
         this.userRepository = userRepository;
         this.agentClient = agentClient;
         this.asrService = asrService;
-        this.ttsService = ttsService;
         this.iseService = iseService;
         this.audioStorageService = audioStorageService;
+        this.agentAudioSynthesisService = agentAudioSynthesisService;
         this.pronunciationEvaluationService = pronunciationEvaluationService;
         this.objectMapper = objectMapper;
         this.evaluatePronunciationOnTurn = evaluatePronunciationOnTurn;
@@ -125,8 +125,11 @@ public class SpeakingServiceImpl implements SpeakingService {
         session.setSelectedTopic(normalizeSelectedTopic(request.selectedTopic()));
         SpeakingSession savedSession = sessionRepository.save(session);
 
+        long modelStartedAt = System.nanoTime();
         SpeakingAgentReply openingReply = agentClient.reply(scenario, savedSession.getSelectedTopic(), List.of(), "", 0);
         saveAgentMessageWithAudio(savedSession, openingReply, 0);
+        log.info("Speaking session opening generated: sessionId={}, llmMs={}",
+                savedSession.getId(), (System.nanoTime() - modelStartedAt) / 1_000_000);
 
         return toSessionResponse(savedSession);
     }
@@ -150,6 +153,7 @@ public class SpeakingServiceImpl implements SpeakingService {
     @Override
     @Transactional
     public SpeakingTurnResponse submitRecording(String username, Long sessionId, MultipartFile audio, Long durationMs) {
+        long requestStartedAt = System.nanoTime();
         SpeakingSession session = findOwnedSession(username, sessionId);
         if (session.getStatus() != SpeakingSessionStatus.ACTIVE) {
             throw new BadRequestException("Speaking session is not active.");
@@ -177,17 +181,22 @@ public class SpeakingServiceImpl implements SpeakingService {
 
         String transcribedText;
         PronunciationScore pronunciationScore = null;
+        long asrStartedAt = System.nanoTime();
+        long iseMs = 0;
         try {
             transcribedText = asrService.transcribe(audioBytes, audio.getOriginalFilename());
             if (evaluatePronunciationOnTurn
                     && EnglishSpeechText.isEligibleForPronunciationEvaluation(transcribedText)) {
+                long iseStartedAt = System.nanoTime();
                 pronunciationScore = iseService.evaluate(audioBytes, transcribedText);
+                iseMs = (System.nanoTime() - iseStartedAt) / 1_000_000;
             }
         } catch (XfyunAsrException | XfyunIseException e) {
             throw e;
         } catch (Exception e) {
             throw new RuntimeException("Speech processing failed: " + e.getMessage(), e);
         }
+        long asrMs = (System.nanoTime() - asrStartedAt) / 1_000_000 - iseMs;
 
         // Serialize ISE detail to JSON
         String pronunciationDetail = null;
@@ -215,6 +224,7 @@ public class SpeakingServiceImpl implements SpeakingService {
 
         // Agent reply
         List<SpeakingMessage> history = messageRepository.findBySessionIdOrderByTurnIndexAscCreatedAtAsc(sessionId);
+        long modelStartedAt = System.nanoTime();
         SpeakingAgentReply reply = agentClient.reply(
                 session.getScenario(),
                 session.getSelectedTopic(),
@@ -222,11 +232,20 @@ public class SpeakingServiceImpl implements SpeakingService {
                 transcribedText,
                 nextTurn
         );
+        long modelMs = (System.nanoTime() - modelStartedAt) / 1_000_000;
 
         SpeakingMessage savedAgentMessage = saveAgentMessageWithAudio(session, reply, nextTurn);
 
         session.setCurrentTurn(nextTurn);
         SpeakingSession savedSession = sessionRepository.save(session);
+
+        log.info("Speaking turn processed: sessionId={}, turn={}, asrMs={}, iseMs={}, llmMs={}, totalMs={}",
+                sessionId,
+                nextTurn,
+                Math.max(0, asrMs),
+                iseMs,
+                modelMs,
+                (System.nanoTime() - requestStartedAt) / 1_000_000);
 
         return new SpeakingTurnResponse(
                 SpeakingMessageResponse.from(savedUserMessage),
@@ -234,15 +253,6 @@ public class SpeakingServiceImpl implements SpeakingService {
                 pronunciationScore,
                 toSessionResponse(savedSession)
         );
-    }
-
-    private byte[] synthesizeAgentAudio(String text) {
-        try {
-            return ttsService.synthesize(text);
-        } catch (RuntimeException e) {
-            log.warn("Agent TTS synthesis failed. The frontend will fall back to browser speech synthesis.", e);
-            return new byte[0];
-        }
     }
 
     private Long normalizeDurationMs(Long durationMs) {
@@ -265,6 +275,27 @@ public class SpeakingServiceImpl implements SpeakingService {
         pronunciationEvaluationService.evaluateUserMessageAsync(messageId, audioBytes, referenceText);
     }
 
+    private void scheduleAgentAudioSynthesis(Long messageId) {
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    enqueueAgentAudioSynthesis(messageId);
+                }
+            });
+            return;
+        }
+        enqueueAgentAudioSynthesis(messageId);
+    }
+
+    private void enqueueAgentAudioSynthesis(Long messageId) {
+        try {
+            agentAudioSynthesisService.synthesizeAgentMessageAsync(messageId);
+        } catch (RuntimeException e) {
+            log.warn("Could not queue Super Smart TTS for speaking message {}.", messageId, e);
+        }
+    }
+
     private SpeakingMessage saveAgentMessageWithAudio(
             SpeakingSession session,
             SpeakingAgentReply reply,
@@ -277,21 +308,9 @@ public class SpeakingServiceImpl implements SpeakingService {
         agentMessage.setSpokenText(resolveSpokenText(reply));
         agentMessage.setInstantTip(reply.instantTip());
         agentMessage.setTurnIndex(turnIndex);
+        agentMessage.setAudioPending(true);
         SpeakingMessage savedAgentMessage = messageRepository.save(agentMessage);
-
-        String spokenText = savedAgentMessage.getSpokenText();
-        byte[] agentAudioBytes = synthesizeAgentAudio(spokenText);
-        if (agentAudioBytes.length > 0) {
-            String agentAudioUrl = audioStorageService.save(
-                    session.getId(),
-                    savedAgentMessage.getId(),
-                    agentAudioBytes,
-                    "mp3"
-            );
-            savedAgentMessage.setAudioUrl(agentAudioUrl);
-            savedAgentMessage = messageRepository.save(savedAgentMessage);
-        }
-
+        scheduleAgentAudioSynthesis(savedAgentMessage.getId());
         return savedAgentMessage;
     }
 

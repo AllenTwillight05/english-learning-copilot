@@ -47,6 +47,9 @@ public class SpeakingMessage {
     @Column(name = "audio_url", length = 500)
     private String audioUrl;
 
+    @Column(name = "audio_pending", nullable = false, columnDefinition = "BOOLEAN NOT NULL DEFAULT FALSE")
+    private boolean audioPending;
+
     @Column(name = "transcribed_text", columnDefinition = "TEXT")
     private String transcribedText;
 

@@ -31,7 +31,6 @@ import com.englishlearningcopilot.backend.service.impl.SpeakingServiceImpl;
 import com.englishlearningcopilot.backend.service.speech.AsrService;
 import com.englishlearningcopilot.backend.service.speech.IseService;
 import com.englishlearningcopilot.backend.service.speech.PronunciationScore;
-import com.englishlearningcopilot.backend.service.speech.TtsService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -69,13 +68,13 @@ class SpeakingServiceImplTest {
     private AsrService asrService;
 
     @Mock
-    private TtsService ttsService;
-
-    @Mock
     private IseService iseService;
 
     @Mock
     private SpeakingAudioStorageService audioStorageService;
+
+    @Mock
+    private SpeakingAgentAudioSynthesisService agentAudioSynthesisService;
 
     @Mock
     private SpeakingPronunciationEvaluationService pronunciationEvaluationService;
@@ -94,9 +93,9 @@ class SpeakingServiceImplTest {
                 userRepository,
                 agentClient,
                 asrService,
-                ttsService,
                 iseService,
                 audioStorageService,
+                agentAudioSynthesisService,
                 pronunciationEvaluationService,
                 objectMapper,
                 false,
@@ -114,7 +113,7 @@ class SpeakingServiceImplTest {
     }
 
     @Test
-    void createSessionPersistsAgentOpeningMessageWithTtsAudio() {
+    void createSessionQueuesAgentOpeningMessageForTts() {
         AppUser user = user(7L, "learner");
         SpeakingScenario scenario = scenario("business-opening");
         AtomicLong ids = new AtomicLong(100);
@@ -136,9 +135,6 @@ class SpeakingServiceImplTest {
         });
         when(agentClient.reply(eq(scenario), eq("Hometown"), any(), eq(""), eq(0)))
                 .thenReturn(new SpeakingAgentReply("Generated opening from agent.", "Generated spoken opening.", null));
-        when(ttsService.synthesize("Generated spoken opening.")).thenReturn(new byte[] {4, 2});
-        when(audioStorageService.save(eq(99L), eq(100L), any(), eq("mp3")))
-                .thenReturn("/audio/opening.mp3");
         when(messageRepository.findBySessionIdOrderByTurnIndexAscCreatedAtAsc(99L))
                 .thenAnswer(invocation -> savedMessages);
 
@@ -152,10 +148,10 @@ class SpeakingServiceImplTest {
         assertThat(response.messages().get(0).content()).isEqualTo("Generated opening from agent.");
         assertThat(response.messages().get(0).spokenText()).isEqualTo("Generated spoken opening.");
         assertThat(response.messages().get(0).autoPlay()).isTrue();
-        assertThat(response.messages().get(0).audioUrl()).isEqualTo("/audio/opening.mp3");
+        assertThat(response.messages().get(0).audioUrl()).isNull();
+        assertThat(response.messages().get(0).audioPending()).isTrue();
         verify(agentClient).reply(eq(scenario), eq("Hometown"), any(), eq(""), eq(0));
-        verify(ttsService).synthesize("Generated spoken opening.");
-        verify(audioStorageService).save(eq(99L), eq(100L), any(), eq("mp3"));
+        verify(agentAudioSynthesisService).synthesizeAgentMessageAsync(100L);
     }
 
     @Test
@@ -205,8 +201,6 @@ class SpeakingServiceImplTest {
         when(messageRepository.findBySessionIdOrderByTurnIndexAscCreatedAtAsc(99L)).thenReturn(List.of());
         when(agentClient.reply(eq(scenario), eq("Work"), any(), eq("Hello, nice to meet you."), eq(1)))
                 .thenReturn(new SpeakingAgentReply("Welcome to the meeting.", "Welcome spoken.", "Use a fuller greeting."));
-        when(ttsService.synthesize("Welcome spoken.")).thenReturn(new byte[] {9, 8});
-        when(audioStorageService.save(eq(99L), any(), any(), eq("mp3"))).thenReturn("/audio/agent.mp3");
         when(sessionRepository.save(session)).thenReturn(session);
 
         SpeakingTurnResponse response = speakingService.submitRecording(
@@ -223,6 +217,7 @@ class SpeakingServiceImplTest {
         assertThat(response.agentMessage().content()).isEqualTo("Welcome to the meeting.");
         assertThat(response.agentMessage().spokenText()).isEqualTo("Welcome spoken.");
         assertThat(response.agentMessage().autoPlay()).isTrue();
+        assertThat(response.agentMessage().audioPending()).isTrue();
         assertThat(response.pronunciationScore()).isNull();
         assertThat(response.session().currentTurn()).isEqualTo(1);
         assertThat(savedMessages)
@@ -232,8 +227,7 @@ class SpeakingServiceImplTest {
         verify(iseService, never()).evaluate(any(), any());
         verify(asrService).transcribe(any(), eq("turn.wav"));
         verify(agentClient).reply(eq(scenario), eq("Work"), any(), eq("Hello, nice to meet you."), eq(1));
-        verify(ttsService).synthesize("Welcome spoken.");
-        verify(audioStorageService).save(eq(99L), eq(101L), any(), eq("mp3"));
+        verify(agentAudioSynthesisService).synthesizeAgentMessageAsync(101L);
     }
 
     @Test
@@ -275,7 +269,6 @@ class SpeakingServiceImplTest {
                         "Let me explain it.",
                         "You can say: I am not sure."
                 ));
-        when(ttsService.synthesize(any())).thenReturn(new byte[] {9});
         when(sessionRepository.save(session)).thenReturn(session);
 
         speakingService = new SpeakingServiceImpl(
@@ -285,9 +278,9 @@ class SpeakingServiceImplTest {
                 userRepository,
                 agentClient,
                 asrService,
-                ttsService,
                 iseService,
                 audioStorageService,
+                agentAudioSynthesisService,
                 pronunciationEvaluationService,
                 objectMapper,
                 true,

@@ -33,7 +33,7 @@ public class SpeakingPronunciationEvaluationService {
         this.objectMapper = objectMapper;
     }
 
-    @Async
+    @Async("speakingEvaluationExecutor")
     public void evaluateUserMessageAsync(Long messageId, byte[] audioBytes, String referenceText) {
         evaluateUserMessage(messageId, audioBytes, referenceText);
     }

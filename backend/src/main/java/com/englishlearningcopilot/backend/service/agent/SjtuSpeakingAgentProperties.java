@@ -10,7 +10,9 @@ public record SjtuSpeakingAgentProperties(
         double temperature,
         int maxTokens,
         int timeoutMs,
-        String promptLabDir
+        String promptLabDir,
+        int historyMessageLimit,
+        int historyContextMaxChars
 ) {
 
     public SjtuSpeakingAgentProperties {
@@ -25,13 +27,19 @@ public record SjtuSpeakingAgentProperties(
             temperature = 0.7;
         }
         if (maxTokens <= 0) {
-            maxTokens = 180;
+            maxTokens = 120;
         }
         if (timeoutMs <= 0) {
             timeoutMs = 30000;
         }
         if (promptLabDir == null || promptLabDir.isBlank()) {
             promptLabDir = "llm-prompt-lab";
+        }
+        if (historyMessageLimit <= 0) {
+            historyMessageLimit = 8;
+        }
+        if (historyContextMaxChars <= 0) {
+            historyContextMaxChars = 600;
         }
     }
 
