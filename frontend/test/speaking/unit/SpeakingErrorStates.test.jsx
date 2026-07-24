@@ -34,15 +34,23 @@ function createScenarioServices(scenarios) {
           ? Promise.resolve(structuredClone(scenario))
           : Promise.reject(new Error("Speaking scenario was not found."));
       },
-      createSession: (scenarioId) => {
-        const scenario = scenarios.find((item) => item.id === scenarioId);
+      createSession: (input, selectedTopicArg) => {
+        const payload = typeof input === "object" && input !== null
+          ? input
+          : {
+              scenarioId: input,
+              ...(selectedTopicArg ? { selectedTopic: selectedTopicArg } : {})
+            };
+        const scenario = scenarios.find((item) => item.id === payload.scenarioId);
         if (!scenario) {
           return Promise.reject(new Error("Speaking scenario was not found."));
         }
         return Promise.resolve({
           id: 1,
           userId: 1,
-          scenario: structuredClone(scenario),
+          scenario: structuredClone(payload.selectedTopic
+            ? { ...scenario, selectedTopic: payload.selectedTopic }
+            : scenario),
           status: "ACTIVE",
           startedAt: new Date().toISOString(),
           completedAt: null,

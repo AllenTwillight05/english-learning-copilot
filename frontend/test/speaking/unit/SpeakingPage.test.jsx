@@ -2,21 +2,19 @@ import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { SpeakingPage } from "../../../src/pages/SpeakingPage";
-import { speakingScenariosMock } from "../../../src/services/mockData";
 import { renderWithProviders } from "../utils/renderWithProviders";
 
 describe("SpeakingPage", () => {
-  it("shows six scenario cards and navigates to the selected scenario", async () => {
+  it("shows daily and IELTS entry cards and opens the selected practice area", async () => {
     renderWithProviders(<SpeakingPage />, {
       path: "/speaking",
       route: "/speaking"
     });
 
-    for (const scenario of speakingScenariosMock) {
-      expect(await screen.findByRole("button", { name: new RegExp(scenario.title) })).toBeInTheDocument();
-    }
+    expect(await screen.findByRole("button", { name: /日常口语/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /雅思口语/ })).toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole("button", { name: new RegExp(speakingScenariosMock[0].title) }));
-    expect(await screen.findByText("详情页占位")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: /日常口语/ }));
+    expect(await screen.findByText("日常口语页占位")).toBeInTheDocument();
   });
 });

@@ -93,7 +93,7 @@ describe("SpeakingConversationPage", () => {
     expect(screen.queryByRole("button", { name: /发送/ })).not.toBeInTheDocument();
   });
 
-  it("keeps one notice bubble and lets a new recording error replace the previous tip", async () => {
+  it("keeps the inline instant tip and shows a recording error separately", async () => {
     const services = {
       speaking: {
         listScenarios: () => Promise.resolve([defaultScenario]),
@@ -123,7 +123,8 @@ describe("SpeakingConversationPage", () => {
     });
 
     expect(await screen.findByText("Try using a complete sentence.")).toBeInTheDocument();
-    expect(container.querySelectorAll(".speaking-alert")).toHaveLength(1);
+    expect(container.querySelectorAll(".chat-instant-tip")).toHaveLength(1);
+    expect(container.querySelectorAll(".speaking-alert")).toHaveLength(0);
 
     await userEvent.click(screen.getByRole("button", { name: /开始录音/ }));
     const stopButton = screen.getByRole("button", { name: /停止录音/ });
@@ -134,7 +135,8 @@ describe("SpeakingConversationPage", () => {
 
     expect(await screen.findByText("没有识别到语音")).toBeInTheDocument();
     await waitFor(() => {
-      expect(screen.queryByText("Try using a complete sentence.")).not.toBeInTheDocument();
+      expect(screen.getByText("Try using a complete sentence.")).toBeInTheDocument();
+      expect(container.querySelectorAll(".chat-instant-tip")).toHaveLength(1);
       expect(container.querySelectorAll(".speaking-alert")).toHaveLength(1);
     });
   });
