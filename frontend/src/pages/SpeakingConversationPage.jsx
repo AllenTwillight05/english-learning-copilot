@@ -6,7 +6,7 @@ import {
   SendOutlined,
   SoundOutlined
 } from "@ant-design/icons";
-import { Button, Flex, Progress, Space, Tag } from "antd";
+import { Button, Flex, Progress, Select, Space, Tag } from "antd";
 import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { AsyncPage } from "../components/common/AsyncPage";
 import { PageSectionHeader } from "../components/common/PageSectionHeader";
@@ -34,6 +34,51 @@ function playAudioUrl(audioUrl, onEnd) {
   audio.onerror = onEnd;
   audio.play().catch(onEnd);
   return audio;
+}
+
+function getSupportedRecordingMimeType() {
+  if (typeof MediaRecorder === "undefined") {
+    return "";
+  }
+
+  const candidates = [
+    "audio/webm;codecs=opus",
+    "audio/webm",
+    "audio/mp4",
+    "audio/ogg;codecs=opus"
+  ];
+
+  if (typeof MediaRecorder.isTypeSupported !== "function") {
+    return "";
+  }
+
+  return candidates.find((type) => MediaRecorder.isTypeSupported(type)) ?? "";
+}
+
+function getRecordingFileName(mimeType) {
+  if (mimeType.includes("mp4")) {
+    return "recording.m4a";
+  }
+  if (mimeType.includes("ogg")) {
+    return "recording.ogg";
+  }
+  return "recording.webm";
+}
+
+function toRecordingErrorMessage(error) {
+  switch (error?.name) {
+    case "NotAllowedError":
+    case "SecurityError":
+      return "无法使用麦克风。请在浏览器地址栏中允许本网站使用麦克风后重试。";
+    case "NotFoundError":
+    case "DevicesNotFoundError":
+      return "没有检测到可用麦克风。请连接或启用麦克风后重试。";
+    case "NotReadableError":
+    case "TrackStartError":
+      return "麦克风正被其他程序占用。请关闭其他录音或通话程序后重试。";
+    default:
+      return error?.message || "录音无法启动，请检查浏览器麦克风权限后重试。";
+  }
 }
 
 function toChatMessage(message) {
@@ -92,14 +137,26 @@ export function SpeakingConversationPage() {
   const [isSending, setIsSending] = useState(false);
   const [sendError, setSendError] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
+  const [isPreparingRecording, setIsPreparingRecording] = useState(false);
   const [recordingCount, setRecordingCount] = useState(0);
   const [playingMessageKey, setPlayingMessageKey] = useState(null);
+  const [audioInputs, setAudioInputs] = useState([]);
+  const [selectedInputDeviceId, setSelectedInputDeviceId] = useState(undefined);
+  const [inputLevel, setInputLevel] = useState(0);
 
   const mediaRecorderRef = useRef(null);
+  const mediaStreamRef = useRef(null);
   const audioChunksRef = useRef([]);
   const recordingStartedAtRef = useRef(null);
   const activePlaybackRef = useRef({ key: null, audio: null, utterance: null });
   const autoPlayedOpeningKeyRef = useRef(null);
+  const isMountedRef = useRef(true);
+  const recordingStartCancelledRef = useRef(false);
+  const audioContextRef = useRef(null);
+  const audioSourceRef = useRef(null);
+  const audioAnimationFrameRef = useRef(null);
+  const inputMonitorAvailableRef = useRef(false);
+  const recordedInputSignalRef = useRef(false);
 
   const activeSession = session ?? data;
   const scenario = activeSession?.scenario;
@@ -107,18 +164,12 @@ export function SpeakingConversationPage() {
     () => (activeSession?.messages ?? []).map(toChatMessage),
     [activeSession]
   );
-  const lastTip = [...messages].reverse().find((message) => message.instantTip)?.instantTip;
   const notice = sendError
     ? {
         role: "alert",
         text: sendError.message || "消息发送失败，请稍后重试。"
       }
-    : lastTip
-      ? {
-          role: "status",
-          text: lastTip
-        }
-      : null;
+    : null;
 
   const clearPlaybackIfCurrent = useCallback((key) => {
     if (activePlaybackRef.current.key !== key) {
@@ -142,6 +193,113 @@ export function SpeakingConversationPage() {
     }
     activePlaybackRef.current = { key: null, audio: null, utterance: null };
     setPlayingMessageKey(null);
+  }, []);
+
+  const stopInputLevelMonitor = useCallback(() => {
+    if (audioAnimationFrameRef.current !== null) {
+      window.cancelAnimationFrame?.(audioAnimationFrameRef.current);
+      audioAnimationFrameRef.current = null;
+    }
+    audioSourceRef.current?.disconnect?.();
+    audioSourceRef.current = null;
+    const audioContext = audioContextRef.current;
+    audioContextRef.current = null;
+    if (audioContext && audioContext.state !== "closed") {
+      audioContext.close().catch(() => {});
+    }
+    if (isMountedRef.current) {
+      setInputLevel(0);
+    }
+  }, []);
+
+  const startInputLevelMonitor = useCallback((stream) => {
+    inputMonitorAvailableRef.current = false;
+    recordedInputSignalRef.current = false;
+    const AudioContextConstructor = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextConstructor) {
+      return;
+    }
+
+    try {
+      const audioContext = new AudioContextConstructor();
+      const analyser = audioContext.createAnalyser();
+      const source = audioContext.createMediaStreamSource(stream);
+      analyser.fftSize = 1024;
+      analyser.smoothingTimeConstant = 0.7;
+      source.connect(analyser);
+      audioContextRef.current = audioContext;
+      audioSourceRef.current = source;
+      inputMonitorAvailableRef.current = true;
+      audioContext.resume?.().catch(() => {});
+
+      const floatSamples = new Float32Array(analyser.fftSize);
+      const byteSamples = new Uint8Array(analyser.fftSize);
+      const updateLevel = () => {
+        let peak = 0;
+        if (typeof analyser.getFloatTimeDomainData === "function") {
+          analyser.getFloatTimeDomainData(floatSamples);
+          for (const sample of floatSamples) {
+            peak = Math.max(peak, Math.abs(sample));
+          }
+        } else {
+          analyser.getByteTimeDomainData(byteSamples);
+          for (const sample of byteSamples) {
+            peak = Math.max(peak, Math.abs(sample - 128) / 128);
+          }
+        }
+
+        // -54 dBFS: clearly above the near-silent recordings currently reaching ASR.
+        if (peak >= 0.002) {
+          recordedInputSignalRef.current = true;
+        }
+        if (isMountedRef.current) {
+          setInputLevel(Math.min(100, Math.round(peak * 800)));
+        }
+        audioAnimationFrameRef.current = window.requestAnimationFrame(updateLevel);
+      };
+      updateLevel();
+    } catch {
+      inputMonitorAvailableRef.current = false;
+    }
+  }, []);
+
+  const releaseRecordingStream = useCallback((stream = mediaStreamRef.current) => {
+    if (mediaStreamRef.current === stream) {
+      stopInputLevelMonitor();
+    }
+    stream?.getTracks?.().forEach((track) => track.stop());
+    if (mediaStreamRef.current === stream) {
+      mediaStreamRef.current = null;
+    }
+  }, [stopInputLevelMonitor]);
+
+  const refreshAudioInputs = useCallback(async (activeDeviceId) => {
+    if (!navigator.mediaDevices?.enumerateDevices) {
+      return;
+    }
+    try {
+      const inputs = (await navigator.mediaDevices.enumerateDevices())
+        .filter((device) => device.kind === "audioinput")
+        .map((device, index) => ({
+          value: device.deviceId,
+          label: device.label || `麦克风 ${index + 1}`
+        }));
+      if (!isMountedRef.current) {
+        return;
+      }
+      setAudioInputs(inputs);
+      setSelectedInputDeviceId((currentDeviceId) => {
+        if (currentDeviceId && inputs.some((input) => input.value === currentDeviceId)) {
+          return currentDeviceId;
+        }
+        if (activeDeviceId && inputs.some((input) => input.value === activeDeviceId)) {
+          return activeDeviceId;
+        }
+        return inputs[0]?.value;
+      });
+    } catch {
+      // Recording still works when the browser does not allow device enumeration.
+    }
   }, []);
 
   const startPlayback = useCallback((message) => {
@@ -198,13 +356,38 @@ export function SpeakingConversationPage() {
   }, [messages, startPlayback]);
 
   const startRecording = useCallback(async () => {
+    if (isRecording || isPreparingRecording || isSending) {
+      return;
+    }
+
+    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
+      setSendError(new Error("当前浏览器不支持网页录音。请使用最新版 Chrome、Edge 或 Safari。"));
+      return;
+    }
+
+    let stream = null;
+    recordingStartCancelledRef.current = false;
+    setIsPreparingRecording(true);
+    setSendError(null);
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
-          ? "audio/webm;codecs=opus"
-          : "audio/webm"
-      });
+      const audioConstraints = selectedInputDeviceId
+        ? { deviceId: { exact: selectedInputDeviceId } }
+        : true;
+      stream = await navigator.mediaDevices.getUserMedia({ audio: audioConstraints });
+      if (!isMountedRef.current || recordingStartCancelledRef.current) {
+        releaseRecordingStream(stream);
+        return;
+      }
+
+      mediaStreamRef.current = stream;
+      const activeDeviceId = stream.getAudioTracks?.()[0]?.getSettings?.().deviceId;
+      refreshAudioInputs(activeDeviceId);
+      startInputLevelMonitor(stream);
+      const mimeType = getSupportedRecordingMimeType();
+      const mediaRecorder = mimeType
+        ? new MediaRecorder(stream, { mimeType })
+        : new MediaRecorder(stream);
+      const sessionId = activeSession?.id;
 
       audioChunksRef.current = [];
       mediaRecorder.ondataavailable = (event) => {
@@ -214,24 +397,46 @@ export function SpeakingConversationPage() {
       };
 
       mediaRecorder.onstop = async () => {
-        // Stop all tracks to release the microphone
-        stream.getTracks().forEach((track) => track.stop());
+        const durationMs = recordingStartedAtRef.current ? Date.now() - recordingStartedAtRef.current : undefined;
+        const noInputSignal = inputMonitorAvailableRef.current
+          && !recordedInputSignalRef.current
+          && (durationMs ?? 0) >= 800;
+        releaseRecordingStream(stream);
+        mediaRecorderRef.current = null;
+        recordingStartedAtRef.current = null;
+        setIsRecording(false);
 
-        if (audioChunksRef.current.length === 0 || !activeSession?.id) {
+        if (audioChunksRef.current.length === 0) {
+          setSendError(new Error("没有录到有效语音，请靠近麦克风后再试一次。"));
+          setIsSending(false);
+          return;
+        }
+        if (noInputSignal) {
+          audioChunksRef.current = [];
+          setSendError(new Error("未检测到有效麦克风声音。请在下方选择正确的录音设备，或检查系统输入音量后重试。"));
+          setIsSending(false);
+          return;
+        }
+        if (!sessionId) {
+          setSendError(new Error("当前会话已失效，请返回后重新进入练习。"));
+          setIsSending(false);
           return;
         }
 
-        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
-        const durationMs = recordingStartedAtRef.current
-          ? Date.now() - recordingStartedAtRef.current
-          : undefined;
-        recordingStartedAtRef.current = null;
+        const recordingMimeType = mediaRecorder.mimeType || mimeType || audioChunksRef.current[0]?.type || "audio/webm";
+        const audioBlob = new Blob(audioChunksRef.current, { type: recordingMimeType });
         audioChunksRef.current = [];
 
-        setIsSending(true);
-        setSendError(null);
         try {
-          const turn = await speaking.submitRecording(activeSession.id, audioBlob, durationMs);
+          const turn = await speaking.submitRecording(
+            sessionId,
+            audioBlob,
+            durationMs,
+            getRecordingFileName(recordingMimeType)
+          );
+          if (!isMountedRef.current) {
+            return;
+          }
           setSession(turn.session);
           setRecordingCount((current) => current + 1);
 
@@ -247,40 +452,112 @@ export function SpeakingConversationPage() {
         }
       };
 
+      mediaRecorder.onerror = (event) => {
+        releaseRecordingStream(stream);
+        mediaRecorderRef.current = null;
+        recordingStartedAtRef.current = null;
+        setIsRecording(false);
+        setIsSending(false);
+        setSendError(new Error(event.error?.message || "录音过程中发生错误，请重试。"));
+      };
+
       mediaRecorderRef.current = mediaRecorder;
       recordingStartedAtRef.current = Date.now();
       mediaRecorder.start();
       setIsRecording(true);
     } catch (err) {
       console.error("Failed to start recording:", err);
+      releaseRecordingStream(stream);
+      mediaRecorderRef.current = null;
+      recordingStartedAtRef.current = null;
+      setIsRecording(false);
+      setSendError(new Error(toRecordingErrorMessage(err)));
+    } finally {
+      if (isMountedRef.current) {
+        setIsPreparingRecording(false);
+      }
     }
-  }, [activeSession, speaking, startPlayback]);
+  }, [
+    activeSession,
+    isPreparingRecording,
+    isRecording,
+    isSending,
+    refreshAudioInputs,
+    releaseRecordingStream,
+    selectedInputDeviceId,
+    speaking,
+    startInputLevelMonitor,
+    startPlayback
+  ]);
 
   const stopRecording = useCallback(() => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
-      mediaRecorderRef.current.stop();
-      mediaRecorderRef.current = null;
+    const mediaRecorder = mediaRecorderRef.current;
+    if (!mediaRecorder) {
+      recordingStartCancelledRef.current = true;
+      releaseRecordingStream();
+      setIsRecording(false);
+      setIsPreparingRecording(false);
+      return;
     }
+    if (mediaRecorder.state === "inactive") {
+      releaseRecordingStream();
+      setIsRecording(false);
+      return;
+    }
+
     setIsRecording(false);
+    setIsSending(true);
+    try {
+      mediaRecorder.stop();
+    } catch (err) {
+      releaseRecordingStream();
+      mediaRecorderRef.current = null;
+      recordingStartedAtRef.current = null;
+      setIsSending(false);
+      setSendError(new Error(toRecordingErrorMessage(err)));
+    }
+  }, [releaseRecordingStream]);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
   }, []);
+
+  const cancelPendingRecording = useCallback((updateUi = true) => {
+    recordingStartCancelledRef.current = true;
+    const mediaRecorder = mediaRecorderRef.current;
+    if (mediaRecorder?.state === "recording") {
+      mediaRecorder.onstop = null;
+      mediaRecorder.stop();
+    }
+    mediaRecorderRef.current = null;
+    recordingStartedAtRef.current = null;
+    audioChunksRef.current = [];
+    releaseRecordingStream();
+    if (updateUi) {
+      setIsRecording(false);
+      setIsPreparingRecording(false);
+    }
+  }, [releaseRecordingStream]);
 
   const finishSession = useCallback(() => {
     if (!scenario || !activeSession?.id) {
       return;
     }
     stopPlayback();
+    cancelPendingRecording();
     navigate(`/speaking/${scenario.id}/feedback?sessionId=${encodeURIComponent(activeSession.id)}`);
-  }, [activeSession, navigate, scenario, stopPlayback]);
+  }, [activeSession, cancelPendingRecording, navigate, scenario, stopPlayback]);
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
       stopPlayback();
-      if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
-        mediaRecorderRef.current.stop();
-      }
+      cancelPendingRecording(false);
     };
-  }, [stopPlayback]);
+  }, [cancelPendingRecording, stopPlayback]);
 
   return (
     <AsyncPage loading={loading} error={error}>
@@ -318,17 +595,24 @@ export function SpeakingConversationPage() {
                     className={`chat-bubble-row chat-bubble-row--${message.role}`}
                     key={message.id ?? `${message.role}-${index}`}
                   >
-                    <div className={`chat-bubble chat-bubble--${message.role}`}>
-                      <span>{message.text}</span>
-                      <Button
-                        aria-label={isThisPlaying ? "停止播放" : "播放此句音频"}
-                        className={`chat-audio-button ${isThisPlaying ? "chat-audio-button--playing" : ""}`}
-                        icon={<SoundOutlined />}
-                        shape="circle"
-                        size="small"
-                        disabled={isOtherPlaying}
-                        onClick={() => playMessageAudio(message)}
-                      />
+                    <div className={`chat-message-stack chat-message-stack--${message.role}`}>
+                      <div className={`chat-bubble chat-bubble--${message.role}`}>
+                        <span>{message.text}</span>
+                        <Button
+                          aria-label={isThisPlaying ? "停止播放" : "播放此句音频"}
+                          className={`chat-audio-button ${isThisPlaying ? "chat-audio-button--playing" : ""}`}
+                          icon={<SoundOutlined />}
+                          shape="circle"
+                          size="small"
+                          disabled={isOtherPlaying}
+                          onClick={() => playMessageAudio(message)}
+                        />
+                      </div>
+                      {message.instantTip ? (
+                        <div className="chat-instant-tip" role="note">
+                          {message.instantTip}
+                        </div>
+                      ) : null}
                     </div>
                   </div>
                 );
@@ -347,6 +631,8 @@ export function SpeakingConversationPage() {
                 <span>
                   {isRecording
                     ? "正在录音中..."
+                    : isPreparingRecording
+                      ? "正在连接麦克风..."
                     : isSending
                       ? "正在处理语音..."
                       : "点击「开始录音」录入语音"}
@@ -354,12 +640,30 @@ export function SpeakingConversationPage() {
               </div>
               <div className="waveform-bars" aria-hidden="true">
                 {Array.from({ length: 28 }).map((_, index) => (
-                  <span key={index} style={{ "--bar": `${18 + ((index * 13) % 34)}px` }} />
+                  <span
+                    key={index}
+                    style={{
+                      "--bar": `${isRecording ? Math.max(4, 4 + inputLevel * (0.24 + ((index % 7) * 0.04))) : 4}px`
+                    }}
+                  />
                 ))}
               </div>
+              {isRecording ? <div className="recorder-strip__level">输入电平 {inputLevel}%</div> : null}
               {isRecording ? <Progress percent={66} showInfo={false} status="active" /> : null}
               {isSending ? <Progress percent={100} showInfo={false} status="active" /> : null}
             </div>
+
+            {audioInputs.length > 1 ? (
+              <div className="recorder-input-select">
+                <span>录音设备</span>
+                <Select
+                  value={selectedInputDeviceId}
+                  options={audioInputs}
+                  disabled={isRecording || isPreparingRecording || isSending}
+                  onChange={setSelectedInputDeviceId}
+                />
+              </div>
+            ) : null}
 
             <Flex justify="space-between" gap={12} wrap="wrap">
               <Space wrap>
@@ -370,14 +674,14 @@ export function SpeakingConversationPage() {
                   type="primary"
                   icon={<AudioOutlined />}
                   onClick={startRecording}
-                  disabled={isRecording || isSending}
+                  disabled={isRecording || isPreparingRecording || isSending}
                 >
                   开始录音
                 </Button>
                 <Button
                   icon={<PauseCircleOutlined />}
                   onClick={stopRecording}
-                  disabled={!isRecording}
+                  disabled={!isRecording && !isPreparingRecording}
                 >
                   停止录音
                 </Button>

@@ -2,7 +2,7 @@ package com.englishlearningcopilot.backend.service.speech.xfyun;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-@ConfigurationProperties(prefix = "xfyun.tts")
+@ConfigurationProperties(prefix = "supersmart.tts")
 public record XfyunOnlineTtsProperties(
         boolean enabled,
         String url,

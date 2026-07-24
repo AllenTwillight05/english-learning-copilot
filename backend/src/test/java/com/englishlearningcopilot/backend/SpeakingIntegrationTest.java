@@ -92,13 +92,13 @@ class SpeakingIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.userMessage.sender").value("USER"))
                 .andExpect(jsonPath("$.userMessage.transcribedText").isString())
-                .andExpect(jsonPath("$.userMessage.pronunciationScore").isNumber())
+                .andExpect(jsonPath("$.userMessage.pronunciationScore").value(nullValue()))
                 .andExpect(jsonPath("$.agentMessage.sender").value("AGENT"))
                 .andExpect(jsonPath("$.agentMessage.content").isString())
                 .andExpect(jsonPath("$.agentMessage.spokenText").isString())
                 .andExpect(jsonPath("$.agentMessage.autoPlay").value(true))
                 .andExpect(jsonPath("$.agentMessage.instantTip").isString())
-                .andExpect(jsonPath("$.pronunciationScore.totalScore").isNumber())
+                .andExpect(jsonPath("$.pronunciationScore").value(nullValue()))
                 .andExpect(jsonPath("$.session.currentTurn").value(1))
                 .andExpect(jsonPath("$.session.selectedTopic").value("Hometown"))
                 .andExpect(jsonPath("$.session.messages.length()").value(3));
@@ -129,7 +129,7 @@ class SpeakingIntegrationTest {
     }
 
     @Test
-    void submitRecordingReturnsTranscribedTextAndPronunciationScores() throws Exception {
+    void submitRecordingReturnsTranscribedTextAndAgentReplyWithoutBlockingOnPronunciationScores() throws Exception {
         String token = registerAndExtractToken();
 
         MvcResult createdSessionResult = mockMvc.perform(post("/api/speaking/sessions")
@@ -160,16 +160,13 @@ class SpeakingIntegrationTest {
                 .andExpect(jsonPath("$.userMessage.spokenText").value(nullValue()))
                 .andExpect(jsonPath("$.userMessage.autoPlay").value(false))
                 .andExpect(jsonPath("$.userMessage.transcribedText").isString())
-                .andExpect(jsonPath("$.userMessage.pronunciationScore").isNumber())
-                .andExpect(jsonPath("$.userMessage.pronunciationDetail").isString())
+                .andExpect(jsonPath("$.userMessage.pronunciationScore").value(nullValue()))
+                .andExpect(jsonPath("$.userMessage.pronunciationDetail").value(nullValue()))
                 .andExpect(jsonPath("$.agentMessage.sender").value("AGENT"))
                 .andExpect(jsonPath("$.agentMessage.content").isString())
                 .andExpect(jsonPath("$.agentMessage.spokenText").isString())
                 .andExpect(jsonPath("$.agentMessage.autoPlay").value(true))
-                .andExpect(jsonPath("$.pronunciationScore.totalScore").isNumber())
-                .andExpect(jsonPath("$.pronunciationScore.accuracy").isNumber())
-                .andExpect(jsonPath("$.pronunciationScore.fluency").isNumber())
-                .andExpect(jsonPath("$.pronunciationScore.integrity").isNumber())
+                .andExpect(jsonPath("$.pronunciationScore").value(nullValue()))
                 .andExpect(jsonPath("$.session.currentTurn").value(1));
     }
 

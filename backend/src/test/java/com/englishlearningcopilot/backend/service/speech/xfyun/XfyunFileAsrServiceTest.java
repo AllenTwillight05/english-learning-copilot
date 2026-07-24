@@ -8,8 +8,8 @@ class XfyunFileAsrServiceTest {
 
     @Test
     void mapsSilentAudioFailureToReadableMessage() {
-        XfyunFileAsrService service = new XfyunFileAsrService(null, null, null);
+        XfyunFileAsrService service = new XfyunFileAsrService(null, null, null, null);
 
-        assertThat(service.toReadableFailure("6")).isEqualTo("没有识别到语音");
+        assertThat(service.toReadableFailure("6")).contains("判定为静音");
     }
 }

@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
  * Replace with real iFlytek TTS (语音合成) when API credentials are available.
  */
 @Component
-@ConditionalOnProperty(name = "xfyun.tts.enabled", havingValue = "false", matchIfMissing = true)
+@ConditionalOnProperty(name = "supersmart.tts.enabled", havingValue = "false", matchIfMissing = true)
 public class MockTtsService implements TtsService {
 
     @Override

@@ -1691,8 +1691,22 @@ a {
   justify-content: flex-end;
 }
 
-.chat-bubble {
+.chat-message-stack {
   max-width: min(72%, 560px);
+  display: grid;
+  gap: 6px;
+}
+
+.chat-message-stack--coach {
+  justify-items: start;
+}
+
+.chat-message-stack--learner {
+  justify-items: end;
+}
+
+.chat-bubble {
+  width: 100%;
   padding: 12px 14px;
   border-radius: 18px;
   display: flex;
@@ -1730,6 +1744,17 @@ a {
   color: #ffffff;
 }
 
+.chat-instant-tip {
+  max-width: 100%;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(247, 201, 109, 0.44);
+  background: rgba(255, 248, 225, 0.76);
+  color: #7a4a00;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
 .recorder-strip {
   display: grid;
   gap: 12px;
@@ -1742,6 +1767,12 @@ a {
   gap: 8px;
   color: var(--text-soft);
   font-size: 13px;
+}
+
+.recorder-strip__level {
+  color: var(--text-soft);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
 }
 
 .recorder-strip--recording {
@@ -1767,8 +1798,17 @@ a {
 }
 
 .recorder-strip--recording .waveform-bars span {
-  animation: waveformPulse 0.92s ease-in-out infinite alternate;
-  animation-delay: calc(var(--bar) * -0.018);
+  opacity: 0.9;
+  transition: height 90ms linear;
+}
+
+.recorder-input-select {
+  display: grid;
+  grid-template-columns: auto minmax(220px, 360px);
+  align-items: center;
+  gap: 10px;
+  color: var(--text-soft);
+  font-size: 13px;
 }
 
 .speaking-progress {
@@ -2133,6 +2173,14 @@ a {
 }
 
 @media (max-width: 820px) {
+  .recorder-input-select {
+    grid-template-columns: 1fr;
+  }
+
+  .recorder-input-select .ant-select {
+    width: 100%;
+  }
+
   .topbar__auth .ant-space {
     justify-content: stretch;
   }

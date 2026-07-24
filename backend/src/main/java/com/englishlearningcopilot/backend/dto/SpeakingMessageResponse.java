@@ -23,7 +23,7 @@ public record SpeakingMessageResponse(
                 message.getId(),
                 message.getSender().name(),
                 message.getContent(),
-                message.getSender().name().equals("AGENT") ? message.getContent() : null,
+                message.getSender().name().equals("AGENT") ? message.getSpokenText() : null,
                 message.getAudioUrl(),
                 message.getSender().name().equals("AGENT"),
                 message.getTranscribedText(),

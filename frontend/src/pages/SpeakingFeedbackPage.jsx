@@ -292,7 +292,14 @@ export function SpeakingFeedbackPage() {
                     className={`chat-bubble-row chat-bubble-row--${message.role}`}
                     key={message.id ?? `${message.role}-${index}`}
                   >
-                    <div className={`chat-bubble chat-bubble--${message.role}`}>{message.text}</div>
+                    <div className={`chat-message-stack chat-message-stack--${message.role}`}>
+                      <div className={`chat-bubble chat-bubble--${message.role}`}>{message.text}</div>
+                      {message.instantTip ? (
+                        <div className="chat-instant-tip" role="note">
+                          {message.instantTip}
+                        </div>
+                      ) : null}
+                    </div>
                   </div>
                 ))}
               </div>

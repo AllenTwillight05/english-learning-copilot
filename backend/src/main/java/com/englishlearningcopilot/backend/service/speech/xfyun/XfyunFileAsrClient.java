@@ -30,10 +30,10 @@ public class XfyunFileAsrClient {
         this.signatureService = signatureService;
     }
 
-    public XfyunFileAsrOrder upload(byte[] audio, XfyunFileAsrProperties properties) {
+    public XfyunFileAsrOrder upload(byte[] audio, XfyunFileAsrProperties properties, String fileName) {
         String signatureRandom = random();
         Map<String, String> params = uploadParams(properties, signatureRandom);
-        params.put("fileName", properties.fileName());
+        params.put("fileName", resolveFileName(fileName, properties));
         params.put("fileSize", String.valueOf(audio.length));
         params.put("language", properties.language());
         params.put("accent", properties.accent());
@@ -55,6 +55,15 @@ public class XfyunFileAsrClient {
             throw new XfyunAsrException("XFYUN ASR upload response did not include orderId.");
         }
         return new XfyunFileAsrOrder(orderId, signatureRandom);
+    }
+
+    private String resolveFileName(String fileName, XfyunFileAsrProperties properties) {
+        if (fileName == null || fileName.isBlank()) {
+            return properties.fileName();
+        }
+        String normalized = fileName.replace('\\', '/');
+        int lastSeparator = normalized.lastIndexOf('/');
+        return lastSeparator >= 0 ? normalized.substring(lastSeparator + 1) : normalized;
     }
 
     public XfyunFileAsrResult getResult(XfyunFileAsrOrder order, XfyunFileAsrProperties properties) {

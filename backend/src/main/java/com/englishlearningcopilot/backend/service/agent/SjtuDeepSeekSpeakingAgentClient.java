@@ -119,13 +119,14 @@ public class SjtuDeepSeekSpeakingAgentClient implements SpeakingAgentClient {
                 Response contract for the production backend:
                 Return only one JSON object. Do not wrap it in Markdown.
                 JSON shape:
-                {"content":"Text shown in the chat UI.","spokenText":"Natural English text for TTS.","instantTip":"One short coaching tip, or null."}
+                {"content":"The next examiner or role-play line shown in the chat UI.","spokenText":"Natural English text for TTS.","instantTip":"A concise teaching note for the learner, or null."}
 
                 Rules for the JSON fields:
-                - content may include one brief correction or coaching hint plus the next speaking prompt.
-                - spokenText must be only the natural English examiner/role-play line that should be read aloud.
-                - instantTip should be short. Use null during IELTS mock test unless the test is finished.
+                - content must be only the next examiner or role-play line. Do not put corrections, translations, or explanations in content.
+                - spokenText must be only the natural English line that should be read aloud. It is usually the same as content.
+                - instantTip is where brief teaching, correction, explanation, or "if you don't know how to answer" help goes.
                 - Keep spokenText concise, conversational, and suitable for direct text-to-speech.
+                - Use null for instantTip when no immediate teaching note is needed, especially during IELTS mock test flow.
                 """.formatted(labPrompt, topic, turnIndex);
     }
 

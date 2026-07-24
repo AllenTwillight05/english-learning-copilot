@@ -46,9 +46,9 @@ export function createHttpServices(baseUrl = "") {
       getSession: (sessionId) =>
         getJson(withBaseUrl(baseUrl, API_ENDPOINTS.speakingSession(sessionId))),
       listHistory: () => getJson(withBaseUrl(baseUrl, API_ENDPOINTS.speakingHistory)),
-      submitRecording: (sessionId, audioBlob, durationMs) => {
+      submitRecording: (sessionId, audioBlob, durationMs, fileName = "recording.webm") => {
         const formData = new FormData();
-        formData.append("audio", audioBlob, "recording.webm");
+        formData.append("audio", audioBlob, fileName);
         if (durationMs) {
           formData.append("durationMs", String(durationMs));
         }
