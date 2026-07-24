@@ -17,6 +17,11 @@ import {
 } from "./mockData";
 import { getStoredAuth } from "./authStorage";
 import { createHttpServices } from "./httpServices";
+import {
+  DAILY_SPEAKING_SCENARIOS,
+  IELTS_SCENARIOS,
+  createIeltsScenario
+} from "./speakingCatalog";
 
 const httpServices = createHttpServices(import.meta.env.VITE_API_BASE_URL ?? "");
 
@@ -38,6 +43,13 @@ const mockUsers = [
 let nextSpeakingSessionId = 1;
 let nextSpeakingMessageId = 1;
 const mockSpeakingSessions = new Map();
+const catalogSpeakingScenarios = [
+  ...DAILY_SPEAKING_SCENARIOS,
+  createIeltsScenario("part1"),
+  createIeltsScenario("part2"),
+  createIeltsScenario("part3"),
+  createIeltsScenario("mock")
+];
 const mockLearningPlanState = {
   dailyVocabularyGoal: vocabularyPracticeProgressMock.total,
   dailyGrammarGoal: grammarProgressMock.total,
@@ -166,11 +178,22 @@ function createMockProfileSnapshot() {
   };
 }
 
-function toSpeakingMessageResponse({ sender, content, instantTip = null, turnIndex }) {
+function toSpeakingMessageResponse({
+  sender,
+  content,
+  spokenText = null,
+  audioUrl = null,
+  autoPlay = false,
+  instantTip = null,
+  turnIndex
+}) {
   return {
     id: nextSpeakingMessageId++,
     sender,
     content,
+    spokenText,
+    audioUrl,
+    autoPlay,
     instantTip,
     turnIndex,
     createdAt: new Date().toISOString()
@@ -189,6 +212,36 @@ function toSpeakingSessionResponse({ scenario, messages, currentTurn = 0 }) {
     targetTurns: scenario.targetTurns ?? 6,
     messages
   };
+}
+
+function normalizeCreateSessionInput(input, selectedTopic) {
+  if (typeof input === "object" && input !== null) {
+    return input;
+  }
+
+  return {
+    scenarioId: input,
+    ...(selectedTopic ? { selectedTopic } : {})
+  };
+}
+
+function findMockSpeakingScenario(scenarioId) {
+  return speakingScenariosMock.find((item) => item.id === scenarioId)
+    ?? catalogSpeakingScenarios.find((item) => item.id === scenarioId);
+}
+
+function toTopicOpeningMessage(scenario, selectedTopic) {
+  if (!selectedTopic) {
+    return scenario.prompts?.find((message) => message.role === "coach")?.text
+      ?? scenario.openingMessage
+      ?? "Let's start this speaking practice.";
+  }
+
+  if (scenario.id === IELTS_SCENARIOS.part2.scenarioId) {
+    return `Let's practise IELTS Speaking Part 2. Your cue card is: ${selectedTopic}`;
+  }
+
+  return `Let's practise ${scenario.title}. Your topic is ${selectedTopic}.`;
 }
 
 // 默认使用的 mock 服务。mock 数据尽量贴近 contracts.js，方便后端接口未完成时并行开发。
@@ -252,28 +305,36 @@ export function createMockServices() {
       getCommunityLearningTrends: () => httpServices.dashboard.getCommunityLearningTrends()
     },
     speaking: {
-      listScenarios: () => simulateLatency(speakingScenariosMock),
+      listScenarios: () => simulateLatency([
+        ...catalogSpeakingScenarios,
+        ...speakingScenariosMock.filter(
+          (scenario) => !catalogSpeakingScenarios.some((catalog) => catalog.id === scenario.id)
+        )
+      ]),
       getScenario: (scenarioId) => {
-        const scenario = speakingScenariosMock.find((item) => item.id === scenarioId);
+        const scenario = findMockSpeakingScenario(scenarioId);
         return scenario
           ? simulateLatency(scenario)
           : Promise.reject(new Error("Speaking scenario was not found."));
       },
-      createSession: (scenarioId) => {
-        const scenario = speakingScenariosMock.find((item) => item.id === scenarioId);
+      createSession: (input, selectedTopicArg) => {
+        const payload = normalizeCreateSessionInput(input, selectedTopicArg);
+        const scenario = findMockSpeakingScenario(payload.scenarioId);
         if (!scenario) {
           return Promise.reject(new Error("Speaking scenario was not found."));
         }
 
-        const openingMessage = scenario.prompts?.find((message) => message.role === "coach")?.text
-          ?? scenario.openingMessage
-          ?? "Let's start this speaking practice.";
+        const openingMessage = toTopicOpeningMessage(scenario, payload.selectedTopic);
         const session = toSpeakingSessionResponse({
-          scenario,
+          scenario: payload.selectedTopic
+            ? { ...scenario, selectedTopic: payload.selectedTopic }
+            : scenario,
           messages: [
             toSpeakingMessageResponse({
               sender: "AGENT",
               content: openingMessage,
+              spokenText: openingMessage,
+              autoPlay: true,
               turnIndex: 0
             })
           ]
@@ -319,6 +380,8 @@ export function createMockServices() {
         const agentMessage = toSpeakingMessageResponse({
           sender: "AGENT",
           content: "Nice answer. Could you add one more detail and make it sound more natural?",
+          spokenText: "Nice answer. Could you add one more detail and make it sound more natural?",
+          autoPlay: true,
           instantTip: "Try adding a reason or example to make your response fuller.",
           turnIndex
         });

@@ -9,7 +9,10 @@ import { LoginPage } from "../pages/LoginPage";
 import { ProfilePage } from "../pages/ProfilePage";
 import { RegisterPage } from "../pages/RegisterPage";
 import { SpeakingConversationPage } from "../pages/SpeakingConversationPage";
+import { SpeakingDailyPage } from "../pages/SpeakingDailyPage";
 import { SpeakingFeedbackPage } from "../pages/SpeakingFeedbackPage";
+import { SpeakingIeltsPage } from "../pages/SpeakingIeltsPage";
+import { SpeakingIeltsTopicPage } from "../pages/SpeakingIeltsTopicPage";
 import { SpeakingPage } from "../pages/SpeakingPage";
 import { SpeakingScenarioDetailPage } from "../pages/SpeakingScenarioDetailPage";
 import { VocabularyPage } from "../pages/VocabularyPage";
@@ -24,6 +27,9 @@ export const appRoutes = [
     children: [
       { index: true, element: <DashboardPage /> },
       { path: "speaking", element: <SpeakingPage /> },
+      { path: "speaking/daily", element: <SpeakingDailyPage /> },
+      { path: "speaking/ielts", element: <SpeakingIeltsPage /> },
+      { path: "speaking/ielts/:partId", element: <SpeakingIeltsTopicPage /> },
       { path: "speaking/:scenarioId/conversation", element: <SpeakingConversationPage /> },
       { path: "speaking/:scenarioId/feedback", element: <SpeakingFeedbackPage /> },
       { path: "speaking/:scenarioId", element: <SpeakingScenarioDetailPage /> },

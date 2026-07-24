@@ -1,0 +1,22 @@
+=== G-02-restaurant: Restaurant Ordering (A2-B1) ===
+Opening: Good evening. Welcome in. Would you like to see the menu?
+
+[normal order]
+  IN:  Hi, can I see the menu please?
+  OUT: Of course. Here you are. Take your time looking it over.
+
+[short answer]
+  IN:  Pasta.
+  OUT: Great choice. Our pasta comes with a tomato or cream sauce. Which one would you prefer?
+
+[chinese intent]
+  IN:  买单。
+  OUT: 可以这样说："Can I have the bill, please?" 这句话适合在餐厅用餐后要求结账。Of course. Would you like to pay by cash or card?
+
+[mixed language]
+  IN:  I want 点菜.
+  OUT: 可以这样说："I'd like to order, please." 这句话适合在餐厅准备点菜时使用。What would you like to have?
+
+[off-topic]
+  IN:  Do you know where the nearest hotel is?
+  OUT: Let's focus on the restaurant ordering practice for now. Would you like to see the menu?

@@ -1,0 +1,21 @@
+=== G-11-directions: Asking for Directions (A1-A2) ===
+Opening: Hi. You look a little lost. Where are you trying to go?
+
+[normal ask]
+  IN:  Excuse me, could you tell me how to get to the train station?
+  OUT: Sure. Go straight for two blocks, then turn left. The station is on your right.
+
+[short answer]
+  IN:  Left.
+  OUT: Turn left at the next street, and you'll see the bus stop on your right.
+
+[chinese intent]
+  IN:  请问地铁站在哪里？
+  OUT: 可以这样说："Excuse me, where is the subway station?" 这句话适合问路时使用。Do you need to take the subway to get somewhere?
+
+[follow-up] ERROR: API 429: {"error":{"message":"Rate limit exceeded for api_key: 4e24f8f4676140cc1a5f5e682107a5250371b59321071f84dfbfadb52e346902. Limit type: requests. Current limit: 10, Remaining: 0. Limit resets at: 2026-07-23 11:31:01 UTC","type":"None","param":"None","code":"429"}}
+
+=== G-11-directions: Asking for Directions (retest) ===
+[normal]
+  IN:  Is it far from here?
+  OUT: It's not too far. It takes about thirty minutes by bus.

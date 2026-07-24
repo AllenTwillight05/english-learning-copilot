@@ -42,13 +42,37 @@ async function stubBrowserAudio(page) {
         pause() {}
       }
     });
+    const tracks = [{ stop: () => {} }];
+    const stream = { getTracks: () => tracks };
     Object.defineProperty(window, "MediaRecorder", {
       configurable: true,
-      value: undefined
+      value: class MediaRecorderMock {
+        constructor(_stream, options = {}) {
+          this.state = "inactive";
+          this.mimeType = options.mimeType || "audio/webm";
+          this.ondataavailable = null;
+          this.onstop = null;
+          this.onerror = null;
+        }
+
+        static isTypeSupported() {
+          return true;
+        }
+
+        start() {
+          this.state = "recording";
+        }
+
+        stop() {
+          this.state = "inactive";
+          this.ondataavailable?.({ data: new Blob(["mock-recording"], { type: this.mimeType }) });
+          window.setTimeout(() => this.onstop?.(), 0);
+        }
+      }
     });
     Object.defineProperty(navigator, "mediaDevices", {
       configurable: true,
-      value: undefined
+      value: { getUserMedia: async () => stream }
     });
   });
 }
@@ -94,8 +118,9 @@ test("completes the real browser speaking practice path and stores replay histor
 
   for (let count = 1; count <= 3; count += 1) {
     await page.getByRole("button", { name: /开始录音/ }).click();
-    await expect(page.getByText(`当前为第 ${count} 轮`)).toBeVisible();
+    await expect(page.getByRole("button", { name: /停止录音/ })).toBeEnabled();
     await page.getByRole("button", { name: /停止录音/ }).click();
+    await expect(page.getByText(`当前为第 ${count} 轮`)).toBeVisible();
   }
 
   await expect(page.getByRole("button", { name: /交卷/ })).toBeEnabled();

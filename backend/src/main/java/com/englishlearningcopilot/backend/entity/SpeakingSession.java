@@ -55,6 +55,9 @@ public class SpeakingSession {
     @Column(nullable = false, name = "current_turn")
     private int currentTurn;
 
+    @Column(name = "selected_topic", length = 200)
+    private String selectedTopic;
+
     @Column(nullable = false, name = "created_at", updatable = false)
     @Setter(AccessLevel.NONE)
     private Instant createdAt;

@@ -1,0 +1,120 @@
+{
+  "id": "G-10-phone-call",
+  "title": "Making a Phone Call",
+  "level": "A2-B1",
+  "domain": "Phone English",
+  "goal": "The learner makes a phone call, asks to speak with someone, explains the reason for calling, arranges a meeting, and closes politely.",
+  "learnerRole": "caller",
+  "agentRole": "person receiving the call",
+  "targetTurns": 8,
+  "keywords": [
+    "May I speak with",
+    "This is",
+    "speaking",
+    "What's up?",
+    "I'm calling to",
+    "meet for lunch",
+    "What did you have in mind?",
+    "around twelve",
+    "see you then",
+    "look forward to it"
+  ],
+  "openingMessage": "Hello, this is Lee speaking.",
+  "conversationFlow": [
+    "Answer the phone and identify yourself.",
+    "Confirm who is calling if needed.",
+    "Ask the reason for the call.",
+    "Discuss the proposed meeting or request.",
+    "Clarify time and place.",
+    "Confirm the plan and close politely."
+  ],
+  "stateRules": [
+    "If the learner has not identified themselves, ask who is calling.",
+    "If the learner has identified themselves but not the reason, ask what they are calling about.",
+    "If the learner proposes a meeting but no time is given, ask what time works.",
+    "If the learner gives a time but no place, ask where they would like to meet.",
+    "If time and place are both clear, confirm the plan.",
+    "Keep the tone concise like a real phone call."
+  ],
+  "errorHandling": [
+    "If the learner uses Chinese for a scenario-related intention, use expression help mode; if it is unrelated, use the scenario off-topic boundary.",
+    "If the learner gives a short answer such as tomorrow or twelve, accept it and continue.",
+    "If the learner asks unrelated questions, reply exactly: Let's focus on the phone call practice for now.",
+    "If the learner asks how to say a phrase, give one short phone phrase and return to the call."
+  ],
+  "expressionHelp": [
+    {
+      "intent": "ask to speak",
+      "triggers": ["找某人", "接电话", "speak"],
+      "phrase": "May I speak with Lee? This is Ray.",
+      "explanation": "Use this to politely ask for someone on the phone and identify yourself."
+    },
+    {
+      "intent": "reason for calling",
+      "triggers": ["打电话是为了", "calling"],
+      "phrase": "I'm calling to ask if we can meet tomorrow.",
+      "explanation": "Use 'I'm calling to...' to explain the reason for your call."
+    },
+    {
+      "intent": "confirm plan",
+      "triggers": ["确认", "see you"],
+      "phrase": "I'll see you there around twelve.",
+      "explanation": "Use this to confirm the time and place before ending the call."
+    },
+    {
+      "intent": "identify caller",
+      "triggers": ["我是", "打电话给", "this is", "calling about"],
+      "phrase": "This is Ray calling about tomorrow's lunch.",
+      "explanation": "Use 'This is...' plus your name and reason when you start a phone call."
+    },
+    {
+      "intent": "leave message",
+      "triggers": ["留言", "message", "not available"],
+      "phrase": "Can I leave a message?",
+      "explanation": "Use this when the person you want is not available."
+    },
+    {
+      "intent": "arrange meeting",
+      "triggers": ["约午饭", "见面", "meet", "lunch"],
+      "phrase": "Could we meet for lunch tomorrow?",
+      "explanation": "Use this to suggest a meeting time or social plan by phone."
+    }
+  ],
+  "sampleDialogue": [
+    {
+      "speaker": "Receiver",
+      "text": "Hello, this is Lee speaking."
+    },
+    {
+      "speaker": "Caller",
+      "text": "Hi Lee, this is Ray. How are you today?"
+    },
+    {
+      "speaker": "Receiver",
+      "text": "Things are going well. What's up?"
+    },
+    {
+      "speaker": "Caller",
+      "text": "I was wondering if we could meet for lunch tomorrow."
+    },
+    {
+      "speaker": "Receiver",
+      "text": "Sure. Where did you have in mind?"
+    },
+    {
+      "speaker": "Caller",
+      "text": "I was thinking of Joe's around twelve."
+    },
+    {
+      "speaker": "Receiver",
+      "text": "That sounds good. I'll see you there."
+    }
+  ],
+  "testInputs": [
+    "May I speak with Lee? This is Ray.",
+    "I'm calling to ask if we can meet tomorrow.",
+    "Could we meet for lunch around twelve?",
+    "I'll see you there. Goodbye.",
+    "我想打电话约午饭。"
+  ]
+}

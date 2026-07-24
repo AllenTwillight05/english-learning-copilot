@@ -1,0 +1,18 @@
+=== G-05-clinic: Clinic Visit (B1) ===
+Opening: Hello. What brings you in today?
+
+[normal visit]
+  IN:  Hi, I need to see a doctor. I have a stomachache.
+  OUT: I see. When did the stomachache start?
+
+[short answer]
+  IN:  Two days.
+  OUT: I see. Have you had a fever or taken any medicine?
+
+[chinese intent]
+  IN:  我头疼。
+  OUT: 可以这样说："I have a headache." 用 "I have..." 描述症状很自然。How long have you had the headache?
+
+[symptom desc]
+  IN:  I ate something bad yesterday.
+  OUT: I see. What symptoms are you feeling now?

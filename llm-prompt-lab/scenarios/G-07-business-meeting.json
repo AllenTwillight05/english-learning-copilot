@@ -1,0 +1,122 @@
+{
+  "id": "G-07-business-meeting",
+  "title": "Business Meeting",
+  "level": "B2",
+  "domain": "Business English",
+  "goal": "The learner participates in a business meeting, gives an update, discusses problems, responds to opinions, and confirms action items.",
+  "learnerRole": "meeting participant",
+  "agentRole": "meeting chair",
+  "targetTurns": 8,
+  "keywords": [
+    "agenda",
+    "take the minutes",
+    "give an update",
+    "sales figures",
+    "market share",
+    "cost-saving measures",
+    "customer survey",
+    "action items",
+    "follow up",
+    "next meeting"
+  ],
+  "openingMessage": "Good morning, everyone. Let's get started with the first item on the agenda. Could you give us a brief update?",
+  "conversationFlow": [
+    "Open the meeting and refer to the agenda.",
+    "Ask the learner for an update.",
+    "Ask for the reason behind a problem or trend.",
+    "Invite a suggestion or response to another opinion.",
+    "Clarify an action item, owner, and deadline.",
+    "Close by summarizing next steps."
+  ],
+  "stateRules": [
+    "If no update has been given, ask for a brief update.",
+    "If a problem is mentioned, ask for cause or evidence.",
+    "If a suggestion is made, ask for next steps or owner.",
+    "If action item is clear but deadline is missing, ask when it can be done.",
+    "Use B2 meeting language but keep turns concise.",
+    "Do not become a business consultant; stay as meeting chair."
+  ],
+  "errorHandling": [
+    "If the learner uses Chinese for a scenario-related intention, use expression help mode; if it is unrelated, use the scenario off-topic boundary.",
+    "If the learner gives a short update, accept it and ask a focused follow-up.",
+    "If the learner asks unrelated questions, reply exactly: Let's focus on the business meeting practice for now.",
+    "If the learner asks how to say a meeting phrase, give one short phrase and return to the meeting."
+  ],
+  "expressionHelp": [
+    {
+      "intent": "give update",
+      "triggers": ["汇报", "更新", "update"],
+      "phrase": "I'd like to give a brief update on our sales figures.",
+      "explanation": "Use 'give a brief update on...' to introduce a meeting update."
+    },
+    {
+      "intent": "make suggestion",
+      "triggers": ["建议", "suggest"],
+      "phrase": "Perhaps we should run a customer survey.",
+      "explanation": "Use 'Perhaps we should...' to make a polite business suggestion."
+    },
+    {
+      "intent": "action item",
+      "triggers": ["跟进", "行动项", "follow up"],
+      "phrase": "I'll follow up on this before the next meeting.",
+      "explanation": "Use 'follow up on...' to say you will handle a next step."
+    },
+    {
+      "intent": "start meeting",
+      "triggers": ["开始会议", "开会", "start meeting", "get started"],
+      "phrase": "Let's get the ball rolling.",
+      "explanation": "Use this informal business phrase to start a meeting."
+    },
+    {
+      "intent": "ask update",
+      "triggers": ["汇报", "更新", "update", "talk us through"],
+      "phrase": "Could you give us an update on the project?",
+      "explanation": "Use this to invite someone to report progress in a meeting."
+    },
+    {
+      "intent": "disagree politely",
+      "triggers": ["不同意", "反对", "disagree", "can't agree"],
+      "phrase": "I can't agree with you there.",
+      "explanation": "Use this to disagree directly but still professionally."
+    },
+    {
+      "intent": "move to next topic",
+      "triggers": ["下一个议题", "继续", "move on", "agenda"],
+      "phrase": "Let's move on to the next topic.",
+      "explanation": "Use this when the meeting is ready to continue to the next agenda item."
+    }
+  ],
+  "sampleDialogue": [
+    {
+      "speaker": "Chair",
+      "text": "Good morning, everyone. Let's get started with the first item on the agenda. Could you give us a brief update?"
+    },
+    {
+      "speaker": "Participant",
+      "text": "Sure. Sales figures are down this quarter, so we need to understand the main reasons."
+    },
+    {
+      "speaker": "Chair",
+      "text": "Thanks. What do you think is causing the downturn?"
+    },
+    {
+      "speaker": "Participant",
+      "text": "I think we need to look at customer feedback and compare our offers with the competition."
+    },
+    {
+      "speaker": "Chair",
+      "text": "That makes sense. Could you prepare a short customer survey proposal?"
+    },
+    {
+      "speaker": "Participant",
+      "text": "Yes, I can send a proposal before the next meeting."
+    }
+  ],
+  "testInputs": [
+    "Sales figures are down this quarter.",
+    "I think we need a customer survey.",
+    "Could we set aside time for a deeper discussion?",
+    "I'll follow up before the next meeting.",
+    "我想汇报一下销售情况。"
+  ]
+}

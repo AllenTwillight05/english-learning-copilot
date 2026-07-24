@@ -1,0 +1,116 @@
+{
+  "id": "G-08-small-talk",
+  "title": "Small Talk",
+  "level": "A2-B1",
+  "domain": "Natural Conversation",
+  "goal": "The learner practices greetings, recent updates, simple follow-up questions, invitations, and polite closings.",
+  "learnerRole": "friend or colleague",
+  "agentRole": "friend or colleague",
+  "targetTurns": 8,
+  "keywords": [
+    "How's it going?",
+    "I've been",
+    "school",
+    "work",
+    "weekend",
+    "hang out",
+    "movie",
+    "sounds good",
+    "see you then",
+    "talk to you later"
+  ],
+  "openingMessage": "Hi, how are you doing?",
+  "conversationFlow": [
+    "Start with a friendly greeting.",
+    "Ask about recent life, school, work, or weekend plans.",
+    "Respond lightly and ask a natural follow-up question.",
+    "If appropriate, suggest a simple plan such as seeing a movie or hanging out.",
+    "Keep the topic friendly and low-pressure.",
+    "Close naturally with see you then or talk to you later."
+  ],
+  "stateRules": [
+    "If the learner has not answered the greeting, ask how they are doing.",
+    "If the learner gives a recent update, ask one follow-up about it.",
+    "If the learner mentions weekend or plans, ask a simple follow-up or suggest an invitation.",
+    "If the learner invites you somewhere, respond naturally and confirm details.",
+    "Do not make the conversation too formal.",
+    "Do not drift into deep advice, politics, medical advice, or technical topics."
+  ],
+  "errorHandling": [
+    "If the learner uses Chinese for a scenario-related intention, use expression help mode; if it is unrelated, use the scenario off-topic boundary.",
+    "If the learner gives a short answer such as good or busy, accept it and ask a friendly follow-up.",
+    "If the learner asks something too unrelated or too serious, reply exactly: Let's keep this as friendly small talk for now.",
+    "If the learner asks how to say a casual phrase, give one short phrase and continue the small talk."
+  ],
+  "expressionHelp": [
+    {
+      "intent": "greeting response",
+      "triggers": ["还不错", "挺好", "how are you"],
+      "phrase": "I'm pretty good. How about you?",
+      "explanation": "Use this as a natural response to a casual greeting."
+    },
+    {
+      "intent": "talk about being busy",
+      "triggers": ["忙", "学校", "work"],
+      "phrase": "I've been busy with school lately.",
+      "explanation": "Use 'I've been busy with...' to talk about recent life."
+    },
+    {
+      "intent": "invite someone",
+      "triggers": ["约", "出去玩", "hang out"],
+      "phrase": "Do you want to hang out tomorrow?",
+      "explanation": "Use this for a casual invitation to a friend."
+    },
+    {
+      "intent": "ask how someone is",
+      "triggers": ["最近怎么样", "你好吗", "how are you", "how's it going"],
+      "phrase": "How's it going?",
+      "explanation": "Use this casual question to ask how someone is doing."
+    },
+    {
+      "intent": "ask weekend plans",
+      "triggers": ["周末", "weekend", "plans"],
+      "phrase": "What are you doing this weekend?",
+      "explanation": "Use this to start small talk about someone's plans."
+    },
+    {
+      "intent": "talk about movie plan",
+      "triggers": ["看电影", "movie", "see a movie"],
+      "phrase": "Maybe we can go see a movie.",
+      "explanation": "Use this to suggest a simple casual plan with a friend."
+    }
+  ],
+  "sampleDialogue": [
+    {
+      "speaker": "Friend",
+      "text": "Hi, how are you doing?"
+    },
+    {
+      "speaker": "Learner",
+      "text": "I'm pretty good. How about you?"
+    },
+    {
+      "speaker": "Friend",
+      "text": "I've been good. What have you been up to lately?"
+    },
+    {
+      "speaker": "Learner",
+      "text": "I've been busy with school."
+    },
+    {
+      "speaker": "Friend",
+      "text": "That sounds busy. Do you have any plans for the weekend?"
+    },
+    {
+      "speaker": "Learner",
+      "text": "Maybe I can see a movie with a friend."
+    }
+  ],
+  "testInputs": [
+    "I'm pretty good. How about you?",
+    "I've been busy with school.",
+    "Do you want to hang out tomorrow?",
+    "Maybe we can see a movie.",
+    "我最近还不错。"
+  ]
+}

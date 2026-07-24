@@ -13,24 +13,34 @@ public class XfyunFileAsrService implements AsrService {
     private final XfyunFileAsrProperties properties;
     private final XfyunFileAsrClient client;
     private final XfyunTranscriptionParser parser;
+    private final XfyunAsrAudioConverter audioConverter;
 
     public XfyunFileAsrService(
             XfyunFileAsrProperties properties,
             XfyunFileAsrClient client,
-            XfyunTranscriptionParser parser
+            XfyunTranscriptionParser parser,
+            XfyunAsrAudioConverter audioConverter
     ) {
         this.properties = properties;
         this.client = client;
         this.parser = parser;
+        this.audioConverter = audioConverter;
     }
 
     @Override
     public String transcribe(byte[] audio) {
+        return transcribe(audio, properties.fileName());
+    }
+
+    @Override
+    public String transcribe(byte[] audio, String fileName) {
         if (audio == null || audio.length == 0) {
             throw new XfyunAsrException("Uploaded audio is empty.");
         }
 
-        XfyunFileAsrOrder order = client.upload(audio, properties);
+        byte[] pcmAudio = audioConverter.toPcm16kMono(audio, properties);
+        String uploadFileName = properties.transcodeEnabled() ? "recording.pcm" : fileName;
+        XfyunFileAsrOrder order = client.upload(pcmAudio, properties, uploadFileName);
         long deadline = System.currentTimeMillis() + properties.timeoutMs();
         while (System.currentTimeMillis() < deadline) {
             XfyunFileAsrResult result = client.getResult(order, properties);
@@ -63,7 +73,7 @@ public class XfyunFileAsrService implements AsrService {
 
     String toReadableFailure(String failType) {
         if ("6".equals(failType)) {
-            return "没有识别到语音";
+            return "讯飞将上传音频判定为静音。请确认麦克风输入和音频转码配置。";
         }
         return "XFYUN ASR failed: " + failType;
     }

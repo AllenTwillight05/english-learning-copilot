@@ -6,5 +6,11 @@ import java.util.List;
 
 public interface SpeakingAgentClient {
 
-    SpeakingAgentReply reply(SpeakingScenario scenario, List<SpeakingMessage> history, String userMessage, int turnIndex);
+    SpeakingAgentReply reply(
+            SpeakingScenario scenario,
+            String selectedTopic,
+            List<SpeakingMessage> history,
+            String userMessage,
+            int turnIndex
+    );
 }

@@ -139,6 +139,45 @@ describe("SpeakingConversationPage", () => {
     });
   });
 
+  it("releases the microphone and restores the controls when recorder creation fails", async () => {
+    const stopTrack = vi.fn();
+    const getUserMedia = vi.fn().mockResolvedValue({ getTracks: () => [{ stop: stopTrack }] });
+    const originalMediaDevices = navigator.mediaDevices;
+    const originalMediaRecorder = globalThis.MediaRecorder;
+    Object.defineProperty(navigator, "mediaDevices", {
+      configurable: true,
+      value: { getUserMedia }
+    });
+    globalThis.MediaRecorder = class UnsupportedRecorder {
+      static isTypeSupported() {
+        return true;
+      }
+
+      constructor() {
+        throw new DOMException("The requested MIME type is not supported.", "NotSupportedError");
+      }
+    };
+
+    renderWithProviders(<SpeakingConversationPage />, {
+      path: "/speaking/:scenarioId/conversation",
+      route: `/speaking/${defaultScenario.id}/conversation`
+    });
+
+    const startButton = await screen.findByRole("button", { name: /开始录音/ });
+    await userEvent.click(startButton);
+
+    expect(await screen.findByText("The requested MIME type is not supported.")).toBeInTheDocument();
+    expect(stopTrack).toHaveBeenCalledTimes(1);
+    expect(startButton).toBeEnabled();
+    expect(screen.getByRole("button", { name: /停止录音/ })).toBeDisabled();
+
+    Object.defineProperty(navigator, "mediaDevices", {
+      configurable: true,
+      value: originalMediaDevices
+    });
+    globalThis.MediaRecorder = originalMediaRecorder;
+  });
+
   it("disables other playback buttons while a speech-synthesis message is playing", async () => {
     renderWithProviders(<SpeakingConversationPage />, {
       path: "/speaking/:scenarioId/conversation",

@@ -12,4 +12,12 @@ public interface AsrService {
      * @return transcribed English text
      */
     String transcribe(byte[] audio);
+
+    /**
+     * Transcribe audio while preserving the browser-provided file extension for providers
+     * that infer the container format from the upload name.
+     */
+    default String transcribe(byte[] audio, String fileName) {
+        return transcribe(audio);
+    }
 }

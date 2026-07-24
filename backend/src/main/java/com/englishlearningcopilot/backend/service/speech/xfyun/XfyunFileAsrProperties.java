@@ -15,7 +15,10 @@ public record XfyunFileAsrProperties(
         boolean durationCheckDisable,
         int pollIntervalMs,
         int timeoutMs,
-        String fileName
+        String fileName,
+        boolean transcodeEnabled,
+        String transcodeCommand,
+        int transcodeTimeoutMs
 ) {
 
     public XfyunFileAsrProperties {
@@ -39,6 +42,12 @@ public record XfyunFileAsrProperties(
         }
         if (fileName == null || fileName.isBlank()) {
             fileName = "recording.webm";
+        }
+        if (transcodeCommand == null || transcodeCommand.isBlank()) {
+            transcodeCommand = "ffmpeg";
+        }
+        if (transcodeTimeoutMs <= 0) {
+            transcodeTimeoutMs = 30000;
         }
     }
 }

@@ -82,8 +82,8 @@ public class SpeakingController {
 
     /**
      * POST /api/speaking/sessions/{sessionId}/messages (multipart)
-     * Submit a voice recording. Backend runs ASR + ISE in parallel,
-     * then calls the reply agent and TTS.
+     * Submit a voice recording. Backend runs ASR, then calls the reply agent
+     * and Super Smart TTS. Pronunciation scoring is deferred to feedback.
      */
     @PostMapping(value = "/sessions/{sessionId}/messages", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public SpeakingTurnResponse submitRecording(

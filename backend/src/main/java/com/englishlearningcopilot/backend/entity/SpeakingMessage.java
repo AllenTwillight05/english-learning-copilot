@@ -38,25 +38,28 @@ public class SpeakingMessage {
     @Column(nullable = false, length = 20)
     private SpeakingMessageSender sender;
 
-    @Column(nullable = false, length = 4000)
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
+
+    @Column(name = "spoken_text", columnDefinition = "TEXT")
+    private String spokenText;
 
     @Column(name = "audio_url", length = 500)
     private String audioUrl;
 
-    @Column(name = "transcribed_text", length = 4000)
+    @Column(name = "transcribed_text", columnDefinition = "TEXT")
     private String transcribedText;
 
     @Column(name = "pronunciation_score")
     private Double pronunciationScore;
 
-    @Column(name = "pronunciation_detail", length = 4000)
+    @Column(name = "pronunciation_detail", columnDefinition = "TEXT")
     private String pronunciationDetail;
 
     @Column(name = "duration_ms")
     private Long durationMs;
 
-    @Column(name = "instant_tip", length = 1000)
+    @Column(name = "instant_tip", columnDefinition = "TEXT")
     private String instantTip;
 
     @Column(nullable = false, name = "turn_index")

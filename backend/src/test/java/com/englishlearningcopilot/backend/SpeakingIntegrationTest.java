@@ -3,6 +3,7 @@ package com.englishlearningcopilot.backend;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -64,13 +65,18 @@ class SpeakingIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                  "scenarioId": "business-opening"
+                                  "scenarioId": "IELTS-P1-practice",
+                                  "selectedTopic": "Hometown"
                                 }
                                 """))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.scenario.id").value("business-opening"))
+                .andExpect(jsonPath("$.scenario.id").value("IELTS-P1-practice"))
+                .andExpect(jsonPath("$.selectedTopic").value("Hometown"))
                 .andExpect(jsonPath("$.status").value("ACTIVE"))
                 .andExpect(jsonPath("$.messages[0].sender").value("AGENT"))
+                .andExpect(jsonPath("$.messages[0].content").isString())
+                .andExpect(jsonPath("$.messages[0].spokenText").isString())
+                .andExpect(jsonPath("$.messages[0].autoPlay").value(true))
                 .andReturn();
 
         Long sessionId = objectMapper.readTree(createdSessionResult.getResponse().getContentAsString())
@@ -86,18 +92,22 @@ class SpeakingIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.userMessage.sender").value("USER"))
                 .andExpect(jsonPath("$.userMessage.transcribedText").isString())
-                .andExpect(jsonPath("$.userMessage.pronunciationScore").isNumber())
+                .andExpect(jsonPath("$.userMessage.pronunciationScore").value(nullValue()))
                 .andExpect(jsonPath("$.agentMessage.sender").value("AGENT"))
                 .andExpect(jsonPath("$.agentMessage.content").isString())
+                .andExpect(jsonPath("$.agentMessage.spokenText").isString())
+                .andExpect(jsonPath("$.agentMessage.autoPlay").value(true))
                 .andExpect(jsonPath("$.agentMessage.instantTip").isString())
-                .andExpect(jsonPath("$.pronunciationScore.totalScore").isNumber())
+                .andExpect(jsonPath("$.pronunciationScore").value(nullValue()))
                 .andExpect(jsonPath("$.session.currentTurn").value(1))
+                .andExpect(jsonPath("$.session.selectedTopic").value("Hometown"))
                 .andExpect(jsonPath("$.session.messages.length()").value(3));
 
         mockMvc.perform(get("/api/speaking/history")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(sessionId))
+                .andExpect(jsonPath("$[0].selectedTopic").value("Hometown"))
                 .andExpect(jsonPath("$[0].messages.length()").value(3));
 
         // Verify feedback endpoint returns expected structure including new fields
@@ -119,7 +129,7 @@ class SpeakingIntegrationTest {
     }
 
     @Test
-    void submitRecordingReturnsTranscribedTextAndPronunciationScores() throws Exception {
+    void submitRecordingReturnsTranscribedTextAndAgentReplyWithoutBlockingOnPronunciationScores() throws Exception {
         String token = registerAndExtractToken();
 
         MvcResult createdSessionResult = mockMvc.perform(post("/api/speaking/sessions")
@@ -147,15 +157,16 @@ class SpeakingIntegrationTest {
                 .andExpect(jsonPath("$.userMessage.sender").value("USER"))
                 .andExpect(jsonPath("$.userMessage.content").isString())
                 .andExpect(jsonPath("$.userMessage.audioUrl").isString())
+                .andExpect(jsonPath("$.userMessage.spokenText").value(nullValue()))
+                .andExpect(jsonPath("$.userMessage.autoPlay").value(false))
                 .andExpect(jsonPath("$.userMessage.transcribedText").isString())
-                .andExpect(jsonPath("$.userMessage.pronunciationScore").isNumber())
-                .andExpect(jsonPath("$.userMessage.pronunciationDetail").isString())
+                .andExpect(jsonPath("$.userMessage.pronunciationScore").value(nullValue()))
+                .andExpect(jsonPath("$.userMessage.pronunciationDetail").value(nullValue()))
                 .andExpect(jsonPath("$.agentMessage.sender").value("AGENT"))
                 .andExpect(jsonPath("$.agentMessage.content").isString())
-                .andExpect(jsonPath("$.pronunciationScore.totalScore").isNumber())
-                .andExpect(jsonPath("$.pronunciationScore.accuracy").isNumber())
-                .andExpect(jsonPath("$.pronunciationScore.fluency").isNumber())
-                .andExpect(jsonPath("$.pronunciationScore.integrity").isNumber())
+                .andExpect(jsonPath("$.agentMessage.spokenText").isString())
+                .andExpect(jsonPath("$.agentMessage.autoPlay").value(true))
+                .andExpect(jsonPath("$.pronunciationScore").value(nullValue()))
                 .andExpect(jsonPath("$.session.currentTurn").value(1));
     }
 

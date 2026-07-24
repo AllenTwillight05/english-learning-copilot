@@ -13,6 +13,7 @@ public record SpeakingSessionResponse(
         Instant completedAt,
         int currentTurn,
         int targetTurns,
+        String selectedTopic,
         List<SpeakingMessageResponse> messages
 ) {
 
@@ -26,6 +27,7 @@ public record SpeakingSessionResponse(
                 session.getCompletedAt(),
                 session.getCurrentTurn(),
                 session.getTargetTurns(),
+                session.getSelectedTopic(),
                 messages
         );
     }

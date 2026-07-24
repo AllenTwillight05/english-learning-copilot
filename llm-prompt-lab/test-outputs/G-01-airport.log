@@ -1,0 +1,22 @@
+=== G-01-airport: Airport Check-in (A2-B1) ===
+Opening: Good morning. May I see your passport and booking reference, please?
+
+[normal check-in]
+  IN:  Hi, I'd like to check in for my flight to Tokyo.
+  OUT: Good morning. May I see your passport and booking reference, please?
+
+[short answer]
+  IN:  Window.
+  OUT: A window seat, great choice. Do you have any bags to check in today?
+
+[chinese intent]
+  IN:  我想托运一个行李。
+  OUT: 可以这样说："I have one suitcase to check." 这句话用来告诉工作人员你有行李需要托运。Do you have any carry-on bags as well?
+
+[off-topic]
+  IN:  Can you recommend a good restaurant nearby?
+  OUT: Let's focus on the airport check-in practice for now. Do you have your passport and booking reference ready?
+
+[grammar error]
+  IN:  I have a reservation name John.
+  OUT: Thank you, John. Could I also see your passport and booking reference number, please?

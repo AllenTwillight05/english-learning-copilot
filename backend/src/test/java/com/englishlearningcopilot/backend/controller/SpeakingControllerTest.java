@@ -71,7 +71,8 @@ class SpeakingControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                  "scenarioId": "business-opening"
+                                  "scenarioId": "business-opening",
+                                  "selectedTopic": "Hometown"
                                 }
                                 """))
                 .andExpect(status().isCreated())
@@ -82,6 +83,7 @@ class SpeakingControllerTest {
                 ArgumentCaptor.forClass(CreateSpeakingSessionRequest.class);
         verify(speakingService).createSession(eq("learner"), captor.capture());
         org.assertj.core.api.Assertions.assertThat(captor.getValue().scenarioId()).isEqualTo("business-opening");
+        org.assertj.core.api.Assertions.assertThat(captor.getValue().selectedTopic()).isEqualTo("Hometown");
     }
 
     @Test
@@ -183,11 +185,25 @@ class SpeakingControllerTest {
                 null,
                 0,
                 3,
+                "Hometown",
                 messages
         );
     }
 
     private static SpeakingMessageResponse message(Long id, String sender, String content) {
-        return new SpeakingMessageResponse(id, sender, content, null, content, null, null, null, 1, null);
+        return new SpeakingMessageResponse(
+                id,
+                sender,
+                content,
+                "AGENT".equals(sender) ? content : null,
+                null,
+                "AGENT".equals(sender),
+                content,
+                null,
+                null,
+                null,
+                1,
+                null
+        );
     }
 }

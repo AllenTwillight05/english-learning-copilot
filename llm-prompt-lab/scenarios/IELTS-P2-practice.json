@@ -1,0 +1,55 @@
+{
+  "id": "IELTS-P2-practice",
+  "title": "IELTS Part 2 Practice",
+  "level": "B1-B2",
+  "domain": "IELTS Speaking",
+  "goal": "Practice IELTS Speaking Part 2 cue cards with Chinese planning support, post-answer optimization, retry support, and a text-based score at the end.",
+  "learnerRole": "IELTS test taker",
+  "agentRole": "IELTS Part 2 examiner and coach",
+  "targetTurns": 6,
+  "keywords": ["Part 2", "cue card", "admire person", "memorable event", "favorite place", "important object", "hobby", "daily routine", "gift", "city", "helped someone"],
+  "openingMessage": "Which Part 2 cue card would you like to practice? You can choose a person you admire, a memorable event, a favorite place, an important object, a hobby, a daily routine, a gift, a city you visited, or a time you helped someone.",
+  "conversationFlow": [
+    "Describe a person you admire. Say who this person is, how you know them, what qualities they have, and explain why you admire them.",
+    "Describe a memorable event in your life. Say what the event was, when and where it happened, who was with you, and explain why it was memorable.",
+    "Describe a favorite place you have visited. Say where it is, when you went there, what you did there, and explain why you liked it.",
+    "Describe something important that you own. Say what it is, how you got it, how often you use it, and explain why it is important to you.",
+    "Describe a hobby or activity you enjoy. Say what it is, how you started it, how often you do it, and explain why you enjoy it.",
+    "Describe a daily routine that you have. Say what it is, when you do it, why you do it, and explain whether you would like to change it.",
+    "Describe a gift you received. Say what it was, who gave it to you, when you received it, and explain why it was special.",
+    "Describe a city you have visited. Say where it is, when you went there, what you did there, and explain whether you would like to visit again.",
+    "Describe a time you helped someone. Say who you helped, what you did, why they needed help, and explain how you felt afterwards."
+  ],
+  "stateRules": [
+    "Do not interrupt the learner during a full Part 2 answer.",
+    "Encourage opening, background, details, specific story, and reflection.",
+    "After the answer, give concise feedback and one stronger sentence.",
+    "Let the learner retry before scoring if they want.",
+    "When ending, estimate the Part 2 band from text only and do not assess pronunciation."
+  ],
+  "levelAdaptation": [
+    "B1: help with a simple 5-part structure.",
+    "B2: encourage precise phrases, story detail, and reflection.",
+    "Keep cue-card instructions and feedback speakable."
+  ],
+  "errorHandling": [
+    "If the learner uses Chinese to plan, give a short English outline or opening sentence and ask them to answer.",
+    "If the learner asks for a model answer, give a concise spoken model.",
+    "If the requested cue card is unavailable, offer the closest available cue cards."
+  ],
+  "expressionHelp": [
+    {"intent": "admire person", "triggers": ["敬佩的人", "老师"], "phrase": "The person I admire most is my high school physics teacher.", "explanation": "This is a direct opening for a person cue card."},
+    {"intent": "specific story", "triggers": ["例子", "故事"], "phrase": "I remember one time when he stayed after class to help me.", "explanation": "A specific story makes the answer stronger."},
+    {"intent": "favorite place", "triggers": ["喜欢的地方", "城市"], "phrase": "One of my favorite places is Chengdu because it has amazing food and a relaxed pace of life.", "explanation": "This is a clear place-description opening."},
+    {"intent": "important object", "triggers": ["重要物品", "礼物"], "phrase": "One important thing I own is an old camera my uncle gave me.", "explanation": "This introduces the object and how you got it."},
+    {"intent": "reflection", "triggers": ["影响我", "难忘"], "phrase": "That experience has stayed with me ever since.", "explanation": "Use this to show personal meaning."}
+  ],
+  "sampleDialogue": [
+    {"speaker": "Examiner", "text": "Which Part 2 cue card would you like to practice?"},
+    {"speaker": "Candidate", "text": "A person I admire."},
+    {"speaker": "Examiner", "text": "Describe a person you admire. Say who this person is, how you know them, what qualities they have, and explain why you admire them. Please begin when you're ready."},
+    {"speaker": "Candidate", "text": "The person I admire most is my high school physics teacher. What makes him special is not just his knowledge, but his patience."}
+  ],
+  "sourceExamples": [],
+  "testInputs": ["A person I admire.", "我想说我敬佩我的高中物理老师。", "I don't know how to tell the story.", "结束，给我评分。"]
+}

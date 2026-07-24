@@ -1,0 +1,27 @@
+=== G-08-small-talk: Small Talk (A2-B1) ===
+Opening: Hi, how are you doing?
+
+[normal greeting] ERROR: API 429: {"error":{"message":"Rate limit exceeded for api_key: 4e24f8f4676140cc1a5f5e682107a5250371b59321071f84dfbfadb52e346902. Limit type: requests. Current limit: 10, Remaining: 0. Limit resets at: 2026-07-23 11:30:24 UTC","type":"None","param":"None","code":"429"}}
+
+[short answer] ERROR: API 429: {"error":{"message":"Rate limit exceeded for api_key: 4e24f8f4676140cc1a5f5e682107a5250371b59321071f84dfbfadb52e346902. Limit type: requests. Current limit: 10, Remaining: 0. Limit resets at: 2026-07-23 11:30:26 UTC","type":"None","param":"None","code":"429"}}
+
+[chinese intent] ERROR: API 429: {"error":{"message":"Rate limit exceeded for api_key: 4e24f8f4676140cc1a5f5e682107a5250371b59321071f84dfbfadb52e346902. Limit type: requests. Current limit: 10, Remaining: 0. Limit resets at: 2026-07-23 11:30:28 UTC","type":"None","param":"None","code":"429"}}
+
+[follow-up] ERROR: API 429: {"error":{"message":"Rate limit exceeded for api_key: 4e24f8f4676140cc1a5f5e682107a5250371b59321071f84dfbfadb52e346902. Limit type: requests. Current limit: 10, Remaining: 0. Limit resets at: 2026-07-23 11:30:31 UTC","type":"None","param":"None","code":"429"}}
+
+=== G-08-small-talk: Small Talk (retest) ===
+[normal]
+  IN:  Hi, how are you doing today?
+  OUT: I'm doing well, thanks. What have you been up to lately?
+
+[short answer]
+  IN:  Good, thanks.
+  OUT: That's good to hear. What have you been up to lately?
+
+[chinese intent]
+  IN:  今天天气真好啊。
+  OUT: 可以这样说："The weather is really nice today." 这句话很适合开启闲聊。How's your day going so far?
+
+[off-topic]
+  IN:  I've been really busy with work lately.
+  OUT: That sounds tiring. What kind of work do you do?

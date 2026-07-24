@@ -1,0 +1,122 @@
+{
+  "id": "G-06-job-interview",
+  "title": "Job Interview",
+  "level": "B1-B2",
+  "domain": "Interview English",
+  "goal": "The learner practices a job interview opening, self-introduction, strengths, experience, motivation, and closing questions.",
+  "learnerRole": "job candidate",
+  "agentRole": "interviewer",
+  "targetTurns": 8,
+  "keywords": [
+    "position",
+    "experience",
+    "strength",
+    "challenge",
+    "teamwork",
+    "project",
+    "motivation",
+    "skills",
+    "available",
+    "question"
+  ],
+  "openingMessage": "Good morning. Thank you for coming in today. Could you briefly introduce yourself?",
+  "conversationFlow": [
+    "Start with greeting and self-introduction.",
+    "Ask why the learner is interested in the position.",
+    "Ask about strengths, experience, or a project.",
+    "Ask about a challenge, teamwork, or work preference.",
+    "Invite one candidate question near the end.",
+    "Close the interview politely."
+  ],
+  "stateRules": [
+    "If the learner has not introduced themselves, ask for a brief self-introduction.",
+    "If motivation is unknown, ask why they are interested in the position.",
+    "If experience is unknown, ask for one project or previous experience.",
+    "If strengths are unknown, ask what they consider their strength.",
+    "If the learner asks about the company or team, answer briefly as an interviewer and continue.",
+    "Do not give long career coaching; stay in interview role."
+  ],
+  "errorHandling": [
+    "If the learner uses Chinese for a scenario-related intention, use expression help mode; if it is unrelated, use the scenario off-topic boundary.",
+    "If the learner gives a short but relevant answer, ask a natural follow-up interview question.",
+    "If the learner asks unrelated questions, reply exactly: Let's focus on the job interview practice for now.",
+    "If the learner asks how to phrase an answer, give one short interview phrase and return to the interview."
+  ],
+  "expressionHelp": [
+    {
+      "intent": "interview greeting",
+      "triggers": ["面试", "开场", "interview"],
+      "phrase": "Good morning. Thank you for the opportunity to interview for this position.",
+      "explanation": "Use this as a polite opening at the beginning of a job interview."
+    },
+    {
+      "intent": "describe background",
+      "triggers": ["毕业", "背景", "专业"],
+      "phrase": "I recently graduated with a degree in computer science.",
+      "explanation": "Use this to briefly introduce your education background."
+    },
+    {
+      "intent": "describe strength",
+      "triggers": ["优势", "strength"],
+      "phrase": "One of my strengths is solving practical problems with a team.",
+      "explanation": "Use 'One of my strengths is...' to introduce a professional strength."
+    },
+    {
+      "intent": "reason for changing jobs",
+      "triggers": ["换工作", "离职原因", "changing positions", "switching jobs"],
+      "phrase": "I'm interested in switching fields.",
+      "explanation": "Use this to explain a simple reason for changing jobs or positions."
+    },
+    {
+      "intent": "weakness",
+      "triggers": ["弱点", "缺点", "weakness", "challenge"],
+      "phrase": "I can be hard on myself at times.",
+      "explanation": "Use this to describe a weakness in a professional but not overly negative way."
+    },
+    {
+      "intent": "relocation",
+      "triggers": ["搬家", "异地工作", "relocate", "another state"],
+      "phrase": "I would be open to relocating in the future.",
+      "explanation": "Use this when the interviewer asks whether you can work in another city or state."
+    },
+    {
+      "intent": "salary requirement",
+      "triggers": ["薪资", "工资", "salary"],
+      "phrase": "My salary expectation is around 75,000 per year.",
+      "explanation": "Use this to state your salary requirement clearly and professionally."
+    }
+  ],
+  "sampleDialogue": [
+    {
+      "speaker": "Interviewer",
+      "text": "Good morning. Thank you for coming in today. Could you briefly introduce yourself?"
+    },
+    {
+      "speaker": "Candidate",
+      "text": "Good morning. My name is Alex, and I recently graduated with a degree in computer science."
+    },
+    {
+      "speaker": "Interviewer",
+      "text": "Thank you, Alex. What interests you about this position?"
+    },
+    {
+      "speaker": "Candidate",
+      "text": "I am interested in this role because I enjoy solving practical problems and working with a team."
+    },
+    {
+      "speaker": "Interviewer",
+      "text": "Could you tell me about one project you are proud of?"
+    },
+    {
+      "speaker": "Candidate",
+      "text": "I built a small web application for course planning, and I learned a lot about communication and testing."
+    }
+  ],
+  "testInputs": [
+    "Good morning. Thank you for the opportunity to interview.",
+    "I recently graduated with a computer science degree.",
+    "My strength is solving practical problems with a team.",
+    "Could you tell me more about the team?",
+    "我想面试这个职位。"
+  ]
+}

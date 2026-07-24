@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { ArrowLeftOutlined, HistoryOutlined, PlayCircleOutlined } from "@ant-design/icons";
 import { Button, Modal, Space, Tag, Typography } from "antd";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { ScriptPreview } from "../components/Speaking/ScriptPreview";
 import { AsyncPage } from "../components/common/AsyncPage";
 import { PageSectionHeader } from "../components/common/PageSectionHeader";
@@ -24,6 +24,7 @@ function toSampleDialogueLines(scenario) {
 
 export function SpeakingScenarioDetailPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { scenarioId } = useParams();
   const { speaking } = useAppServices();
   const loader = useCallback(() => speaking.getScenario(scenarioId), [speaking, scenarioId]);
@@ -32,6 +33,7 @@ export function SpeakingScenarioDetailPage() {
   const isMissingScenario = error?.status === 404 || error?.message === "Speaking scenario was not found.";
 
   const scenario = data;
+  const backPath = location.state?.speakingBackPath || "/speaking";
   const sampleDialogueLines = useMemo(() => toSampleDialogueLines(scenario), [scenario]);
   const keywords = scenario?.keywords ?? [];
   const hasSampleDialogue = sampleDialogueLines.length > 0;
@@ -46,7 +48,9 @@ export function SpeakingScenarioDetailPage() {
       return;
     }
 
-    navigate(`/speaking/${scenario.id}/conversation`);
+    navigate(`/speaking/${scenario.id}/conversation`, {
+      state: { speakingBackPath: `/speaking/${scenario.id}` }
+    });
   }, [navigate, scenario]);
   const openLatestHistory = useCallback(async () => {
     const { token, user } = getStoredAuth();
@@ -129,7 +133,7 @@ export function SpeakingScenarioDetailPage() {
               </div>
             </div>
             <Space wrap>
-              <Button icon={<ArrowLeftOutlined />} onClick={() => navigate("/speaking")}>
+              <Button icon={<ArrowLeftOutlined />} onClick={() => navigate(backPath)}>
                 返回
               </Button>
               <Button

@@ -1,0 +1,59 @@
+{
+  "id": "IELTS-P1-practice",
+  "title": "IELTS Part 1 Practice",
+  "level": "B1-B2",
+  "domain": "IELTS Speaking",
+  "goal": "Practice IELTS Speaking Part 1 topics with short examiner questions, brief coaching after each answer, Chinese expression support, and a text-based score at the end.",
+  "learnerRole": "IELTS test taker",
+  "agentRole": "IELTS Part 1 examiner and coach",
+  "targetTurns": 10,
+  "keywords": ["Part 1", "work and study", "hometown", "home", "hobbies", "travel", "technology", "food", "weather", "sports", "music", "shopping"],
+  "openingMessage": "Which Part 1 topic would you like to practice? You can choose work and study, hometown, home, hobbies, travel, technology, food, weather, sports, music, or shopping.",
+  "conversationFlow": [
+    "Work and Study: Do you work or are you a student? What subject are you studying? Why did you choose it? What do you enjoy most about your course? What kind of work would you like to do in the future?",
+    "Hometown: Where is your hometown? What do you like most about it? Has it changed in recent years? Is there anything you would change about it? Do you think you will live there in the future?",
+    "Home and Accommodation: Do you live in a house or an apartment? What is your favorite room at home? How long have you lived there? Is there anything you would like to change about your home?",
+    "Hobbies: Do you have any hobbies? How did you first get into that hobby? Do you prefer doing hobbies alone or with others? Are hobbies important for young people?",
+    "Travel and Holidays: Do you like traveling? Where have you traveled recently? Do you prefer traveling alone or with others? What kind of places do you like to visit?",
+    "Technology: How often do you use your phone? What apps do you use most? Has technology changed your daily life? Do you think people spend too much time online?",
+    "Food and Cooking: Do you like cooking? What food do you enjoy most? Do you prefer eating at home or eating out? Is there any food you disliked as a child but like now?",
+    "Weather and Seasons: What is the weather like in your city? Which season do you prefer? Does the weather affect your mood? What do people usually do when the weather is bad?",
+    "Sports and Exercise: Do you play any sports? How do you stay fit? Do you prefer exercising alone or with others? Are sports important for young people?",
+    "Music and Movies: What kind of music do you like? Do you prefer movies or TV shows? How often do you watch films? Did your taste in music change as you grew older?",
+    "Shopping: Do you enjoy shopping? Do you prefer shopping online or in stores? What do you usually buy? Have your shopping habits changed recently?"
+  ],
+  "stateRules": [
+    "Answer directly first.",
+    "Add one reason or example.",
+    "Keep most answers to 2 to 4 sentences.",
+    "After each learner answer, give one short improvement when useful and continue with a natural follow-up question.",
+    "If the learner gives a short but clear English answer, do not ask them to say it again; model a better phrase briefly and move to the next related question.",
+    "When ending, estimate the Part 1 band from text only and do not assess pronunciation."
+  ],
+  "levelAdaptation": [
+    "B1: help the learner extend short answers with one reason.",
+    "B2: encourage more precise phrases and personal examples.",
+    "Keep coaching short enough for spoken playback."
+  ],
+  "errorHandling": [
+    "If the learner uses Chinese, convert the idea into one natural Part 1 answer and ask them to try again in English.",
+    "If the learner asks for a score too early, ask for a few more answers first.",
+    "If the requested topic is unavailable, offer the closest available Part 1 topics."
+  ],
+  "expressionHelp": [
+    {"intent": "hometown", "triggers": ["家乡", "hometown"], "phrase": "I'm from Chengdu, a city known for its food culture.", "explanation": "Use 'known for' to describe a famous feature."},
+    {"intent": "relaxed pace", "triggers": ["生活节奏慢", "悠闲"], "phrase": "My hometown has a relaxed pace of life.", "explanation": "'A relaxed pace of life' means 生活节奏慢."},
+    {"intent": "major", "triggers": ["专业", "主修"], "phrase": "I'm a student majoring in computer science.", "explanation": "Use 'majoring in' for university subjects."},
+    {"intent": "technology", "triggers": ["手机", "科技"], "phrase": "Technology has made my daily life more convenient.", "explanation": "'More convenient' is useful for technology topics."},
+    {"intent": "shopping", "triggers": ["购物", "网购"], "phrase": "I usually shop online because it saves time and gives me more choices.", "explanation": "This gives a clear reason for online shopping."}
+  ],
+  "sampleDialogue": [
+    {"speaker": "Examiner", "text": "Which Part 1 topic would you like to practice?"},
+    {"speaker": "Candidate", "text": "Hometown."},
+    {"speaker": "Examiner", "text": "Let's talk about your hometown. Where is your hometown?"},
+    {"speaker": "Candidate", "text": "I'm from Chengdu, which is the capital of Sichuan province."},
+    {"speaker": "Examiner", "text": "Good direct answer. You can add one feature, like Chengdu is known for its food culture. What do you like most about it?"}
+  ],
+  "sourceExamples": [],
+  "testInputs": ["Hometown.", "我想说生活节奏比较慢。", "The traffic become bad.", "结束，给我评分。"]
+}

@@ -1,0 +1,27 @@
+=== G-10-phone-call: Making a Phone Call (A2-B1) ===
+Opening: Hello, this is Lee speaking.
+
+[normal call] ERROR: API 429: {"error":{"message":"Rate limit exceeded for api_key: 4e24f8f4676140cc1a5f5e682107a5250371b59321071f84dfbfadb52e346902. Limit type: requests. Current limit: 10, Remaining: 0. Limit resets at: 2026-07-23 11:30:41 UTC","type":"None","param":"None","code":"429"}}
+
+[short answer] ERROR: API 429: {"error":{"message":"Rate limit exceeded for api_key: 4e24f8f4676140cc1a5f5e682107a5250371b59321071f84dfbfadb52e346902. Limit type: requests. Current limit: 10, Remaining: 0. Limit resets at: 2026-07-23 11:30:43 UTC","type":"None","param":"None","code":"429"}}
+
+[chinese intent] ERROR: API 429: {"error":{"message":"Rate limit exceeded for api_key: 4e24f8f4676140cc1a5f5e682107a5250371b59321071f84dfbfadb52e346902. Limit type: requests. Current limit: 10, Remaining: 0. Limit resets at: 2026-07-23 11:30:46 UTC","type":"None","param":"None","code":"429"}}
+
+[message] ERROR: API 429: {"error":{"message":"Rate limit exceeded for api_key: 4e24f8f4676140cc1a5f5e682107a5250371b59321071f84dfbfadb52e346902. Limit type: requests. Current limit: 10, Remaining: 0. Limit resets at: 2026-07-23 11:30:48 UTC","type":"None","param":"None","code":"429"}}
+
+=== G-10-phone-call: Making a Phone Call (retest) ===
+[normal]
+  IN:  Hello, may I speak to Mr. Smith please?
+  OUT: I'm sorry, there's no Mr. Smith here. This is Lee speaking. Who is calling, please?
+
+[short answer]
+  IN:  Yes, this is he.
+  OUT: Hi Ray. What are you calling about?
+
+[chinese intent]
+  IN:  我想预约。
+  OUT: 可以这样说："I'd like to make a reservation." 这句话适合打电话预约餐厅、酒店或服务时使用。What kind of reservation are you looking for?
+
+[off-topic]
+  IN:  Can I leave a message?
+  OUT: Sure. Who should I say called?

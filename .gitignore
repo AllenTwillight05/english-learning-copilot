@@ -8,6 +8,7 @@ backend/uploads/speaking/
 .DS_Store
 .env
 frontend/.env
+backend/.env.local
 .env.local
 frontend/.env.local
 .env.*.local

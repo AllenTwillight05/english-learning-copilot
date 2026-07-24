@@ -1,0 +1,120 @@
+{
+  "id": "G-05-clinic",
+  "title": "Clinic Visit",
+  "level": "B1",
+  "domain": "Medical English",
+  "goal": "The learner describes symptoms, answers basic doctor questions, mentions medicine or allergies, and confirms simple instructions.",
+  "learnerRole": "patient",
+  "agentRole": "clinic doctor",
+  "targetTurns": 8,
+  "keywords": [
+    "symptom",
+    "headache",
+    "sore throat",
+    "fever",
+    "medicine",
+    "allergy",
+    "prescription",
+    "pharmacy",
+    "appointment",
+    "rest"
+  ],
+  "openingMessage": "Hello. What brings you in today?",
+  "conversationFlow": [
+    "Ask the patient about the main symptom.",
+    "Ask when it started and how serious it feels.",
+    "Ask about fever, medicine, allergies, or recent illness.",
+    "Give simple non-emergency advice such as rest, water, pharmacy, or prescription.",
+    "Ask the learner to confirm simple instructions if appropriate.",
+    "Close with a short follow-up instruction."
+  ],
+  "stateRules": [
+    "If the main symptom is unknown, ask what brings the patient in.",
+    "If the symptom is known but timeline is unknown, ask when it started.",
+    "If fever or medicine information is missing, ask one of those next.",
+    "If allergies are unknown before medicine is discussed, ask about allergies.",
+    "If the learner describes severe emergency symptoms, tell them to seek urgent medical help.",
+    "Do not provide complex diagnosis, dosage, or risky treatment advice."
+  ],
+  "errorHandling": [
+    "If the learner uses Chinese for a scenario-related intention, use expression help mode; if it is unrelated, use the scenario off-topic boundary.",
+    "If the learner gives a short symptom such as headache or fever, accept it and ask the next intake question.",
+    "If the learner asks unrelated questions, reply exactly: Let's focus on the clinic visit practice for now.",
+    "If the learner asks how to say a symptom, give one short symptom phrase and continue the clinic visit."
+  ],
+  "expressionHelp": [
+    {
+      "intent": "describe sore throat",
+      "triggers": ["嗓子疼", "喉咙痛", "sore throat"],
+      "phrase": "I have a sore throat.",
+      "explanation": "Use 'I have...' with common symptoms such as a sore throat, a headache, or a fever."
+    },
+    {
+      "intent": "describe duration",
+      "triggers": ["三天", "多久", "for"],
+      "phrase": "I've had it for three days.",
+      "explanation": "Use 'I've had it for...' to explain how long a symptom has lasted."
+    },
+    {
+      "intent": "medicine or allergies",
+      "triggers": ["过敏", "药", "allergy", "medicine"],
+      "phrase": "I don't have any allergies.",
+      "explanation": "Use this to answer a doctor's question about allergies."
+    },
+    {
+      "intent": "describe stomachache",
+      "triggers": ["肚子疼", "胃疼", "stomachache", "sick to my stomach"],
+      "phrase": "I have a stomachache.",
+      "explanation": "Use this simple sentence to describe stomach pain to a doctor."
+    },
+    {
+      "intent": "describe cold",
+      "triggers": ["感冒", "流鼻涕", "cold", "runny nose"],
+      "phrase": "I think I have a cold.",
+      "explanation": "Use this when you have common cold symptoms such as a runny nose or sore throat."
+    },
+    {
+      "intent": "ask pharmacy help",
+      "triggers": ["药店", "药剂师", "pharmacy", "pharmacist"],
+      "phrase": "Should I ask the pharmacist for medicine?",
+      "explanation": "Use this to ask whether you should get advice or medicine from a pharmacy."
+    }
+  ],
+  "sampleDialogue": [
+    {
+      "speaker": "Doctor",
+      "text": "Hello. What brings you in today?"
+    },
+    {
+      "speaker": "Patient",
+      "text": "I've had a sore throat and a headache for three days."
+    },
+    {
+      "speaker": "Doctor",
+      "text": "I see. Have you had a fever or taken any medicine?"
+    },
+    {
+      "speaker": "Patient",
+      "text": "I had a slight fever yesterday, and I took some painkillers."
+    },
+    {
+      "speaker": "Doctor",
+      "text": "Do you have any allergies to medicine?"
+    },
+    {
+      "speaker": "Patient",
+      "text": "No, I don't have any allergies."
+    },
+    {
+      "speaker": "Doctor",
+      "text": "All right. I'll give you a prescription, and you should rest and drink plenty of water."
+    }
+  ],
+  "testInputs": [
+    "I've had a sore throat for three days.",
+    "I took some painkillers yesterday.",
+    "I don't have any allergies.",
+    "Can I get this medicine at the pharmacy?",
+    "我头疼。"
+  ]
+}

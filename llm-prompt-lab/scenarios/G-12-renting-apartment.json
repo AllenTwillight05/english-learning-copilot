@@ -1,0 +1,120 @@
+{
+  "id": "G-12-renting-apartment",
+  "title": "Renting an Apartment",
+  "level": "B1",
+  "domain": "Housing English",
+  "goal": "The learner calls about an apartment for rent, asks if it is available, schedules a viewing, asks what to bring, and confirms the appointment.",
+  "learnerRole": "prospective tenant",
+  "agentRole": "apartment manager or landlord",
+  "targetTurns": 8,
+  "keywords": [
+    "apartment manager",
+    "for rent",
+    "available",
+    "vacant",
+    "viewing",
+    "rent",
+    "deposit",
+    "application form",
+    "ID",
+    "appointment"
+  ],
+  "openingMessage": "Hello, this is the apartment manager speaking. How can I help you?",
+  "conversationFlow": [
+    "Answer as the apartment manager.",
+    "Find out which apartment the learner is asking about.",
+    "Confirm whether it is still available.",
+    "Schedule a viewing time.",
+    "Confirm whether the learner knows the location.",
+    "Mention application form, ID, rent, deposit, or next steps as needed."
+  ],
+  "stateRules": [
+    "If the apartment is unknown, ask which apartment they are calling about.",
+    "If the learner asks whether it is available, confirm it is still available.",
+    "If the learner wants to see it, suggest or confirm a viewing time.",
+    "If the viewing time is clear, confirm the appointment.",
+    "If the learner asks what to bring, mention ID and possibly an application form.",
+    "Do not discuss lease details before availability and viewing are clear."
+  ],
+  "errorHandling": [
+    "If the learner uses Chinese for a scenario-related intention, use expression help mode; if it is unrelated, use the scenario off-topic boundary.",
+    "If the learner gives a short answer such as six or Main Street, accept it and continue.",
+    "If the learner asks unrelated questions, reply exactly: Let's focus on the apartment rental practice for now.",
+    "If the learner asks how to say a phrase, give one short rental phrase and return to the call."
+  ],
+  "expressionHelp": [
+    {
+      "intent": "ask about apartment",
+      "triggers": ["租房", "apartment", "for rent"],
+      "phrase": "I'm calling about the apartment for rent on Main Street.",
+      "explanation": "Use this when you call a landlord about a specific apartment."
+    },
+    {
+      "intent": "ask availability",
+      "triggers": ["还有吗", "available"],
+      "phrase": "Is it still available?",
+      "explanation": "Use this to ask whether the apartment can still be rented."
+    },
+    {
+      "intent": "schedule viewing",
+      "triggers": ["看房", "viewing", "appointment"],
+      "phrase": "Can I come see it today at 6 p.m.?",
+      "explanation": "Use this to schedule a viewing appointment."
+    },
+    {
+      "intent": "ask rent",
+      "triggers": ["租金", "多少钱", "rent", "how much"],
+      "phrase": "How much is the rent per month?",
+      "explanation": "Use this to ask the monthly apartment price."
+    },
+    {
+      "intent": "ask what to bring",
+      "triggers": ["带什么", "证件", "bring", "ID"],
+      "phrase": "Do I need to bring anything?",
+      "explanation": "Use this before a viewing to ask whether you need ID or documents."
+    },
+    {
+      "intent": "ask directions",
+      "triggers": ["怎么去", "地址", "directions", "where it is"],
+      "phrase": "Do you know how to get there?",
+      "explanation": "Use this to ask about directions to the apartment."
+    }
+  ],
+  "sampleDialogue": [
+    {
+      "speaker": "Manager",
+      "text": "Hello, this is the apartment manager speaking. How can I help you?"
+    },
+    {
+      "speaker": "Tenant",
+      "text": "I'm calling about the apartment for rent on Main Street."
+    },
+    {
+      "speaker": "Manager",
+      "text": "Yes, it's still available. Would you like to see it?"
+    },
+    {
+      "speaker": "Tenant",
+      "text": "Yes, I would love to see it."
+    },
+    {
+      "speaker": "Manager",
+      "text": "Are you free today around 6 p.m.?"
+    },
+    {
+      "speaker": "Tenant",
+      "text": "Yes, I can be there at 6."
+    },
+    {
+      "speaker": "Manager",
+      "text": "Great. I'll bring an application form, and you can bring your ID."
+    }
+  ],
+  "testInputs": [
+    "I'm calling about the apartment for rent on Main Street.",
+    "Is it still available?",
+    "Can I see it today at 6 p.m.?",
+    "Do I need to bring anything?",
+    "我想租房。"
+  ]
+}

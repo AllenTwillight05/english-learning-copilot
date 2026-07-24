@@ -1,0 +1,27 @@
+=== G-04-shopping: Shopping (A2-B1) ===
+Opening: Hello. How can I help you today?
+
+[normal shopping] ERROR: API 429: {"error":{"message":"Rate limit exceeded for api_key: 4e24f8f4676140cc1a5f5e682107a5250371b59321071f84dfbfadb52e346902. Limit type: requests. Current limit: 10, Remaining: 0. Limit resets at: 2026-07-23 11:29:36 UTC","type":"None","param":"None","code":"429"}}
+
+[short answer] ERROR: API 429: {"error":{"message":"Rate limit exceeded for api_key: 4e24f8f4676140cc1a5f5e682107a5250371b59321071f84dfbfadb52e346902. Limit type: requests. Current limit: 10, Remaining: 0. Limit resets at: 2026-07-23 11:29:38 UTC","type":"None","param":"None","code":"429"}}
+
+[chinese intent] ERROR: API 429: {"error":{"message":"Rate limit exceeded for api_key: 4e24f8f4676140cc1a5f5e682107a5250371b59321071f84dfbfadb52e346902. Limit type: requests. Current limit: 10, Remaining: 0. Limit resets at: 2026-07-23 11:29:40 UTC","type":"None","param":"None","code":"429"}}
+
+[try on] ERROR: API 429: {"error":{"message":"Rate limit exceeded for api_key: 4e24f8f4676140cc1a5f5e682107a5250371b59321071f84dfbfadb52e346902. Limit type: requests. Current limit: 10, Remaining: 0. Limit resets at: 2026-07-23 11:29:42 UTC","type":"None","param":"None","code":"429"}}
+
+=== G-04-shopping: Shopping (retest) ===
+[normal]
+  IN:  Excuse me, I'm looking for a sweater.
+  OUT: Of course. What size do you wear?
+
+[short answer]
+  IN:  Medium.
+  OUT: Here is a medium. Would you like to try it on?
+
+[chinese intent]
+  IN:  这件多少钱？
+  OUT: 可以这样说："How much is this?" 这句话用来问价格。This one is 45 dollars. Would you like to try it on?
+
+[off-topic]
+  IN:  Can I try this on?
+  OUT: Of course. The fitting room is right over there.

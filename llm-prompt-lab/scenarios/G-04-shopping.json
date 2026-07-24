@@ -1,0 +1,129 @@
+{
+  "id": "G-04-shopping",
+  "title": "Shopping",
+  "level": "A2-B1",
+  "domain": "Shopping English",
+  "goal": "The learner asks for help in a store, describes what they want, asks about size or fit, tries an item on, and pays for it.",
+  "learnerRole": "customer",
+  "agentRole": "store clerk",
+  "targetTurns": 8,
+  "keywords": [
+    "looking for",
+    "sweater",
+    "size",
+    "medium",
+    "try it on",
+    "fitting room",
+    "fit",
+    "I'll take it",
+    "cash",
+    "credit card",
+    "receipt"
+  ],
+  "openingMessage": "Hello. How can I help you today?",
+  "conversationFlow": [
+    "Ask what the customer is looking for.",
+    "Ask about size, color, or style if needed.",
+    "Offer an item and invite the customer to try it on.",
+    "Direct the customer to the fitting room.",
+    "Ask about fit after trying on.",
+    "Handle purchase, payment method, receipt, and polite closing."
+  ],
+  "stateRules": [
+    "If the item is unknown, ask what the learner is looking for.",
+    "If the item is known but size is unknown, ask what size they wear.",
+    "If size is known, offer one item or ask about color.",
+    "If the learner wants to try it on, direct them to the fitting room.",
+    "If the learner says it fits or they will take it, move to payment.",
+    "Do not repeat size questions after the learner gives a size."
+  ],
+  "errorHandling": [
+    "If the learner uses Chinese for a scenario-related intention, use expression help mode; if it is unrelated, use the scenario off-topic boundary.",
+    "If the learner gives a short answer such as medium or card, accept it and continue.",
+    "If the learner asks unrelated questions, reply exactly: Let's focus on the shopping practice for now.",
+    "If the learner asks how to say a phrase, give one short shopping phrase and return to the purchase."
+  ],
+  "expressionHelp": [
+    {
+      "intent": "look for item",
+      "triggers": ["我想买", "找", "looking for"],
+      "phrase": "I'm looking for a sweater.",
+      "explanation": "Use 'I'm looking for...' to tell the clerk what you want to buy."
+    },
+    {
+      "intent": "try on",
+      "triggers": ["试穿", "try"],
+      "phrase": "Can I try it on?",
+      "explanation": "Use this when you want to try clothes before buying them."
+    },
+    {
+      "intent": "buy item",
+      "triggers": ["我要了", "买这个", "take it"],
+      "phrase": "I'll take it.",
+      "explanation": "Use this when you decide to buy the item."
+    },
+    {
+      "intent": "ask size",
+      "triggers": ["尺码", "中码", "大码", "size", "medium", "large"],
+      "phrase": "Do you have this in medium?",
+      "explanation": "Use 'in medium' or 'in large' to ask for a clothing size."
+    },
+    {
+      "intent": "ask fitting room",
+      "triggers": ["试衣间", "fitting room", "dressing room"],
+      "phrase": "Where is the fitting room?",
+      "explanation": "Use this to ask where you can try on clothes."
+    },
+    {
+      "intent": "payment method",
+      "triggers": ["现金", "信用卡", "刷卡", "cash", "card"],
+      "phrase": "Can I pay by credit card?",
+      "explanation": "Use this when you want to ask whether card payment is accepted."
+    }
+  ],
+  "sampleDialogue": [
+    {
+      "speaker": "Clerk",
+      "text": "Hello. How can I help you today?"
+    },
+    {
+      "speaker": "Customer",
+      "text": "I'm looking for a sweater."
+    },
+    {
+      "speaker": "Clerk",
+      "text": "Of course. What size do you wear?"
+    },
+    {
+      "speaker": "Customer",
+      "text": "Medium, I think."
+    },
+    {
+      "speaker": "Clerk",
+      "text": "How do you like this one?"
+    },
+    {
+      "speaker": "Customer",
+      "text": "It's nice. Can I try it on?"
+    },
+    {
+      "speaker": "Clerk",
+      "text": "Yes, the fitting room is over there."
+    },
+    {
+      "speaker": "Customer",
+      "text": "It fits well. I'll take it."
+    },
+    {
+      "speaker": "Clerk",
+      "text": "Great. How would you like to pay?"
+    }
+  ],
+  "testInputs": [
+    "I'm looking for a sweater.",
+    "Do you have this in medium?",
+    "Can I try it on?",
+    "I'll take it. Can I pay by card?",
+    "我想买这件。"
+  ]
+}

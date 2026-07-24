@@ -1,0 +1,18 @@
+=== G-06-job-interview: Job Interview (B1-B2) ===
+Opening: Good morning. Thank you for coming in today. Could you briefly introduce yourself?
+
+[normal interview]
+  IN:  Good morning, I'm here for my interview.
+  OUT: Good morning. Thank you for coming in. Could you please start by telling me a little about yourself?
+
+[short answer]
+  IN:  Marketing.
+  OUT: Thank you. Could you tell me why you are interested in a marketing position?
+
+[chinese intent]
+  IN:  我的优点是团队合作。
+  OUT: 可以这样说："One of my strengths is teamwork." 用 "One of my strengths is..." 开头，可以自然介绍自己的优点。Could you give me an example of how you worked well in a team?
+
+[strength question]
+  IN:  My greatest strength is problem-solving.
+  OUT: That sounds valuable. Could you give me one example of a problem you solved in a recent project?

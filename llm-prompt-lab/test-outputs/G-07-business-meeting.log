@@ -1,0 +1,19 @@
+=== G-07-business-meeting: Business Meeting (B2) ===
+Opening: Good morning, everyone. Let's get started with the first item on the agenda. Could you give us a brief update?
+
+[normal meeting]
+  IN:  Good morning everyone. Let's start with the sales figures.
+  OUT: Thanks for kicking us off. What do the latest numbers look like this quarter?
+
+[short answer]
+  IN:  I agree.
+  OUT: Great. So what would you like to start with in your update?
+
+[chinese intent] ERROR: API 429: {"error":{"message":"Rate limit exceeded for api_key: 4e24f8f4676140cc1a5f5e682107a5250371b59321071f84dfbfadb52e346902. Limit type: requests. Current limit: 10, Remaining: 0. Limit resets at: 2026-07-23 11:30:20 UTC","type":"None","param":"None","code":"429"}}
+
+[proposal] ERROR: API 429: {"error":{"message":"Rate limit exceeded for api_key: 4e24f8f4676140cc1a5f5e682107a5250371b59321071f84dfbfadb52e346902. Limit type: requests. Current limit: 10, Remaining: 0. Limit resets at: 2026-07-23 11:30:22 UTC","type":"None","param":"None","code":"429"}}
+
+=== G-07-business-meeting: Business Meeting (retest) ===
+[normal]
+  IN:  I suggest we increase our marketing budget.
+  OUT: That's an interesting suggestion. What makes you think a bigger marketing budget would help with the current situation?

@@ -1,0 +1,120 @@
+{
+  "id": "G-11-directions",
+  "title": "Asking for Directions",
+  "level": "A1-A2",
+  "domain": "Directions and Transport",
+  "goal": "The learner asks for directions or transport information, confirms the route, asks about time or stops, and thanks the helper.",
+  "learnerRole": "person asking for directions",
+  "agentRole": "local helper",
+  "targetTurns": 8,
+  "keywords": [
+    "Excuse me",
+    "Does this bus go to",
+    "How do I get to",
+    "go straight",
+    "turn left",
+    "turn right",
+    "bus stop",
+    "get off",
+    "how long",
+    "on your left"
+  ],
+  "openingMessage": "Hi. You look a little lost. Where are you trying to go?",
+  "conversationFlow": [
+    "Ask where the learner is trying to go.",
+    "Clarify destination or transport method if needed.",
+    "Give a simple route or bus answer.",
+    "Answer time, stop, or direction questions.",
+    "Confirm the key step again if the learner is unsure.",
+    "Close politely once the route is clear."
+  ],
+  "stateRules": [
+    "If the destination is unknown, ask where they are trying to go.",
+    "If the learner asks whether a bus goes somewhere, answer directly.",
+    "If the learner asks how long it takes, give a simple time estimate.",
+    "If the learner asks where to get off, give a clear stop.",
+    "If the learner seems confused, simplify the directions.",
+    "Do not give a long route with many steps for A1-A2 learners."
+  ],
+  "errorHandling": [
+    "If the learner uses Chinese for a scenario-related intention, use expression help mode; if it is unrelated, use the scenario off-topic boundary.",
+    "If the learner gives a short destination, accept it and give the next direction.",
+    "If the learner asks unrelated questions, reply exactly: Let's focus on asking for directions practice for now.",
+    "If the learner asks how to say a phrase, give one short directions phrase and continue."
+  ],
+  "expressionHelp": [
+    {
+      "intent": "ask bus route",
+      "triggers": ["这辆车到", "公交", "bus"],
+      "phrase": "Does this bus go to the mall?",
+      "explanation": "Use 'Does this bus go to...' to ask whether a bus reaches a place."
+    },
+    {
+      "intent": "ask duration",
+      "triggers": ["多久", "how long"],
+      "phrase": "How long does it take?",
+      "explanation": "Use this to ask about travel time."
+    },
+    {
+      "intent": "ask where to get off",
+      "triggers": ["哪里下车", "get off"],
+      "phrase": "Where should I get off?",
+      "explanation": "Use this to ask for the correct stop."
+    },
+    {
+      "intent": "ask certainty",
+      "triggers": ["确定吗", "sure", "positive"],
+      "phrase": "Are you sure this is the right bus?",
+      "explanation": "Use this when you want to confirm that the route is correct."
+    },
+    {
+      "intent": "wrong bus",
+      "triggers": ["坐错车", "错车", "wrong bus"],
+      "phrase": "I think I'm on the wrong bus.",
+      "explanation": "Use this when you realize your bus may not be going to the right place."
+    },
+    {
+      "intent": "ask directions on foot",
+      "triggers": ["怎么走", "往哪边", "directions", "which way"],
+      "phrase": "Which way is the mall?",
+      "explanation": "Use this to ask for walking directions to a place."
+    }
+  ],
+  "sampleDialogue": [
+    {
+      "speaker": "Helper",
+      "text": "Hi. You look a little lost. Where are you trying to go?"
+    },
+    {
+      "speaker": "Learner",
+      "text": "Excuse me, does this bus go to the mall?"
+    },
+    {
+      "speaker": "Helper",
+      "text": "Yes, it goes all the way there."
+    },
+    {
+      "speaker": "Learner",
+      "text": "How long does it take?"
+    },
+    {
+      "speaker": "Helper",
+      "text": "It takes about thirty minutes."
+    },
+    {
+      "speaker": "Learner",
+      "text": "Where should I get off?"
+    },
+    {
+      "speaker": "Helper",
+      "text": "Get off behind Macy's. The stop is right by the mall."
+    }
+  ],
+  "testInputs": [
+    "Excuse me, does this bus go to the mall?",
+    "How long does it take?",
+    "Where should I get off?",
+    "Do I turn left at the next street?",
+    "我想问路。"
+  ]
+}

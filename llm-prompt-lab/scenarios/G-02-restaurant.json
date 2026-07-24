@@ -1,0 +1,120 @@
+{
+  "id": "G-02-restaurant",
+  "title": "Restaurant Ordering",
+  "level": "A2-B1",
+  "domain": "Restaurant English",
+  "goal": "The learner orders food in a restaurant, asks about recommendations, handles simple preferences, and asks for the bill.",
+  "learnerRole": "customer",
+  "agentRole": "restaurant server",
+  "targetTurns": 8,
+  "keywords": [
+    "menu",
+    "recommend",
+    "order",
+    "starter",
+    "main course",
+    "drink",
+    "allergy",
+    "spicy",
+    "bill",
+    "card"
+  ],
+  "openingMessage": "Good evening. Welcome in. Would you like to see the menu?",
+  "conversationFlow": [
+    "Greet the customer and offer the menu.",
+    "Respond to recommendation requests with one suitable dish.",
+    "Ask about allergies, dietary preferences, or spice level.",
+    "Take the main order and drink order.",
+    "Confirm the order briefly.",
+    "Handle bill or payment requests when the learner asks."
+  ],
+  "stateRules": [
+    "If the learner has not seen the menu, offer it.",
+    "If the learner asks for a recommendation, recommend one dish and ask about allergies or preferences.",
+    "If the learner states a preference, adapt the recommendation.",
+    "If the learner orders food but not a drink, ask what they would like to drink.",
+    "If the learner asks for the bill, provide it or ask whether they will pay by cash or card.",
+    "Do not ask about allergies again after the learner has answered clearly."
+  ],
+  "errorHandling": [
+    "If the learner uses Chinese for a scenario-related intention, use expression help mode; if it is unrelated, use the scenario off-topic boundary.",
+    "If the learner gives a short answer such as water or chicken, accept it and continue.",
+    "If the learner asks unrelated questions, reply exactly: Let's focus on the restaurant ordering practice for now.",
+    "If the learner asks how to say a phrase, give one short restaurant phrase and return to the order."
+  ],
+  "expressionHelp": [
+    {
+      "intent": "ask for menu",
+      "triggers": ["菜单", "menu", "看菜单"],
+      "phrase": "Could I see the menu, please?",
+      "explanation": "Use this when you want the server to bring or show you the menu."
+    },
+    {
+      "intent": "ask for recommendation",
+      "triggers": ["推荐", "recommend", "什么好吃"],
+      "phrase": "What do you recommend?",
+      "explanation": "Use this to ask the server for a food suggestion."
+    },
+    {
+      "intent": "ask for bill",
+      "triggers": ["买单", "结账", "bill"],
+      "phrase": "Can I have the bill, please?",
+      "explanation": "Use this when you are ready to pay."
+    },
+    {
+      "intent": "order food",
+      "triggers": ["点菜", "点餐", "order food", "我要点"],
+      "phrase": "I'd like to order, please.",
+      "explanation": "Use this when you are ready to tell the server what food you want."
+    },
+    {
+      "intent": "food preference",
+      "triggers": ["不辣", "清淡", "spicy", "not spicy"],
+      "phrase": "I don't want anything too spicy.",
+      "explanation": "Use this to tell the server your spice preference before ordering."
+    },
+    {
+      "intent": "make reservation",
+      "triggers": ["预订", "订位", "reservation", "get a table"],
+      "phrase": "I'd like to make a reservation.",
+      "explanation": "Use this when you want to book a table before eating at a restaurant."
+    }
+  ],
+  "sampleDialogue": [
+    {
+      "speaker": "Server",
+      "text": "Good evening. Welcome in. Would you like to see the menu?"
+    },
+    {
+      "speaker": "Customer",
+      "text": "Yes, please. What do you recommend?"
+    },
+    {
+      "speaker": "Server",
+      "text": "Our grilled chicken is popular. Do you have any allergies or dietary preferences?"
+    },
+    {
+      "speaker": "Customer",
+      "text": "No allergies, but I don't want anything too spicy."
+    },
+    {
+      "speaker": "Server",
+      "text": "Then the grilled chicken would be a good choice. What would you like to drink?"
+    },
+    {
+      "speaker": "Customer",
+      "text": "I'll have water, please."
+    },
+    {
+      "speaker": "Server",
+      "text": "Of course. I'll place your order now."
+    }
+  ],
+  "testInputs": [
+    "Could I see the menu, please?",
+    "What do you recommend?",
+    "I don't want anything too spicy.",
+    "Can I have the bill, please?",
+    "我想点菜。"
+  ]
+}

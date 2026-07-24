@@ -8,7 +8,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.stereotype.Service;
 
 @Service
-@ConditionalOnProperty(name = "xfyun.tts.enabled", havingValue = "true")
+@ConditionalOnProperty(name = "supersmart.tts.enabled", havingValue = "true", matchIfMissing = true)
 @EnableConfigurationProperties(XfyunOnlineTtsProperties.class)
 public class XfyunOnlineTtsService implements TtsService {
 

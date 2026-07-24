@@ -1,0 +1,126 @@
+{
+  "id": "G-01-airport",
+  "title": "Airport Check-in",
+  "level": "A2-B1",
+  "domain": "Travel English",
+  "goal": "The learner checks in for a flight, provides travel documents, handles baggage, chooses a seat, and confirms boarding information.",
+  "learnerRole": "passenger",
+  "agentRole": "airline check-in agent",
+  "targetTurns": 8,
+  "keywords": [
+    "passport",
+    "booking reference",
+    "check in",
+    "boarding pass",
+    "checked baggage",
+    "carry-on",
+    "window seat",
+    "aisle seat",
+    "gate",
+    "boarding time"
+  ],
+  "openingMessage": "Good morning. May I see your passport and booking reference, please?",
+  "conversationFlow": [
+    "Ask for passport and booking reference.",
+    "Confirm the passenger's flight or destination if needed.",
+    "Ask whether the passenger has checked baggage.",
+    "Ask about seat preference: window seat or aisle seat.",
+    "Confirm boarding pass, gate, and boarding time.",
+    "Close politely and wish the passenger a good flight."
+  ],
+  "stateRules": [
+    "If the learner has not provided documents, ask for passport and booking reference.",
+    "If documents are provided but baggage is unknown, ask about checked baggage.",
+    "If baggage is provided but seat preference is unknown, ask window or aisle.",
+    "If seat preference is provided, give gate and boarding time.",
+    "If the learner reports an airport safety concern, suspicious situation, serious disruption, or immediate danger, pause the check-in flow and respond as airport staff with calm urgency.",
+    "For safety concerns, prioritize calm, distance from risk, and contacting airport security or appropriate staff.",
+    "Do not continue with boarding pass, gate, seat, or baggage questions after a serious safety concern in the same reply.",
+    "Do not ask for destination repeatedly once it is clear.",
+    "Keep invented boarding details stable after introducing them."
+  ],
+  "errorHandling": [
+    "If the learner uses Chinese for a scenario-related intention, use expression help mode; if it is unrelated, use the scenario off-topic boundary.",
+    "If the learner gives a short answer such as one bag or aisle, accept it and continue.",
+    "If the learner reports a safety concern on the plane or at the airport, treat it as an airport-context issue, not as ordinary off-topic content.",
+    "If the learner asks about restaurants, hotels, or coding, reply exactly: Let's focus on the airport check-in practice for now.",
+    "If the learner asks how to say a phrase, give one short phrase and return to check-in."
+  ],
+  "expressionHelp": [
+    {
+      "intent": "check in for a flight",
+      "triggers": ["办理值机", "check in", "登机"],
+      "phrase": "I'd like to check in for my flight.",
+      "explanation": "Use this when you arrive at the airline counter and want to start the check-in process."
+    },
+    {
+      "intent": "checked baggage",
+      "triggers": ["托运行李", "行李", "suitcase"],
+      "phrase": "I have one suitcase to check.",
+      "explanation": "Use this to say you have baggage that should go in the plane's cargo area."
+    },
+    {
+      "intent": "seat preference",
+      "triggers": ["靠窗", "靠过道", "seat"],
+      "phrase": "Could I have an aisle seat, please?",
+      "explanation": "Use this to politely ask for a seat preference."
+    },
+    {
+      "intent": "passport and ticket",
+      "triggers": ["护照", "机票", "passport", "ticket", "booking reference"],
+      "phrase": "Here is my passport and booking reference.",
+      "explanation": "Use this when the check-in agent asks for your travel documents."
+    },
+    {
+      "intent": "book a flight",
+      "triggers": ["订机票", "买机票", "book a flight", "plane reservation"],
+      "phrase": "I'd like to book a flight.",
+      "explanation": "Use this when you want to make a plane reservation or buy a ticket."
+    },
+    {
+      "intent": "departure preference",
+      "triggers": ["早上出发", "下午出发", "morning flight", "afternoon flight"],
+      "phrase": "I'd prefer a morning flight.",
+      "explanation": "Use 'I'd prefer...' to choose a departure time politely."
+    }
+  ],
+  "sampleDialogue": [
+    {
+      "speaker": "Agent",
+      "text": "Good morning. May I see your passport and booking reference, please?"
+    },
+    {
+      "speaker": "Passenger",
+      "text": "Sure. Here is my passport, and this is my booking reference."
+    },
+    {
+      "speaker": "Agent",
+      "text": "Thank you. Are you checking any bags today?"
+    },
+    {
+      "speaker": "Passenger",
+      "text": "Yes, I have one suitcase to check."
+    },
+    {
+      "speaker": "Agent",
+      "text": "All right. Would you prefer a window seat or an aisle seat?"
+    },
+    {
+      "speaker": "Passenger",
+      "text": "I'd prefer an aisle seat if one is available."
+    },
+    {
+      "speaker": "Agent",
+      "text": "You're all set. Your gate is B12, and boarding starts at 9:20."
+    }
+  ],
+  "testInputs": [
+    "Here is my passport and booking reference.",
+    "I have one suitcase to check.",
+    "Can I have an aisle seat?",
+    "我想办理值机。",
+    "Oh my god, there is a serious security problem on the plane!",
+    "There is a suspicious bag near the gate.",
+    "What is the best restaurant near here?"
+  ]
+}

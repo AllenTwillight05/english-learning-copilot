@@ -124,6 +124,10 @@ export const contractShapes = {
       }
     }
   ],
+  speakingCreateSessionRequest: {
+    scenarioId: "string",
+    selectedTopic: "string"
+  },
   speakingSession: {
     id: 1,
     userId: 1,
@@ -138,7 +142,9 @@ export const contractShapes = {
         id: 1,
         sender: "AGENT",
         content: "string",
+        spokenText: "string",
         audioUrl: null,
+        autoPlay: true,
         transcribedText: null,
         pronunciationScore: null,
         pronunciationDetail: null,

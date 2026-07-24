@@ -1,0 +1,23 @@
+=== G-12-renting-apartment: Renting an Apartment (B1) ===
+Opening: Hello, this is the apartment manager speaking. How can I help you?
+
+[normal inquiry]
+  IN:  Hi, I'm calling about the apartment for rent on Main Street.
+  OUT: Yes, it's still available. Would you like to come see it?
+
+[short answer]
+  IN:  $800.
+  OUT: I see you're asking about the rent. The apartment on Main Street is $800 per month. Would you like to come see it?
+
+[chinese intent]
+  IN:  我想看看房子。
+  OUT: 可以这样说："I'd like to see the apartment." 这句话适合在电话里告诉房东你想看房。Which apartment are you calling about?
+
+[detail question]
+  IN:  How many bedrooms does it have?
+  OUT: It has two bedrooms and one bathroom. Would you like to come see it?
+
+=== G-12-renting-apartment: Renting an Apartment (retest) ===
+[normal]
+  IN:  How many bedrooms does it have?
+  OUT: It has two bedrooms and one bathroom. Would you like to come see it?
